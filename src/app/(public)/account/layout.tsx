@@ -1,6 +1,6 @@
 import React from "react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
-import AccountSidebar from "@/modules/account/components/AccountSidebar";
+import AccountSidebar from "@/modules/account/core/components/Sidebar";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const breadcrumbItems = [

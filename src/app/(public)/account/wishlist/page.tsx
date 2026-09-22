@@ -1,6 +1,6 @@
 import React from "react";
-import WishlistToolbar from "@/modules/account/components/WishlistToolbar";
-import WishlistItemCard from "@/modules/account/components/WishlistItemCard";
+import WishlistToolbar from "@/modules/account/wishlist/components/WishlistToolbar";
+import WishlistItemCard from "@/modules/account/wishlist/components/WishlistItemCard";
 import { mockWishlistItems } from "@/modules/account/data/mockAccountData";
 
 export default function WishlistPage() {

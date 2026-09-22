@@ -4,12 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Info, FileText, Store, Truck } from "lucide-react";
 
-import OrderSuccessHero from "@/modules/checkout/components/OrderSuccessHero";
-import OrderSummary from "@/modules/checkout/components/OrderSummary";
-import OrderMetadata from "@/modules/checkout/components/OrderMetadata";
-import PostPurchaseRecommendations from "@/modules/checkout/components/PostPurchaseRecommendations";
-import TrustStrip from "@/modules/checkout/components/TrustStrip";
-import TrackingModal from "@/modules/checkout/components/TrackingModal";
+import OrderSuccessHero from "@/modules/checkout/success/components/OrderSuccessHero";
+import OrderSummary from "@/modules/checkout/success/components/OrderSummary";
+import OrderMetadata from "@/modules/checkout/success/components/OrderMetadata";
+import PostPurchaseRecommendations from "@/modules/checkout/success/components/PostPurchaseRecommendations";
+import TrustStrip from "@/modules/checkout/shared/components/TrustStrip";
+import TrackingModal from "@/modules/checkout/success/components/TrackingModal";
 
 export default function CheckoutSuccessPage() {
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);

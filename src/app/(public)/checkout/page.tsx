@@ -1,10 +1,10 @@
 import React from "react";
-import CheckoutProgress from "@/modules/checkout/components/CheckoutProgress";
-import CartItems from "@/modules/checkout/components/CartItems";
-import AiCrossSell from "@/modules/checkout/components/AiCrossSell";
-import ShippingPayment from "@/modules/checkout/components/ShippingPayment";
-import CheckoutSummary from "@/modules/checkout/components/CheckoutSummary";
-import CheckoutCommitments from "@/modules/checkout/components/CheckoutCommitments";
+import CheckoutProgress from "@/modules/checkout/flow/components/CheckoutProgress";
+import CartItems from "@/modules/checkout/cart/components/CartItems";
+import AiCrossSell from "@/modules/checkout/cross-sell/components/AiCrossSell";
+import ShippingPayment from "@/modules/checkout/flow/components/ShippingPayment";
+import CheckoutSummary from "@/modules/checkout/cart/components/CheckoutSummary";
+import CheckoutCommitments from "@/modules/checkout/shared/components/CheckoutCommitments";
 
 export default function CheckoutPage() {
   return (

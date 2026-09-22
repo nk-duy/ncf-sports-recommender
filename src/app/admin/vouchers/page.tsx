@@ -1,5 +1,5 @@
 import React from "react";
-import VoucherTable from "@/modules/admin/components/VoucherTable";
+import VoucherTable from "@/modules/admin/vouchers/components/VoucherTable";
 import vouchersData from "@/data/vouchers.json";
 
 export default function AdminVouchersPage() {

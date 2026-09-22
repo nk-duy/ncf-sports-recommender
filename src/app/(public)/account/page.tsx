@@ -1,7 +1,7 @@
 import React from "react";
-import SummaryCards from "@/modules/account/components/SummaryCards";
-import RecentOrders from "@/modules/account/components/RecentOrders";
-import AccountRecommendations from "@/modules/account/components/AccountRecommendations";
+import SummaryCards from "@/modules/account/dashboard/components/SummaryCards";
+import RecentOrders from "@/modules/account/dashboard/components/RecentOrders";
+import AccountRecommendations from "@/modules/account/dashboard/components/Recommendations";
 import { mockUserProfile } from "@/modules/account/data/mockAccountData";
 
 export default function AccountOverviewPage() {
