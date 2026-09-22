@@ -1,38 +1,66 @@
 import React from "react";
 import ProductCard from "@/modules/products/components/ProductCard";
-import productsData from "@/data/products.json";
+import styles from "./ProductGrid.module.css";
 
-export default function ProductGrid() {
-  // Format the raw product data to match the ProductCard interface
-  const products = productsData.map((item) => ({
-    id: item.id,
-    name: item.name,
-    price: new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price),
-    imageUrl: item.image_url,
-  }));
+// Interface matches backend response
+interface ProductAPI {
+  product_id: string;
+  name: string;
+  price: number;
+  image_url: string;
+}
+
+export default async function ProductGrid() {
+  // Fetch from FastAPI backend
+  let products: ProductAPI[] = [];
+  try {
+    const res = await fetch("http://localhost:8000/api/v1/products/?limit=16", {
+      cache: "no-store", // disable caching for dynamic updates
+    });
+    if (res.ok) {
+      products = await res.json();
+    }
+  } catch (err) {
+    console.error("Failed to fetch products:", err);
+  }
+
+  // Format currency
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
 
   return (
-    <section id="featured-products" className="py-16 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="featured-products" className={styles.sectionContainer}>
+      <div className={styles.wrapper}>
         
         {/* Sleek Minimalist Header */}
-        <div className="flex flex-col items-center justify-center mb-12 text-center">
-          <div className="flex items-center gap-4 w-full max-w-sm mb-4 opacity-50">
-            <div className="h-px bg-gray-300 flex-1"></div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nổi bật nhất</span>
-            <div className="h-px bg-gray-300 flex-1"></div>
+        <div className={styles.header}>
+          <div className={styles.headerLines}>
+            <div className={styles.line}></div>
+            <span className={styles.headerSubtext}>Nổi bật nhất</span>
+            <div className={styles.line}></div>
           </div>
-          <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-3">
+          <h2 className={styles.headerTitle}>
             Top Thịnh Hành
           </h2>
-          <p className="text-sm font-medium text-gray-500 max-w-md mx-auto">
+          <p className={styles.headerDesc}>
             Bộ sưu tập thời trang và phụ kiện thể thao được lựa chọn nhiều nhất tuần này nhờ thuật toán AI phân tích xu hướng.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className={styles.gridContainer}>
+          {products.map((p) => (
+            <ProductCard 
+              key={p.product_id} 
+              product={{
+                id: p.product_id,
+                name: p.name,
+                price: formatPrice(p.price),
+                imageUrl: p.image_url,
+                discountLabel: "HOT", // Mock label
+                category: "GIÀY CHẠY BỘ", // Mock category
+              }} 
+            />
           ))}
         </div>
         
