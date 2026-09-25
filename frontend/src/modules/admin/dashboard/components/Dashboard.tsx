@@ -1,4 +1,6 @@
-import React from "react";
+'use client';
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
   Download, 
@@ -14,6 +16,33 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({
+    total_users: 0,
+    total_products: 0,
+    total_orders: 0,
+    total_revenue: 0,
+    pending_orders: 0
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/v1/admin/dashboard-stats");
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch admin stats:", err);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  };
+
   return (
     <div className="flex flex-col w-full space-y-8">
       {/* Page Header & Action Bar */}
@@ -22,7 +51,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xs text-blue-600 tracking-wider uppercase font-semibold">Thương mại điện tử</span>
             <span className="text-gray-300 text-xs">•</span>
-            <span className="font-mono text-[11px] text-gray-500">Cập nhật 2 phút trước</span>
+            <span className="font-mono text-[11px] text-gray-500">Cập nhật realtime</span>
           </div>
           <h1 className="text-3xl text-gray-900 font-bold tracking-tight">Tổng quan hệ thống</h1>
           <p className="text-sm text-gray-600 mt-1">Theo dõi chỉ số bán hàng và hiệu suất thương mại điện tử SportsAI</p>
@@ -55,7 +84,7 @@ export default function AdminDashboard() {
             <div>
               <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block">Tổng doanh thu</span>
               <div className="mt-2 text-2xl text-gray-900 font-bold tracking-tight">
-                128.450.000 <span className="text-sm font-normal text-gray-500">đ</span>
+                {formatPrice(stats.total_revenue)}
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
@@ -65,8 +94,7 @@ export default function AdminDashboard() {
           <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
             <div className="inline-flex items-center gap-1.5 text-green-600 text-xs font-semibold">
               <TrendingUp size={16} />
-              <span>+12.5%</span>
-              <span className="text-gray-500 font-normal ml-1">so với tuần trước</span>
+              <span>Cập nhật liên tục</span>
             </div>
           </div>
         </div>
@@ -75,9 +103,9 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between border border-gray-100">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block">Số đơn hàng mới</span>
+              <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block">Số đơn hàng</span>
               <div className="mt-2 text-2xl text-gray-900 font-bold tracking-tight">
-                342 <span className="text-sm font-normal text-gray-500">đơn</span>
+                {stats.total_orders} <span className="text-sm font-normal text-gray-500">đơn</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600">
@@ -85,10 +113,9 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-            <div className="inline-flex items-center gap-1.5 text-green-600 text-xs font-semibold">
-              <TrendingUp size={16} />
-              <span>+8.2%</span>
-              <span className="text-gray-500 font-normal ml-1">tỷ lệ hủy &lt; 1%</span>
+            <div className="inline-flex items-center gap-1.5 text-gray-600 text-xs font-semibold">
+              <span className="text-orange-500">{stats.pending_orders}</span>
+              <span className="text-gray-500 font-normal ml-1">đang chờ xử lý</span>
             </div>
           </div>
         </div>
@@ -99,7 +126,7 @@ export default function AdminDashboard() {
             <div>
               <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block">Số khách hàng</span>
               <div className="mt-2 text-2xl text-gray-900 font-bold tracking-tight">
-                1.250 <span className="text-sm font-normal text-gray-500">người</span>
+                {stats.total_users} <span className="text-sm font-normal text-gray-500">người</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
@@ -109,29 +136,28 @@ export default function AdminDashboard() {
           <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
             <div className="inline-flex items-center gap-1.5 text-gray-600 text-xs font-semibold">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500"></span>
-              <span className="text-green-600">+15</span>
-              <span className="font-normal ml-1">người mới hôm nay</span>
+              <span className="text-gray-500 font-normal ml-1">Đã đăng ký</span>
             </div>
           </div>
         </div>
 
-        {/* Stat 4: AI Recommendations Impact */}
+        {/* Stat 4: Total Products */}
         <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between border border-gray-100">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block">Lượt click từ Gợi ý AI</span>
+              <span className="text-xs text-gray-500 uppercase font-semibold tracking-wider block">Số sản phẩm</span>
               <div className="mt-2 text-2xl text-gray-900 font-bold tracking-tight">
-                4.860 <span className="text-sm font-normal text-gray-500">lượt</span>
+                {stats.total_products} <span className="text-sm font-normal text-gray-500">món</span>
               </div>
             </div>
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-              <Brain size={22} />
+              <ShoppingBag size={22} />
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
             <div className="inline-flex items-center gap-1.5 text-blue-600 text-xs font-semibold">
               <Activity size={16} />
-              <span>Chiếm 28% tổng lượt tương tác</span>
+              <span>Sản phẩm đang bán</span>
             </div>
           </div>
         </div>
