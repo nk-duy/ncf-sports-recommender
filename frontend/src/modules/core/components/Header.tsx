@@ -1,117 +1,147 @@
-import Link from 'next/link';
-import React from 'react';
+'use client';
+import React, { useState, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useCartStore } from "@/shared/store/cartStore";
 
 export default function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { getTotalItems } = useCartStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
   return (
-    <header className="fixed top-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-      <div className="h-28 w-full">
-        <div className="h-16 w-full px-margin-desktop flex items-center justify-between gap-space-lg">
-          <div className="flex items-center gap-space-xl">
-            <Link className="flex items-center gap-space-xs" href="/">
-              <span className="material-symbols-outlined text-primary text-[28px]">bolt</span>
-              <div className="flex flex-col">
-                <span className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight">
-                  Sports<span className="text-primary">AI</span>
-                </span>
-                <span className="font-label-sm text-label-sm text-secondary-fixed-dim uppercase tracking-wider font-semibold -mt-1">
-                  NCF 2.0 Engine
-                </span>
-              </div>
-            </Link>
+    <header className="bg-[#0B1E3F] sticky top-0 z-50 text-white shadow-md">
+      {/* Top notification strip */}
+      <div className="bg-[#050B14] py-1.5 px-4 text-[11px] text-gray-300 border-b border-white/5 font-medium">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <span>🎉 Siêu hội thể thao 9.9 - Giảm tới 50% tất cả đơn hàng</span>
+            <span className="text-gray-600">|</span>
+            <span>
+              Hotline đặt hàng:{" "}
+              <strong className="text-white">1900 6868</strong>
+            </span>
           </div>
-          <div className="flex-1 max-w-2xl">
-            <div className="relative w-full flex items-center bg-surface-container-low rounded-xl px-space-md py-space-xs">
-              <span className="material-symbols-outlined text-outline text-[20px] mr-space-sm">search</span>
-              <input
-                className="w-full bg-transparent border-none outline-none font-body-sm text-body-sm text-on-surface placeholder:text-outline"
-                placeholder="Tìm kiếm giày chạy marathon, tạ barbell, áo thun dry-fit, AI recommendation..."
-                type="text"
-              />
-              <button className="flex items-center gap-space-xs bg-primary-container text-on-primary-container font-label-sm text-label-sm px-space-md py-1.5 rounded-lg hover:bg-primary transition-colors">
-                <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
-                <span>AI Search</span>
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-space-xl">
-            <div className="hidden xl:flex items-center gap-space-xs text-on-surface-variant">
-              <span className="material-symbols-outlined text-[20px] text-primary">support_agent</span>
-              <div className="flex flex-col text-left">
-                <span className="font-label-sm text-label-sm text-secondary">Hotline 24/7</span>
-                <span className="font-data-mono text-data-mono font-semibold text-on-surface">1800 6886</span>
-              </div>
-            </div>
-            <Link
-              className="relative flex items-center justify-center p-space-sm text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
-            >
-              <span className="material-symbols-outlined text-[26px]">shopping_bag</span>
-              <span className="absolute top-0 right-0 w-5 h-5 bg-error text-on-error font-label-sm text-label-sm font-bold rounded-full flex items-center justify-center">
-                3
-              </span>
-            </Link>
-            <div className="flex items-center gap-space-sm pl-space-sm">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
-              </div>
-              <div className="hidden lg:flex flex-col text-left">
-                <div className="flex items-center gap-space-xs">
-                  <span className="font-label-lg text-label-lg text-on-surface leading-none">Nguyễn Khánh Duy</span>
-                  <span className="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                    VIP
-                  </span>
-                </div>
-                <span className="font-label-sm text-label-sm text-tertiary-container font-medium">
-                  NCF Personalizer Active
-                </span>
-              </div>
-            </div>
+          <div className="flex items-center gap-3">
+            <a className="hover:text-white transition" href="#">
+              Đồ án Tốt nghiệp - ĐHCT
+            </a>
+            <span className="text-gray-600">|</span>
+            <a className="hover:text-white transition" href="/order-tracking">
+              Tra cứu đơn hàng
+            </a>
           </div>
         </div>
-        <div className="h-12 w-full px-margin-desktop flex items-center bg-surface-container-low">
-          <nav className="flex items-center gap-space-xs">
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-primary font-bold bg-surface-container-lowest rounded-lg shadow-sm transition-all"
-              href="/"
+      </div>
+
+      {/* Main Header Bar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex items-center justify-between gap-8">
+          {/* Logo */}
+          <a className="flex items-center gap-3 group flex-shrink-0" href="/home">
+            <div className="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-inner group-hover:scale-105 transition-transform">
+              <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                <path d="M13 3l-2 8h6l-8 10 2-8H5l8-10z"></path>
+              </svg>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black tracking-tight text-white uppercase block leading-none flex items-center gap-2">
+                SPORTS<span className="text-sky-400">AI</span>
+                <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest font-bold">NCF 2.0</span>
+              </span>
+              <span className="text-[9px] text-slate-300 tracking-wider uppercase font-semibold mt-1">
+                HÀNG THỂ THAO CHÍNH HÃNG
+              </span>
+            </div>
+          </a>
+
+          {/* Search */}
+          <div className="flex-1 max-w-3xl">
+            <form onSubmit={handleSearch} className="relative flex items-center">
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-5 pr-28 py-2.5 rounded-full bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 shadow-sm transition placeholder-gray-400"
+                placeholder="Tìm kiếm giày chạy bộ, quần áo gym, vợt cầu lông, phụ kiện..."
+                type="text"
+              />
+              <button type="submit" className="absolute right-1 px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-full transition flex items-center gap-2 shadow">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>Tìm</span>
+              </button>
+            </form>
+          </div>
+
+          {/* User & Cart */}
+          <div className="flex items-center gap-6 flex-shrink-0">
+            <a href="/account" className="flex items-center gap-3 group text-white hover:text-blue-200 transition">
+              <div className="flex flex-col text-right">
+                <span className="text-[13px] font-bold leading-none mb-1 text-white">Khách</span>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-gray-600 border border-white/20 flex items-center justify-center text-white shadow-inner group-hover:scale-105 transition-transform">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </a>
+
+            <a
+              className="flex items-center gap-3 bg-blue-700/60 hover:bg-blue-600 px-4 py-2.5 rounded-xl transition border border-blue-500/20 group text-white shadow-sm"
+              href="/cart"
             >
+              <div className="relative">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {mounted && getTotalItems() > 0 && (
+                  <span className="absolute -top-2.5 -right-2.5 bg-red-600 border border-[#0B1E3F] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm font-bold">Giỏ hàng</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Bar */}
+      <div className="bg-[#0B1E3F] border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex items-center gap-8 py-3.5 text-sm font-bold text-gray-300">
+            <a href="/" className={`transition ${pathname === '/' ? 'text-sky-400 border-b-2 border-sky-400 pb-0.5' : 'hover:text-white'}`}>
               Trang chủ
-            </Link>
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
-              href="#"
-            >
-              Giày thể thao
-            </Link>
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
-              href="#"
-            >
-              Quần áo thể thao
-            </Link>
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
-              href="#"
-            >
-              Thiết bị ngoài trời
-            </Link>
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all"
-              href="#"
-            >
-              Dụng cụ & Thiết bị Gym
-            </Link>
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1"
-              href="#"
-            >
-              Khuyến mãi HOT
-            </Link>
-            <Link
-              className="px-space-md py-1.5 font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1"
-              href="#"
-            >
-              Gợi ý riêng cho bạn AI
-            </Link>
+            </a>
+            <a href="/products" className={`transition ${pathname === '/products' || pathname.startsWith('/products/') ? 'text-sky-400 border-b-2 border-sky-400 pb-0.5' : 'hover:text-white'}`}>
+              Giày dép
+            </a>
+            <a href="/clothing" className={`transition ${pathname === '/clothing' ? 'text-sky-400 border-b-2 border-sky-400 pb-0.5' : 'hover:text-white'}`}>
+              Quần áo
+            </a>
+            <a href="/outdoor" className={`transition ${pathname === '/outdoor' ? 'text-sky-400 border-b-2 border-sky-400 pb-0.5' : 'hover:text-white'}`}>
+              Ngoài trời
+            </a>
+            <a href="/equipment" className={`transition ${pathname === '/equipment' ? 'text-sky-400 border-b-2 border-sky-400 pb-0.5' : 'hover:text-white'}`}>
+              Dụng cụ
+            </a>
+            <a href="/promotions" className="text-amber-500 hover:text-amber-400 transition flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 opacity-80"></span>
+              Khuyến mãi Siêu Sale (-50%) HOT
+            </a>
           </nav>
         </div>
       </div>
