@@ -6,18 +6,16 @@ import { useCartStore } from "@/shared/store/cartStore";
 import { useCheckoutStore } from "@/shared/store/checkoutStore";
 import { notifications } from "@mantine/notifications";
 
-export default function CheckoutSummary() {
+export default function CartSummary() {
   const router = useRouter();
-  const { items, getTotalPrice, clearCart } = useCartStore();
-  const { customer_name, customer_phone, customer_address, payment_method } = useCheckoutStore();
-  const [loading, setLoading] = useState(false);
+  const { items, getTotalPrice } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handlePlaceOrder = async () => {
+  const handleProceedToCheckout = () => {
     if (items.length === 0) {
       notifications.show({
         title: 'Lỗi',
@@ -27,59 +25,7 @@ export default function CheckoutSummary() {
       return;
     }
     
-    if (!customer_name.trim() || !customer_phone.trim() || !customer_address.trim()) {
-      notifications.show({
-        title: 'Thiếu thông tin',
-        message: 'Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng!',
-        color: 'red',
-      });
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      // Gọi API tạo đơn hàng
-      const res = await fetch("http://localhost:8000/api/v1/orders/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          customer_name: customer_name.trim(),
-          customer_phone: customer_phone.trim(),
-          customer_address: customer_address.trim(),
-          payment_method: payment_method,
-          items: items.map(i => ({
-            product_id: i.product_id,
-            quantity: i.quantity,
-            price: i.price,
-            size: i.size,
-            color: i.color || ""
-          })),
-          total_amount: getTotalPrice()
-        })
-      });
-
-      if (res.ok) {
-        clearCart();
-        router.push("/checkout/success");
-      } else {
-        notifications.show({
-          title: 'Lỗi đặt hàng',
-          message: 'Đã có lỗi xảy ra khi đặt hàng.',
-          color: 'red',
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      notifications.show({
-        title: 'Lỗi kết nối',
-        message: 'Không thể kết nối đến máy chủ.',
-        color: 'red',
-      });
-    } finally {
-      setLoading(false);
-    }
+    router.push("/checkout");
   };
 
   const formatPrice = (price: number) => {
@@ -149,21 +95,12 @@ export default function CheckoutSummary() {
       {/* Primary CTA Button */}
       <div className="mt-2">
         <button 
-          onClick={handlePlaceOrder}
-          disabled={loading || items.length === 0}
+          onClick={handleProceedToCheckout}
+          disabled={items.length === 0}
           className="w-full h-12 bg-gray-900 hover:bg-black text-white text-base font-bold uppercase tracking-wider rounded-md transition-colors flex items-center justify-center gap-2 shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {loading ? (
-            <>
-              <Loader2 className="animate-spin" size={20} />
-              <span>Đang xử lý...</span>
-            </>
-          ) : (
-            <>
-              <span>Đặt hàng &amp; Thanh toán</span>
-              <ArrowRight size={20} />
-            </>
-          )}
+          <span>Tiếp tục thanh toán</span>
+          <ArrowRight size={20} />
         </button>
         <div className="text-center text-xs font-medium text-gray-400 mt-3">
           Nhấn "Đặt hàng" đồng nghĩa chấp thuận Điều khoản dịch vụ SportsAI
