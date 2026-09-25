@@ -1,4 +1,79 @@
+'use client';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useCallback } from 'react';
+
 export default function ProductsSidebar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const currentCategory = searchParams.get('category') || '';
+  const currentBrand = searchParams.get('brand') || '';
+  const currentGender = searchParams.get('gender') || '';
+  const currentSizes = searchParams.get('sizes') ? searchParams.get('sizes')!.split(',') : [];
+  const currentColors = searchParams.get('colors') ? searchParams.get('colors')!.split(',') : [];
+  const minPrice = searchParams.get('min_price') || '';
+  const maxPrice = searchParams.get('max_price') || '';
+
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) {
+        params.set(name, value);
+      } else {
+        params.delete(name);
+      }
+      return params.toString();
+    },
+    [searchParams]
+  );
+
+  const toggleArrayParam = (name: string, value: string, currentArray: string[]) => {
+    let newArray = [...currentArray];
+    if (newArray.includes(value)) {
+      newArray = newArray.filter(v => v !== value);
+    } else {
+      newArray.push(value);
+    }
+    router.push(pathname + '?' + createQueryString(name, newArray.join(',')));
+  };
+
+  const handlePriceChange = (min: string, max: string) => {
+    let params = new URLSearchParams(searchParams.toString());
+    if (min) params.set('min_price', min);
+    else params.delete('min_price');
+    
+    if (max) params.set('max_price', max);
+    else params.delete('max_price');
+    
+    router.push(pathname + '?' + params.toString());
+  };
+
+  const clearAll = () => {
+    router.push(pathname);
+  };
+
+  const isPriceSelected = (min: string, max: string) => {
+    return minPrice === min && maxPrice === max;
+  };
+
+  const categories = [
+    'Giày Chạy Bộ (Running)', 'Tập Gym & Fitness', 'Chạy Trail & Dã Ngoại', 'Sneaker Thể Thao / Lifestyle'
+  ];
+  
+  const brands = ['Nike', 'Adidas', 'Puma', 'Asics', 'New Balance', 'Salomon', 'Unknown'];
+  
+  const sizes = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
+  
+  const colors = [
+    { name: 'White', bg: 'bg-white', border: 'border-gray-200' },
+    { name: 'Black', bg: 'bg-gray-900', border: 'border-gray-900' },
+    { name: 'Blue', bg: 'bg-blue-600', border: 'border-blue-600' },
+    { name: 'Red', bg: 'bg-red-500', border: 'border-red-500' },
+    { name: 'Grey', bg: 'bg-gray-400', border: 'border-gray-400' },
+    { name: 'Navy', bg: 'bg-blue-900', border: 'border-blue-900' },
+  ];
+
   return (
     <div className="w-full">
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm mb-6">
@@ -9,62 +84,68 @@ export default function ProductsSidebar() {
             </svg>
             Bộ Lọc Sản Phẩm
           </h2>
-          <button className="text-xs text-blue-600 font-medium hover:underline">
+          <button onClick={clearAll} className="text-xs text-blue-600 font-medium hover:underline">
             Xóa tất cả
           </button>
         </div>
 
-        {/* Môn thể thao */}
+        {/* Môn thể thao (Category) */}
         <div className="mb-8">
           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Môn thể thao</h3>
           <div className="space-y-3">
-            {[
-              { label: 'Giày Chạy Bộ (Running)', count: 142, checked: true },
-              { label: 'Tập Gym & Fitness', count: 89, checked: false },
-              { label: 'Chạy Trail & Dã Ngoại', count: 45, checked: false },
-              { label: 'Sneaker Thể Thao / Lifestyle', count: 68, checked: false },
-            ].map((item, idx) => (
-              <label key={idx} className="flex items-center justify-between cursor-pointer group">
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${item.checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
-                    {item.checked && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+            {categories.map((cat, idx) => {
+              const checked = currentCategory === cat;
+              return (
+                <label key={idx} onClick={() => router.push(pathname + '?' + createQueryString('category', checked ? '' : cat))} className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                    </div>
+                    <span className={`text-sm ${checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{cat}</span>
                   </div>
-                  <span className={`text-sm ${item.checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{item.label}</span>
-                </div>
-                <span className="text-xs text-gray-400">{item.count}</span>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </div>
         </div>
 
-        {/* Thương hiệu */}
+        {/* Thương hiệu (Brand) */}
         <div className="mb-8">
           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Thương hiệu</h3>
           <div className="space-y-3">
-            {[
-              { label: 'Nike Performance', count: 62, checked: true },
-              { label: 'Adidas Adizero', count: 48, checked: false },
-              { label: 'Salomon Trail', count: 31, checked: false },
-              { label: 'Aura Lifestyle', count: 27, checked: false },
-            ].map((item, idx) => (
-              <label key={idx} className="flex items-center justify-between cursor-pointer group">
-                <div className="flex items-center gap-3">
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${item.checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
-                    {item.checked && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
+            {brands.map((brand, idx) => {
+              const checked = currentBrand === brand;
+              return (
+                <label key={idx} onClick={() => router.push(pathname + '?' + createQueryString('brand', checked ? '' : brand))} className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                    </div>
+                    <span className={`text-sm ${checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{brand}</span>
                   </div>
-                  <span className={`text-sm ${item.checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{item.label}</span>
-                </div>
-                <span className="text-xs text-gray-400">{item.count}</span>
-              </label>
-            ))}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Giới tính (Gender) */}
+        <div className="mb-8">
+          <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Giới tính</h3>
+          <div className="space-y-3">
+            {['Nam', 'Nữ', 'Unisex'].map((gender, idx) => {
+              const checked = currentGender === gender;
+              return (
+                <label key={idx} onClick={() => router.push(pathname + '?' + createQueryString('gender', checked ? '' : gender))} className="flex items-center justify-between cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                      {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                    </div>
+                    <span className={`text-sm ${checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{gender}</span>
+                  </div>
+                </label>
+              );
+            })}
           </div>
         </div>
 
@@ -72,14 +153,18 @@ export default function ProductsSidebar() {
         <div className="mb-8">
           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Kích thước (Size EU)</h3>
           <div className="grid grid-cols-3 gap-2">
-            {['39', '40', '41', '42', '43', '44', '45'].map((size) => (
-              <button 
-                key={size}
-                className={`py-2 text-sm font-medium rounded-lg border transition-colors ${size === '41' ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-gray-200 text-gray-700 hover:border-gray-300'}`}
-              >
-                {size}
-              </button>
-            ))}
+            {sizes.map((size) => {
+              const isSelected = currentSizes.includes(size);
+              return (
+                <button 
+                  key={size}
+                  onClick={() => toggleArrayParam('sizes', size, currentSizes)}
+                  className={`py-2 text-sm font-medium rounded-lg border transition-colors ${isSelected ? 'border-blue-600 text-blue-700 bg-blue-50' : 'border-gray-200 text-gray-700 hover:border-gray-300'}`}
+                >
+                  {size}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -88,18 +173,21 @@ export default function ProductsSidebar() {
           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Mức giá</h3>
           <div className="space-y-3">
             {[
-              { label: 'Dưới 1.000.000đ', checked: false },
-              { label: '1.000.000đ - 2.500.000đ', checked: true },
-              { label: '2.500.000đ - 4.000.000đ', checked: false },
-              { label: 'Trên 4.000.000đ', checked: false },
-            ].map((item, idx) => (
-              <label key={idx} className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${item.checked ? 'border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
-                  {item.checked && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
-                </div>
-                <span className={`text-sm ${item.checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{item.label}</span>
-              </label>
-            ))}
+              { label: 'Tất cả mức giá', min: '', max: '' },
+              { label: 'Dưới 1.000.000đ', min: '', max: '1000000' },
+              { label: '1.000.000đ - 2.500.000đ', min: '1000000', max: '2500000' },
+              { label: 'Trên 2.500.000đ', min: '2500000', max: '' },
+            ].map((item, idx) => {
+              const checked = isPriceSelected(item.min, item.max);
+              return (
+                <label key={idx} onClick={() => handlePriceChange(item.min, item.max)} className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${checked ? 'border-blue-600' : 'border-gray-300 group-hover:border-blue-400'}`}>
+                    {checked && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                  </div>
+                  <span className={`text-sm ${checked ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>{item.label}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
 
@@ -107,36 +195,18 @@ export default function ProductsSidebar() {
         <div>
           <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-4">Bảng màu</h3>
           <div className="flex flex-wrap gap-3">
-            {[
-              { bg: 'bg-white', border: 'border-gray-200' },
-              { bg: 'bg-gray-900', border: 'border-gray-900' },
-              { bg: 'bg-blue-600', border: 'border-blue-600' },
-              { bg: 'bg-green-500', border: 'border-green-500' },
-              { bg: 'bg-red-500', border: 'border-red-500' },
-            ].map((color, idx) => (
-              <button 
-                key={idx}
-                className={`w-7 h-7 rounded-full border-2 ${color.bg} ${idx === 2 ? 'ring-2 ring-offset-2 ring-blue-500 ' + color.border : color.border}`}
-              />
-            ))}
+            {colors.map((color, idx) => {
+              const isSelected = currentColors.includes(color.name);
+              return (
+                <button 
+                  key={idx}
+                  title={color.name}
+                  onClick={() => toggleArrayParam('colors', color.name, currentColors)}
+                  className={`w-7 h-7 rounded-full border-2 ${color.bg} ${isSelected ? 'ring-2 ring-offset-2 ring-blue-500 ' + color.border : color.border}`}
+                />
+              );
+            })}
           </div>
-        </div>
-      </div>
-
-      {/* Promo Banner */}
-      <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 text-white shadow-md">
-        <div className="flex items-center gap-2 text-xs font-bold bg-white/20 w-max px-3 py-1 rounded-full mb-4">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-          </svg>
-          QUÀ TẶNG KÈM
-        </div>
-        <h3 className="text-xl font-black leading-tight mb-2">TẶNG TẤT CHẠY BỘ CHUYÊN DỤNG</h3>
-        <p className="text-sm text-orange-50 leading-snug mb-6">
-          Cho tất cả đơn hàng giày chạy bộ có giá trị trên 1.500.000đ trong tuần này.
-        </p>
-        <div className="bg-white text-orange-600 text-sm font-black text-center py-2.5 rounded-lg border-2 border-dashed border-orange-300">
-          Mã: FREESOCKS
         </div>
       </div>
     </div>

@@ -8,6 +8,8 @@ interface ProductAPI {
   name: string;
   price: number;
   image_url: string;
+  category?: string[];
+  rating?: number;
 }
 
 export default async function ProductGrid() {
@@ -49,19 +51,24 @@ export default async function ProductGrid() {
         </div>
 
         <div className={styles.gridContainer}>
-          {products.map((p) => (
-            <ProductCard 
-              key={p.product_id} 
-              product={{
-                id: p.product_id,
-                name: p.name,
-                price: formatPrice(p.price),
-                imageUrl: p.image_url,
-                discountLabel: "HOT", // Mock label
-                category: "GIÀY CHẠY BỘ", // Mock category
-              }} 
-            />
-          ))}
+          {products.map((p) => {
+            // Lấy category cuối cùng hoặc đầu tiên để hiển thị nếu có
+            const displayCategory = p.category && p.category.length > 0 ? p.category[p.category.length - 1] : "SẢN PHẨM THỂ THAO";
+            
+            return (
+              <ProductCard 
+                key={p.product_id} 
+                product={{
+                  id: p.product_id,
+                  name: p.name,
+                  price: formatPrice(p.price),
+                  imageUrl: p.image_url,
+                  discountLabel: p.rating ? `⭐ ${p.rating}` : "MỚI",
+                  category: displayCategory,
+                }} 
+              />
+            )
+          })}
         </div>
         
       </div>
