@@ -8,6 +8,7 @@ class User(Document):
     email: Indexed(EmailStr, unique=True)
     hashed_password: str
     full_name: Optional[str] = None
+    role: str = "user"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
 

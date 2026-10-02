@@ -10,6 +10,8 @@ async def get_products(
     skip: int = Query(0, ge=0, description="Số lượng bản ghi bỏ qua"),
     limit: int = Query(20, ge=1, le=100, description="Số lượng bản ghi tối đa lấy về"),
     category: Optional[str] = Query(None, description="Lọc theo danh mục"),
+    product_type: Optional[str] = Query(None, description="Lọc theo Loại sản phẩm"),
+    sport_type: Optional[str] = Query(None, description="Lọc theo Môn thể thao"),
     search: Optional[str] = Query(None, description="Tìm kiếm theo tên sản phẩm"),
     brand: Optional[str] = Query(None, description="Thương hiệu"),
     min_price: Optional[float] = Query(None, description="Giá thấp nhất"),
@@ -20,7 +22,7 @@ async def get_products(
 ):
     """Lấy danh sách sản phẩm"""
     products = await product_service.get_products(
-        skip=skip, limit=limit, category=category, search=search,
+        skip=skip, limit=limit, category=category, product_type=product_type, sport_type=sport_type, search=search,
         brand=brand, min_price=min_price, max_price=max_price,
         sizes=sizes, colors=colors, gender=gender
     )
