@@ -7,13 +7,13 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 
 // Nếu báo lỗi @, hãy đổi thành đường dẫn tương đối (vd: "../modules/...")
-import Header from "@/modules/core/components/Header";
-import Footer from "@/modules/core/components/Footer";
+import Header from "@/modules/cot-loi/components/Header";
+import Footer from "@/modules/cot-loi/components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "SportsAI - Đồ án Tốt nghiệp",
+  title: "PRO SPORTS - Đồ án Tốt nghiệp",
   description: "Hệ thống gợi ý sản phẩm thể thao",
 };
 

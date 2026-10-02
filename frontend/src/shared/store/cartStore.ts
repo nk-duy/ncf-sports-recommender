@@ -9,6 +9,7 @@ export interface CartItem {
   quantity: number;
   size: string;
   color?: string;
+  stock: number;
 }
 
 interface CartState {
@@ -32,7 +33,14 @@ export const useCartStore = create<CartState>()(
         
         if (existingItemIndex >= 0) {
           const newItems = [...state.items];
-          newItems[existingItemIndex].quantity += item.quantity;
+          const newQuantity = newItems[existingItemIndex].quantity + item.quantity;
+          const currentStock = item.stock || 100;
+          if (newQuantity > currentStock) {
+            // we will handle notification on the component side or just cap it
+            newItems[existingItemIndex].quantity = currentStock;
+          } else {
+            newItems[existingItemIndex].quantity = newQuantity;
+          }
           return { items: newItems };
         }
         
@@ -44,7 +52,7 @@ export const useCartStore = create<CartState>()(
       updateQuantity: (product_id, size, color, quantity) => set((state) => ({
         items: state.items.map(i => 
           (i.product_id === product_id && i.size === size && i.color === color)
-            ? { ...i, quantity: Math.max(1, quantity) }
+            ? { ...i, quantity: Math.min(Math.max(1, quantity), i.stock || 100) }
             : i
         )
       })),
