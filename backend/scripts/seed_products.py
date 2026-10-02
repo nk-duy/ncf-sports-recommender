@@ -36,15 +36,31 @@ async def seed_data():
     for item in data:
         # Kiểm tra sản phẩm đã tồn tại chưa
         existing = await Product.find_one(Product.product_id == item["id"])
+        
+        product_data = {
+            "product_id": item["id"],
+            "name": item["name"],
+            "price": float(item["price"]),
+            "image_url": item["image_url"],
+            "category": item.get("category", []),
+            "brand": item.get("brand", "PRO SPORTS"),
+            "rating": item.get("rating", 4.5),
+            "reviews_count": item.get("reviews_count", 0),
+            "sizes": item.get("sizes", []),
+            "colors": item.get("colors", []),
+            "stock": item.get("stock", 100),
+            "description": item.get("description", "")
+        }
+
         if not existing:
-            new_product = Product(
-                product_id=item["id"],
-                name=item["name"],
-                price=float(item["price"]),
-                image_url=item["image_url"]
-            )
+            new_product = Product(**product_data)
             await new_product.insert()
             inserted += 1
+        else:
+            for k, v in product_data.items():
+                setattr(existing, k, v)
+            await existing.save()
+            # print(f"Updated {item['id']}")
             
     print(f"Seeding completed. Inserted {inserted} new products.")
 
