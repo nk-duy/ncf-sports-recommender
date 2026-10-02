@@ -11,23 +11,24 @@ interface BreadcrumbProps {
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
   return (
-    <nav className="flex items-center space-x-2 text-sm text-gray-500 py-4">
+    <nav className="flex items-center space-x-2 text-sm text-gray-700 py-4 font-medium">
       {items.map((item, index) => (
         <React.Fragment key={index}>
           {item.href ? (
             <a href={item.href} className="hover:text-blue-600 transition flex items-center gap-1.5">
               {index === 0 && (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
+                  <path d="M12 5.432l8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 01-.75-.75v-4.5a.75.75 0 00-.75-.75h-3a.75.75 0 00-.75.75V21a.75.75 0 01-.75.75H5.625a1.875 1.875 0 01-1.875-1.875v-6.198a2.29 2.29 0 00.091-.086L12 5.43z" />
                 </svg>
               )}
               {item.label}
             </a>
           ) : (
-            <span className="text-gray-900 font-medium">{item.label}</span>
+            <span className="text-[#84B541] italic">{item.label}</span>
           )}
           {index < items.length - 1 && (
-            <span className="text-gray-400">/</span>
+            <span className="text-gray-400 font-light mx-1">›</span>
           )}
         </React.Fragment>
       ))}

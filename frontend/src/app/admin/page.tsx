@@ -17,7 +17,7 @@ export default function AdminDashboardPage() {
           fetch('http://localhost:8000/api/v1/products?limit=1'),
           fetch('http://localhost:8000/api/v1/orders?limit=100')
         ]);
-        
+
         // We just estimate total products here by reading length if we had it, but we only fetched 1. 
         // Ideally we need a count API, but we'll just mock for now.
         const orders = await ordersRes.json();
@@ -42,7 +42,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Tổng quan hệ thống</h1>
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
             <p className="text-2xl font-black text-gray-900 font-mono">{formatPrice(stats.revenue)}</p>
           </div>
         </div>
-        
+
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <ShoppingCart size={28} />
@@ -90,7 +90,7 @@ export default function AdminDashboardPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Lối tắt thao tác</h2>
         <div className="flex flex-wrap gap-4">
-          <Link href="/admin/products" className="px-5 py-2.5 bg-gray-50 border border-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-100 hover:border-gray-300 transition shadow-sm">
+          <Link href="/admin/giay-dep" className="px-5 py-2.5 bg-gray-50 border border-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-100 hover:border-gray-300 transition shadow-sm">
             Quản lý Sản phẩm
           </Link>
           <Link href="/admin/orders" className="px-5 py-2.5 bg-gray-50 border border-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-100 hover:border-gray-300 transition shadow-sm">

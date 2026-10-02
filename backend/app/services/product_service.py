@@ -8,6 +8,8 @@ class ProductService:
         skip: int = 0,
         limit: int = 20,
         category: Optional[str] = None,
+        product_type: Optional[str] = None,
+        sport_type: Optional[str] = None,
         search: Optional[str] = None,
         brand: Optional[str] = None,
         min_price: Optional[float] = None,
@@ -19,7 +21,14 @@ class ProductService:
         query: Dict[str, Any] = {}
         
         if category:
-            query["category"] = category
+            cat_list = [c.strip() for c in category.split(',')]
+            query["category"] = {"$in": cat_list}
+            
+        if product_type:
+            query["product_type"] = product_type
+            
+        if sport_type:
+            query["sport_type"] = sport_type
             
         if search:
             query["name"] = {"$regex": search, "$options": "i"}
@@ -62,6 +71,10 @@ class ProductService:
 
     @staticmethod
     async def create_product(product_data: ProductCreate) -> Optional[Product]:
+        import uuid
+        if not product_data.product_id:
+            product_data.product_id = f"PROD-{str(uuid.uuid4())[:8].upper()}"
+            
         existing_product = await Product.find_one(Product.product_id == product_data.product_id)
         if existing_product:
             return None

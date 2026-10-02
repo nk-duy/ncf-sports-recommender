@@ -2,15 +2,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Gift, Tags } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const navItems = [
     { name: 'Tổng quan', path: '/admin', icon: <LayoutDashboard size={20} /> },
-    { name: 'Sản phẩm', path: '/admin/products', icon: <Package size={20} /> },
-    { name: 'Đơn hàng', path: '/admin/orders', icon: <ShoppingCart size={20} /> },
+    { name: 'Sản phẩm', path: '/admin/san-pham', icon: <Package size={20} /> },
+    { name: 'Đơn hàng', path: '/admin/don-hang', icon: <ShoppingCart size={20} /> },
+    { name: 'Khuyến mãi', path: '/admin/khuyen-mai', icon: <Gift size={20} /> },
+    { name: 'Thuộc tính', path: '/admin/thuoc-tinh', icon: <Tags size={20} /> },
   ];
 
   return (
@@ -18,16 +20,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className="w-64 bg-[#0B1E3F] text-white flex flex-col hidden md:flex">
         <div className="h-16 flex items-center justify-center border-b border-white/10">
-          <Link href="/admin" className="text-xl font-black tracking-tight text-white uppercase flex items-center gap-2">
-            SPORTS<span className="text-sky-400">AI</span>
-            <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest font-bold">ADMIN</span>
+          <Link href="/admin" className="text-xl font-black tracking-tight text-white uppercase flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="PRO SPORTS Logo"
+              className="h-10 w-auto object-contain bg-white rounded-lg p-1 shadow-sm"
+            />
           </Link>
         </div>
-        
+
         <nav className="flex-1 py-6 px-4 space-y-2">
           {navItems.map((item) => (
-            <Link 
-              key={item.path} 
+            <Link
+              key={item.path}
               href={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${pathname === item.path ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
             >
@@ -36,7 +41,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           ))}
         </nav>
-        
+
         <div className="p-4 border-t border-white/10">
           <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-red-500/10 hover:text-red-400 transition">
             <LogOut size={20} />

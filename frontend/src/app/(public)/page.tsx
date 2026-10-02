@@ -1,7 +1,7 @@
-import HeroBanner from "@/modules/home/components/HeroBanner";
-import Features from "@/modules/home/components/Features";
-import ProductGrid from "@/modules/home/components/ProductGrid";
-import RecommendedProducts from "@/modules/home/components/RecommendedProducts";
+import HeroBanner from "@/modules/trang-chu/components/HeroBanner";
+import Features from "@/modules/trang-chu/components/Features";
+import ProductGrid from "@/modules/trang-chu/components/ProductGrid";
+import RecommendedProducts from "@/modules/trang-chu/components/RecommendedProducts";
 
 export default function Home() {
   return (

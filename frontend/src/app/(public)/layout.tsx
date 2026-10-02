@@ -1,6 +1,6 @@
 import React from "react";
-import Header from "@/modules/core/components/Header";
-import Footer from "@/modules/core/components/Footer";
+import Header from "@/modules/cot-loi/components/Header";
+import Footer from "@/modules/cot-loi/components/Footer";
 
 export default function PublicLayout({
   children,

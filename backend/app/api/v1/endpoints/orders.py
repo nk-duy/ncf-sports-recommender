@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException, Query
 from app.schemas.order import OrderCreate
 from beanie import PydanticObjectId
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 from app.services.order_service import order_service
+from app.api.deps import get_current_user_optional, get_current_active_user
+from app.models.user import User
+from fastapi import Depends
 
 router = APIRouter()
 
@@ -11,9 +14,13 @@ class OrderStatusUpdate(BaseModel):
     status: str
 
 @router.post("/", response_model=dict)
-async def create_order(order_data: OrderCreate):
+async def create_order(
+    order_data: OrderCreate, 
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
     try:
-        new_order = await order_service.create_order(order_data)
+        user_id = str(current_user.id) if current_user else None
+        new_order = await order_service.create_order(order_data, user_id=user_id)
         return {"status": "success", "order_id": str(new_order.id)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -24,6 +31,15 @@ async def get_orders(
     limit: int = Query(20, ge=1, le=100)
 ):
     orders = await order_service.get_orders(skip=skip, limit=limit)
+    return orders
+
+@router.get("/my-orders")
+async def get_my_orders(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(get_current_active_user)
+):
+    orders = await order_service.get_my_orders(user_id=str(current_user.id), skip=skip, limit=limit)
     return orders
 
 @router.get("/{order_id}")

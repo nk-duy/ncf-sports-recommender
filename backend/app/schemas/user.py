@@ -13,6 +13,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: str
     is_active: bool
+    role: str
     created_at: datetime
 
 class Token(BaseModel):

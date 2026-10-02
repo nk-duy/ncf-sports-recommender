@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import ProductCard from '@/modules/products/components/ProductCard';
+import ProductCard from '@/modules/san-pham/components/ProductCard';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
@@ -12,6 +12,8 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
   const searchParams = useSearchParams();
   const search = searchParams.get('search');
   const category = searchParams.get('category') || initialCategory;
+  const product_type = searchParams.get('product_type');
+  const sport_type = searchParams.get('sport_type');
   const brand = searchParams.get('brand');
   const minPrice = searchParams.get('min_price');
   const maxPrice = searchParams.get('max_price');
@@ -29,6 +31,8 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
         let url = 'http://localhost:8000/api/v1/products?limit=50';
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (category) url += `&category=${encodeURIComponent(category)}`;
+        if (product_type) url += `&product_type=${encodeURIComponent(product_type)}`;
+        if (sport_type) url += `&sport_type=${encodeURIComponent(sport_type)}`;
         if (brand) url += `&brand=${encodeURIComponent(brand)}`;
         if (minPrice) url += `&min_price=${encodeURIComponent(minPrice)}`;
         if (maxPrice) url += `&max_price=${encodeURIComponent(maxPrice)}`;
@@ -48,7 +52,7 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
       }
     };
     fetchProducts();
-  }, [search, category, brand, minPrice, maxPrice, sizes, colors, gender]);
+  }, [search, category, product_type, sport_type, brand, minPrice, maxPrice, sizes, colors, gender]);
 
   if (loading) {
     return (
@@ -77,13 +81,15 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
         <div className="text-sm text-gray-600">
           Hiển thị <span className="font-bold text-gray-900">{products.length}</span> sản phẩm
           {search && <span> cho từ khóa "<span className="font-bold text-blue-600">{search}</span>"</span>}
+          {sport_type && !search && <span> môn "<span className="font-bold text-blue-600">{sport_type}</span>"</span>}
+          {product_type && !search && <span> loại "<span className="font-bold text-blue-600">{product_type}</span>"</span>}
           {category && !search && <span> trong danh mục "<span className="font-bold text-blue-600">{category}</span>"</span>}
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
-        {products.map((product) => (
-          <ProductCard key={product.product_id} product={product} />
+        {products.map((product, idx) => (
+          <ProductCard key={`${product.product_id}-${idx}`} product={product} />
         ))}
       </div>
     </div>
