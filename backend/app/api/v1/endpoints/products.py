@@ -18,13 +18,14 @@ async def get_products(
     max_price: Optional[float] = Query(None, description="Giá cao nhất"),
     sizes: Optional[str] = Query(None, description="Kích thước, phân tách bằng dấu phẩy"),
     colors: Optional[str] = Query(None, description="Màu sắc, phân tách bằng dấu phẩy"),
-    gender: Optional[str] = Query(None, description="Giới tính (Nam, Nữ, Unisex)")
+    gender: Optional[str] = Query(None, description="Giới tính (Nam, Nữ, Unisex)"),
+    is_promotion: Optional[bool] = Query(None, description="Lọc sản phẩm đang giảm giá")
 ):
     """Lấy danh sách sản phẩm"""
     products = await product_service.get_products(
         skip=skip, limit=limit, category=category, product_type=product_type, sport_type=sport_type, search=search,
         brand=brand, min_price=min_price, max_price=max_price,
-        sizes=sizes, colors=colors, gender=gender
+        sizes=sizes, colors=colors, gender=gender, is_promotion=is_promotion
     )
     return products
 

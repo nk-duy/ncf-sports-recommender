@@ -43,7 +43,7 @@ async def seed_data():
             "price": float(item["price"]),
             "image_url": item["image_url"],
             "category": item.get("category", []),
-            "brand": item.get("brand", "PRO SPORTS"),
+            "brand": item.get("brand", "KADY"),
             "rating": item.get("rating", 4.5),
             "reviews_count": item.get("reviews_count", 0),
             "sizes": item.get("sizes", []),

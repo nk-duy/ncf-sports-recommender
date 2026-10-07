@@ -18,7 +18,8 @@ class OrderService:
 
         # Update voucher usage if applied
         if order_data.voucher_code:
-            voucher = await Voucher.find_one(Voucher.code == order_data.voucher_code)
+            code_upper = order_data.voucher_code.strip().upper()
+            voucher = await Voucher.find_one(Voucher.code == code_upper)
             if voucher:
                 voucher.used_count += 1
                 await voucher.save()

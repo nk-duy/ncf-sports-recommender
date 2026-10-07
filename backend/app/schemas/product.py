@@ -17,6 +17,7 @@ class ProductBase(BaseModel):
     gender: Optional[str] = "Unisex"
     stock: Optional[int] = 100
     description: Optional[str] = ""
+    discount_percent: Optional[int] = 0
 
 class ProductCreate(ProductBase):
     pass
@@ -36,6 +37,7 @@ class ProductUpdate(BaseModel):
     gender: Optional[str] = None
     stock: Optional[int] = None
     description: Optional[str] = None
+    discount_percent: Optional[int] = None
 
 class ProductResponse(ProductBase):
     pass

@@ -71,11 +71,13 @@ class RecommendationService:
         return recommended_products
 
     async def _get_fallback_recommendations(self, top_k: int) -> List[Product]:
-        # Logic dự phòng (fallback) nếu không có model hoặc cold start
-        products = await Product.find({"rating": {"$gte": 4.0}}).limit(top_k * 2).to_list()
-        import random
-        if products:
-            random.shuffle(products)
-        return products[:top_k]
+        try:
+            products = await Product.find(Product.rating >= 4.0).limit(top_k).to_list()
+            if not products:
+                products = await Product.find_all().limit(top_k).to_list()
+            return products
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=str(e))
 
 recommendation_service = RecommendationService()
