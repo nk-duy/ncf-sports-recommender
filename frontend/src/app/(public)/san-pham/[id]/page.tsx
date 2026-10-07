@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Breadcrumb from '@/shared/components/Breadcrumb';
 import SizeGuideModal from '@/shared/components/SizeGuideModal';
+import ProductCard from '@/modules/san-pham/components/ProductCard';
 
 interface ProductAPI {
   product_id: string;
@@ -41,6 +42,10 @@ export default function ProductDetailPage() {
   // State for Size Guide Modal
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
+  // Recommendations state
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(true);
+
   useEffect(() => {
     // 1. Fetch Product
     const fetchProduct = async () => {
@@ -56,7 +61,7 @@ export default function ProductDetailPage() {
             name: "Giày Thể Thao Cao Cấp",
             price: 1500000,
             image_url: "https://lh3.googleusercontent.com/aida/AEtjO1X0GYFJwVR-Lm_MCL3yDf1dmYd9PEaoWx9AghA9qB1ENT8OYO0Yx2RSywbyg9j9aQzNFRIoG5o3wrc_ldekxBqwycGtmzJcWcHf612b1T_7zCIwmeKlzsKOAq6zwmJ-CddWgSOIjALrSJoYIDRi313ayHwI5G46whKzfYJUHzflWEf6UYFQdS4yOacI0jWsjiihMFRDRpnMGquoazt52j4cMUPAkZC5h2Z4G8I5sbM9SLz13zjEqs8oqz8",
-            brand: "PRO SPORTS",
+            brand: "KADY",
             rating: 0,
             reviews_count: 0,
             category: ["Giày thể thao", "Chạy bộ"],
@@ -73,6 +78,49 @@ export default function ProductDetailPage() {
     
     fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    // 3. Fetch Recommendations
+    const fetchRecommendations = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const headers: any = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const res = await fetch(`http://localhost:8000/api/v1/recommendations/?top_k=4`, {
+          headers
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Process data to match ProductCard structure
+          const processedRecs = data.map((p: any) => {
+            const discountPercent = p.discount_percent || 0;
+            const originalPrice = discountPercent > 0 ? Math.round(p.price / (1 - discountPercent / 100)) : p.price;
+            return {
+              id: p.product_id,
+              name: p.name,
+              category: p.category && p.category.length > 0 ? p.category[0] : "THỂ THAO",
+              price: p.price,
+              originalPrice: discountPercent > 0 ? `${originalPrice.toLocaleString('vi-VN')}đ` : undefined,
+              rating: p.rating || 0,
+              reviewsCount: p.reviews_count || 0,
+              imageUrl: p.image_url,
+              discountLabel: discountPercent > 0 ? `-${discountPercent}%` : undefined,
+            };
+          });
+          setRecommendations(processedRecs);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingRecs(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, []);
 
   const trackInteraction = (type: string) => {
     if (!product) return;
@@ -172,7 +220,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <Breadcrumb items={breadcrumbItems} />
 
         <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-4">
@@ -191,7 +239,7 @@ export default function ProductDetailPage() {
             <div className="w-full md:w-1/2 p-8 lg:p-12 flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-2">
                 <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold uppercase rounded">
-                  {product.brand || "PRO SPORTS"}
+                  {product.brand || "KADY"}
                 </span>
                 <span className="text-sm text-gray-400">SKU: {product.product_id}</span>
               </div>
@@ -359,13 +407,35 @@ export default function ProductDetailPage() {
             ) : (
               <>
                 <p>
-                  <strong>{product.name}</strong> là sản phẩm chủ đạo trong bộ sưu tập mới nhất của <strong>{product.brand || "PRO SPORTS"}</strong>. 
+                  <strong>{product.name}</strong> là sản phẩm chủ đạo trong bộ sưu tập mới nhất của <strong>{product.brand || "KADY"}</strong>. 
                   Sản phẩm được thiết kế bằng chất liệu cao cấp, mang lại sự thoải mái tối đa và tối ưu hóa hiệu suất vận động cho người dùng.
                 </p>
                 <p className="mt-4">
                   Với thiết kế tinh tế và công nghệ hiện đại, sản phẩm này phù hợp cho cả tập luyện chuyên nghiệp lẫn sử dụng hàng ngày trong các hoạt động thể thao {product.category?.join(", ")}.
                 </p>
               </>
+            )}
+          </div>
+        </div>
+
+        {/* Phần Sản phẩm gợi ý (AI Recommendations) */}
+        <div className="mt-12 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            Gợi ý dành riêng cho bạn
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {loadingRecs ? (
+               Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-gray-100 rounded-xl h-80 animate-pulse"></div>
+              ))
+            ) : recommendations.length > 0 ? (
+              recommendations.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            ) : (
+              <p className="text-gray-500 col-span-full">Chưa có gợi ý nào vào lúc này.</p>
             )}
           </div>
         </div>

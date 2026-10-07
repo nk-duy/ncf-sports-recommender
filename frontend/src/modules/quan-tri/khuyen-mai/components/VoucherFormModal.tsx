@@ -64,7 +64,7 @@ export default function VoucherFormModal({ isOpen, onClose, onSuccess, editingVo
     try {
       const url = editingVoucher 
         ? `http://localhost:8000/api/v1/vouchers/${editingVoucher._id}`
-        : `http://localhost:8000/api/v1/vouchers/`;
+        : `http://localhost:8000/api/v1/vouchers`;
       const method = editingVoucher ? 'PUT' : 'POST';
 
       const res = await fetch(url, {

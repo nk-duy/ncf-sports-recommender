@@ -57,6 +57,16 @@ export default function PromotionsVoucher() {
     return Math.min(Math.round((used / limit) * 100), 100);
   };
 
+  const [copiedCodes, setCopiedCodes] = useState<Record<string, boolean>>({});
+
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCodes(prev => ({ ...prev, [code]: true }));
+    setTimeout(() => {
+      setCopiedCodes(prev => ({ ...prev, [code]: false }));
+    }, 2000);
+  };
+
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
@@ -125,8 +135,13 @@ export default function PromotionsVoucher() {
                       <span className="text-[10px] text-gray-400 font-medium">
                         {progress !== null ? `Đã dùng ${progress}%` : (voucher.valid_until ? `HSD: ${new Date(voucher.valid_until).toLocaleDateString('vi-VN')}` : 'Không thời hạn')}
                       </span>
-                      <button className={`px-4 py-1.5 rounded-full text-white text-xs font-bold transition-colors ${config.btnColor}`}>
-                        Lưu mã
+                      <button 
+                        onClick={() => handleCopy(voucher.code)}
+                        className={`px-4 py-1.5 rounded-full text-white text-xs font-bold transition-colors ${
+                          copiedCodes[voucher.code] ? 'bg-gray-500 hover:bg-gray-600 cursor-default' : config.btnColor
+                        }`}
+                      >
+                        {copiedCodes[voucher.code] ? 'Đã lưu' : 'Lưu mã'}
                       </button>
                     </div>
                   </div>

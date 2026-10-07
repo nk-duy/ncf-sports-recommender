@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "NCF Sports Recommender Backend"
+    PROJECT_NAME: str = "KADY Recommender Backend"
     API_V1_STR: str = "/api/v1"
     
     # MongoDB Config

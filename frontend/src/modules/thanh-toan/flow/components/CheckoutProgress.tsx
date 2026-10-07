@@ -5,7 +5,7 @@ import { Home, ChevronRight } from "lucide-react";
 export default function CheckoutProgress({ step = 1 }: { step?: number }) {
   return (
     <section className="w-full bg-white py-3 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm font-semibold text-gray-500">
           <Link href="/" className="hover:text-gray-900 transition-colors flex items-center gap-1">
@@ -13,7 +13,7 @@ export default function CheckoutProgress({ step = 1 }: { step?: number }) {
             Trang chủ
           </Link>
           <ChevronRight size={14} />
-          <span className="text-gray-900 font-bold">Giỏ hàng &amp; Thanh toán PRO SPORTS</span>
+          <span className="text-gray-900 font-bold">Giỏ hàng &amp; Thanh toán KADY</span>
         </nav>
         
         {/* Stepped Checkout Indicator */}

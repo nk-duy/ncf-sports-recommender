@@ -12,12 +12,12 @@ export default function Contact() {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 pt-8">
         <Breadcrumb items={breadcrumbItems} />
         
         <div className="text-center max-w-3xl mx-auto mt-12 mb-16">
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
-            Liên hệ với <span className="text-blue-600">PRO SPORTS</span>
+            Liên hệ với <span className="text-blue-600">KADY</span>
           </h1>
           <p className="text-lg text-gray-600">
             Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn. Vui lòng để lại thông tin hoặc liên hệ trực tiếp qua các kênh dưới đây.

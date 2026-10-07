@@ -8,6 +8,11 @@ import { useCheckoutStore } from "@/shared/store/checkoutStore";
 import { useAuthStore } from "@/shared/store/authStore";
 import { notifications } from "@mantine/notifications";
 
+import vnLocationsData from "@/shared/data/locations.json";
+
+// The imported JSON has the format: { province: string, wards: string[] }[]
+const vnLocations = vnLocationsData as { province: string, wards: string[] }[];
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotalPrice, clearCart } = useCartStore();
@@ -15,6 +20,13 @@ export default function CheckoutPage() {
   const { token, isAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [selectedWard, setSelectedWard] = useState('');
+  const [streetAddress, setStreetAddress] = useState('');
+  const [note, setNote] = useState('');
 
   const shippingOptions = [
     { id: 'vnexpress', name: 'VNExpress', price: 30000 },
@@ -35,7 +47,9 @@ export default function CheckoutPage() {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrderClick = () => {
+    setHasAttemptedSubmit(true);
+    
     if (items.length === 0) {
       notifications.show({
         title: 'Lỗi',
@@ -45,14 +59,24 @@ export default function CheckoutPage() {
       return;
     }
     
-    if (!customer_name.trim() || !customer_phone.trim() || !customer_address.trim()) {
+    if (!customer_name.trim() || !customer_phone.trim() || !selectedProvince || !selectedWard || !streetAddress.trim()) {
       notifications.show({
         title: 'Thiếu thông tin',
-        message: 'Vui lòng nhập đầy đủ địa chỉ nhận hàng!',
+        message: 'Vui lòng điền đầy đủ các trường thông tin bắt buộc bị tô đỏ!',
         color: 'red',
       });
       return;
     }
+
+    if (payment_method === 'COD') {
+      submitOrder();
+    } else {
+      setShowPaymentModal(true);
+    }
+  };
+
+  const submitOrder = async () => {
+    const fullAddress = `${streetAddress.trim()}, ${selectedWard}, ${selectedProvince}${note.trim() ? ` (Ghi chú: ${note.trim()})` : ''}`;
     
     setLoading(true);
     try {
@@ -65,7 +89,7 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           customer_name: customer_name.trim(),
           customer_phone: customer_phone.trim(),
-          customer_address: customer_address.trim(),
+          customer_address: fullAddress,
           payment_method: payment_method,
           items: items.map(i => ({
             product_id: i.product_id,
@@ -160,16 +184,16 @@ export default function CheckoutPage() {
     <div className="bg-[#f5f5f5] min-h-screen pb-16">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center gap-4">
+        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 h-20 flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-blue-700 font-bold text-2xl tracking-tighter">PRO SPORTS</span>
+            <span className="text-blue-700 font-bold text-2xl tracking-tighter">KADY</span>
             <span className="text-blue-700 text-xl">|</span>
             <span className="text-blue-700 text-xl font-medium">Thanh Toán</span>
           </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 mt-6">
         
         {/* Địa chỉ nhận hàng */}
         <div className="bg-white rounded-lg shadow-sm mb-4 relative overflow-hidden">
@@ -179,33 +203,84 @@ export default function CheckoutPage() {
               <MapPin size={20} />
               <span>Địa Chỉ Nhận Hàng</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              <div>
-                <input 
-                  type="text" 
-                  value={customer_name}
-                  onChange={(e) => setField('customer_name', e.target.value)}
-                  placeholder="Họ và tên"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
+            
+            <div className="space-y-4 mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-700 font-bold mb-1">Họ và tên <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    value={customer_name}
+                    onChange={(e) => setField('customer_name', e.target.value)}
+                    placeholder="Họ và tên người nhận"
+                    className={`w-full px-3 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-1 ${hasAttemptedSubmit && !customer_name.trim() ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 font-bold mb-1">Số điện thoại <span className="text-red-500">*</span></label>
+                  <input 
+                    type="text" 
+                    value={customer_phone}
+                    onChange={(e) => setField('customer_phone', e.target.value)}
+                    placeholder="Số điện thoại liên hệ"
+                    className={`w-full px-3 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-1 ${hasAttemptedSubmit && !customer_phone.trim() ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                  />
+                </div>
               </div>
-              <div>
-                <input 
-                  type="text" 
-                  value={customer_phone}
-                  onChange={(e) => setField('customer_phone', e.target.value)}
-                  placeholder="Số điện thoại"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-700 font-bold mb-1">Thành phố/tỉnh <span className="text-red-500">*</span></label>
+                  <select 
+                    value={selectedProvince}
+                    onChange={(e) => {
+                      setSelectedProvince(e.target.value);
+                      setSelectedWard('');
+                    }}
+                    className={`w-full px-3 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-1 ${hasAttemptedSubmit && !selectedProvince ? 'border-red-500 bg-red-50 text-red-700 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500'}`}
+                  >
+                    <option value="">Chọn</option>
+                    {vnLocations.map(loc => (
+                      <option key={loc.province} value={loc.province}>{loc.province}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 font-bold mb-1">Phường/xã <span className="text-red-500">*</span></label>
+                  <select 
+                    value={selectedWard}
+                    onChange={(e) => setSelectedWard(e.target.value)}
+                    disabled={!selectedProvince}
+                    className={`w-full px-3 py-2.5 border rounded-md text-sm focus:outline-none focus:ring-1 disabled:bg-gray-100 disabled:text-gray-400 ${hasAttemptedSubmit && !selectedWard ? 'border-red-500 bg-red-50 text-red-700 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 bg-white focus:border-blue-500 focus:ring-blue-500'}`}
+                  >
+                    <option value="">Phường/xã</option>
+                    {selectedProvince && vnLocations.find(l => l.province === selectedProvince)?.wards.map(w => (
+                      <option key={w} value={w}>{w}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
               <div>
-                <input 
-                  type="text" 
-                  value={customer_address}
-                  onChange={(e) => setField('customer_address', e.target.value)}
-                  placeholder="Địa chỉ cụ thể"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
+                <label className="block text-sm text-gray-700 font-bold mb-1">Địa chỉ <span className="text-red-500">*</span></label>
+                <textarea 
+                  value={streetAddress}
+                  onChange={(e) => setStreetAddress(e.target.value)}
+                  placeholder="Số nhà, tên đường, tòa nhà..."
+                  rows={3}
+                  className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 resize-none ${hasAttemptedSubmit && !streetAddress.trim() ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                ></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-700 font-bold mb-1">Ghi chú (Có thể bỏ trống)</label>
+                <textarea 
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Giao giờ hành chính, gọi trước khi giao..."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                ></textarea>
               </div>
             </div>
           </div>
@@ -282,7 +357,7 @@ export default function CheckoutPage() {
           <div className="border-t border-gray-100 bg-white px-6 py-4 flex items-center justify-end text-sm border-b border-dashed">
             <div className="flex items-center gap-3">
               <Ticket size={20} className="text-blue-600" />
-              <span className="font-medium text-gray-900 mr-2">Voucher PRO SPORTS:</span>
+              <span className="font-medium text-gray-900 mr-2">Voucher KADY:</span>
               <div className="flex">
                 <input 
                   type="text" 
@@ -311,7 +386,7 @@ export default function CheckoutPage() {
         <div className="bg-white rounded-lg shadow-sm mb-4">
           <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-8">
             <h3 className="text-lg text-gray-900 font-medium">Phương thức thanh toán</h3>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <button 
                 onClick={() => setField('payment_method', 'COD')}
                 className={`px-4 py-2 text-sm border rounded-md flex items-center gap-2 transition-colors ${payment_method === 'COD' ? 'border-blue-600 text-blue-600 bg-blue-50 font-medium' : 'border-gray-300 text-gray-700 hover:border-blue-400'}`}
@@ -323,6 +398,18 @@ export default function CheckoutPage() {
                 className={`px-4 py-2 text-sm border rounded-md flex items-center gap-2 transition-colors ${payment_method === 'VNPAY' ? 'border-blue-600 text-blue-600 bg-blue-50 font-medium' : 'border-gray-300 text-gray-700 hover:border-blue-400'}`}
               >
                 VNPAY / Thẻ Tín Dụng
+              </button>
+              <button 
+                onClick={() => setField('payment_method', 'MOMO')}
+                className={`px-4 py-2 text-sm border rounded-md flex items-center gap-2 transition-colors ${payment_method === 'MOMO' ? 'border-[#A50064] text-[#A50064] bg-pink-50 font-medium' : 'border-gray-300 text-gray-700 hover:border-[#A50064]'}`}
+              >
+                Ví MoMo
+              </button>
+              <button 
+                onClick={() => setField('payment_method', 'BANK_TRANSFER')}
+                className={`px-4 py-2 text-sm border rounded-md flex items-center gap-2 transition-colors ${payment_method === 'BANK_TRANSFER' ? 'border-blue-600 text-blue-600 bg-blue-50 font-medium' : 'border-gray-300 text-gray-700 hover:border-blue-400'}`}
+              >
+                Chuyển khoản Ngân hàng
               </button>
             </div>
           </div>
@@ -352,10 +439,10 @@ export default function CheckoutPage() {
           </div>
           <div className="border-t border-gray-100 p-6 flex justify-between items-center">
             <div className="text-xs text-gray-500">
-              Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo <span className="text-blue-600 cursor-pointer">Điều khoản PRO SPORTS</span>
+              Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo <span className="text-blue-600 cursor-pointer">Điều khoản KADY</span>
             </div>
             <button 
-              onClick={handlePlaceOrder}
+              onClick={handlePlaceOrderClick}
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-3.5 rounded-lg text-lg font-bold transition-all shadow-md min-w-[200px]"
             >
@@ -365,6 +452,45 @@ export default function CheckoutPage() {
         </div>
 
       </div>
+      
+      {/* QR Code Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md flex flex-col items-center animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Quét mã QR để thanh toán</h3>
+            <p className="text-gray-500 mb-6 text-center text-sm">
+              Sử dụng Ứng dụng {payment_method === 'MOMO' ? 'MoMo' : payment_method === 'VNPAY' ? 'Ngân hàng / VNPAY' : 'Ngân hàng'} để quét mã.
+            </p>
+            
+            <div className="w-64 h-64 bg-gray-100 rounded-xl mb-6 p-4 border-2 border-dashed border-gray-300 flex items-center justify-center relative overflow-hidden">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR" className="w-full h-full opacity-80" />
+               <div className="absolute inset-0 bg-blue-500/10 flex items-center justify-center">
+                  <div className="bg-white px-4 py-2 rounded-full font-bold text-blue-600 shadow-md">
+                    {formatPrice(finalTotal)}
+                  </div>
+               </div>
+            </div>
+
+            <div className="flex w-full gap-3">
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 transition"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  submitOrder();
+                }}
+                className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-sm"
+              >
+                Đã thanh toán
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

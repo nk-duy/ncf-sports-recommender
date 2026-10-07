@@ -67,7 +67,7 @@ export default function OrderSuccessHero({ order }: { order?: any }) {
       </h1>
       
       <p className="relative z-10 text-sm sm:text-base text-blue-100 max-w-lg mb-6 leading-relaxed">
-        Cảm ơn bạn đã tin tưởng PRO SPORTS. Đơn hàng của bạn đang được hệ thống phân loại tự động tại kho trung tâm.
+        Cảm ơn bạn đã tin tưởng KADY. Đơn hàng của bạn đang được hệ thống phân loại tự động tại kho trung tâm.
       </p>
 
       {/* Order ID Pill + Copy Micro-interaction */}

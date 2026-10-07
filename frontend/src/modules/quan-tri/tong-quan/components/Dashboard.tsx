@@ -54,7 +54,7 @@ export default function AdminDashboard() {
             <span className="font-mono text-[11px] text-gray-500">Cập nhật realtime</span>
           </div>
           <h1 className="text-3xl text-gray-900 font-bold tracking-tight">Tổng quan hệ thống</h1>
-          <p className="text-sm text-gray-600 mt-1">Theo dõi chỉ số bán hàng và hiệu suất thương mại điện tử PRO SPORTS</p>
+          <p className="text-sm text-gray-600 mt-1">Theo dõi chỉ số bán hàng và hiệu suất thương mại điện tử KADY</p>
         </div>
 
         {/* Quick Action Controls */}

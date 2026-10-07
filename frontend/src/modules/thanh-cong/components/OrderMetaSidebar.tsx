@@ -61,7 +61,7 @@ export default function OrderMetaSidebar() {
           Dịch vụ vận chuyển
         </h3>
         <div className="text-sm">
-          <p className="text-gray-600 mb-3">PRO SPORTS Express Logistics <span className="font-medium text-gray-900">(Tiêu chuẩn)</span></p>
+          <p className="text-gray-600 mb-3">KADY Express Logistics <span className="font-medium text-gray-900">(Tiêu chuẩn)</span></p>
           <div className="flex items-center justify-between bg-gray-50 px-3 py-2.5 rounded-lg border border-gray-100">
             <span className="text-gray-500">Mã vận đơn:</span>
             <span className="font-bold text-gray-900 font-mono tracking-widest">SPAI-VN-772918</span>

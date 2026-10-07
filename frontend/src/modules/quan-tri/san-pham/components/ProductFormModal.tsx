@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 
 interface ProductFormModalProps {
@@ -24,6 +24,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     sizes: [] as string[],
     colors: [] as string[],
     description: "",
+    images: [] as string[],
   });
 
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -31,7 +32,13 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
   const [availableSizes, setAvailableSizes] = useState<string[]>([]);
 
   useEffect(() => {
-    setAvailableCategories(JSON.parse(localStorage.getItem('admin_categories') || '["Giày Chạy Bộ (Running)", "Sneaker Thể Thao / Lifestyle", "Quần Áo Thể Thao", "Phụ kiện"]'));
+    let loadedCategories = JSON.parse(localStorage.getItem('admin_categories') || 'null');
+    const defaultCategories = ["Bóng đá", "Cầu lông", "Bóng chuyền", "Chạy bộ", "Pickleball", "Dã ngoại", "Gym / Yoga", "Quần áo", "Giày dép", "Thiết bị", "Phụ kiện"];
+    if (!loadedCategories || loadedCategories.includes("Giày Chạy Bộ (Running)")) {
+      loadedCategories = defaultCategories;
+      localStorage.setItem('admin_categories', JSON.stringify(defaultCategories));
+    }
+    setAvailableCategories(loadedCategories);
     setAvailableColors(JSON.parse(localStorage.getItem('admin_colors') || '["Đen", "Trắng", "Đỏ", "Xanh Dương", "Xám", "Vàng"]'));
     
     const shoes = JSON.parse(localStorage.getItem('admin_shoe_sizes') || '["36", "37", "38", "39", "40", "41", "42", "43", "44"]');
@@ -56,6 +63,9 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
         sizes: Array.isArray(editingProduct.sizes) ? editingProduct.sizes : (editingProduct.sizes ? [editingProduct.sizes] : []),
         colors: Array.isArray(editingProduct.colors) ? editingProduct.colors : (editingProduct.colors ? [editingProduct.colors] : []),
         description: editingProduct.description || "",
+        images: Array.isArray(editingProduct.images) && editingProduct.images.length > 0 
+          ? editingProduct.images 
+          : (editingProduct.image_url ? [editingProduct.image_url] : []),
       });
     } else {
       setFormData({
@@ -72,6 +82,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
         sizes: [],
         colors: [],
         description: "",
+        images: [],
       });
     }
   }, [editingProduct, isOpen]);
@@ -96,6 +107,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
       sizes: formData.sizes,
       colors: formData.colors,
       description: formData.description,
+      images: formData.images,
     };
 
     try {
@@ -137,8 +149,8 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
         </button>
       </div>
       
-      <div className="p-8 overflow-y-auto">
-        <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-4xl">
+      <div className="p-8 overflow-y-auto w-full">
+        <form id="product-form" onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mã Sản phẩm (Tùy chọn - Tự động sinh nếu để trống)</label>
               <input type="text" disabled={!!editingProduct} value={formData.product_id} onChange={e => setFormData({...formData, product_id: e.target.value})} className="w-full px-3 py-2 border rounded-md disabled:bg-gray-100" placeholder="Hệ thống tự tạo mã nếu để trống" />
@@ -165,56 +177,94 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Đánh giá (Sao: 0-5)</label>
-                <input required type="number" step="0.1" min="0" max="5" value={formData.rating} onChange={e => setFormData({...formData, rating: Number(e.target.value)})} className="w-full px-3 py-2 border rounded-md" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng lượt đánh giá</label>
-                <input required type="number" value={formData.reviews_count} onChange={e => setFormData({...formData, reviews_count: Number(e.target.value)})} className="w-full px-3 py-2 border rounded-md" />
-              </div>
-            </div>
+
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh (Nhập URL hoặc Tải lên từ máy tính)</label>
-              <div className="flex gap-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Hình ảnh</label>
+              
+              <div className="flex flex-wrap gap-4 items-start">
+                {formData.images.map((imgUrl, index) => (
+                  <div key={index} className="relative group w-24 h-24 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex-shrink-0">
+                    <img src={imgUrl} alt={`Product ${index}`} className="w-full h-full object-contain" />
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        const newImages = formData.images.filter((_, i) => i !== index);
+                        setFormData({...formData, images: newImages, image_url: newImages.length > 0 ? newImages[0] : ''});
+                      }} 
+                      className="absolute top-1 right-1 bg-white/90 p-1.5 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 shadow-sm"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+                
+                <label className="w-24 h-24 flex-shrink-0 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-gray-400 transition-colors text-gray-400 hover:text-gray-500">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple
+                    className="hidden" 
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (!files) return;
+                      let updatedImages = [...formData.images];
+                      
+                      const processFile = (index: number) => {
+                        if (index >= files.length) {
+                           setFormData({...formData, images: updatedImages, image_url: updatedImages.length > 0 ? updatedImages[0] : formData.image_url});
+                           return;
+                        }
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          updatedImages.push(reader.result as string);
+                          processFile(index + 1);
+                        };
+                        reader.readAsDataURL(files[index]);
+                      };
+                      
+                      processFile(0);
+                    }} 
+                  />
+                  <Plus size={24} />
+                  <span className="text-[10px] mt-1 font-medium">Thêm ảnh</span>
+                </label>
+              </div>
+              
+              <div className="mt-4 flex gap-2">
                 <input 
                   type="url" 
-                  value={formData.image_url.startsWith('data:') ? '' : formData.image_url} 
-                  onChange={e => setFormData({...formData, image_url: e.target.value})} 
-                  className="flex-1 px-3 py-2 border rounded-md disabled:bg-gray-100" 
-                  placeholder={formData.image_url.startsWith('data:') ? 'Đã tải ảnh lên từ máy tính' : 'https://...'} 
-                  disabled={formData.image_url.startsWith('data:')} 
-                />
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  id="image-upload" 
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setFormData({...formData, image_url: reader.result as string});
-                      };
-                      reader.readAsDataURL(file);
+                  id="url-input"
+                  className="flex-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                  placeholder="Hoặc dán URL hình ảnh vào đây..." 
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = e.currentTarget.value.trim();
+                      if (val) {
+                        const newImages = [...formData.images, val];
+                        setFormData({...formData, images: newImages, image_url: newImages[0]});
+                        e.currentTarget.value = '';
+                      }
                     }
-                  }} 
+                  }}
                 />
-                <label htmlFor="image-upload" className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-700 whitespace-nowrap">
-                  Tải ảnh lên
-                </label>
-                {formData.image_url.startsWith('data:') && (
-                  <button type="button" onClick={() => setFormData({...formData, image_url: ''})} className="px-3 py-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 text-sm font-medium">Xóa ảnh</button>
-                )}
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    const input = document.getElementById('url-input') as HTMLInputElement;
+                    const val = input?.value.trim();
+                    if (val) {
+                      const newImages = [...formData.images, val];
+                      setFormData({...formData, images: newImages, image_url: newImages[0]});
+                      input.value = '';
+                    }
+                  }}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md text-sm font-medium transition-colors whitespace-nowrap"
+                >
+                  Thêm URL
+                </button>
               </div>
-              {formData.image_url && (
-                 <div className="mt-3">
-                   <img src={formData.image_url} alt="Preview" className="h-24 w-auto rounded-md object-contain border border-gray-200 shadow-sm" />
-                 </div>
-              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">

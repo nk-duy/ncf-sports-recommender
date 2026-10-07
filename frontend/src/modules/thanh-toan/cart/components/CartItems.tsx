@@ -22,7 +22,7 @@ export default function CartItems({ readonly = false }: { readonly?: boolean }) 
     <section className="bg-white p-5 sm:p-7 rounded-lg shadow-sm border border-gray-100">
       <div className="flex items-center justify-between pb-4 mb-4 border-b border-gray-100">
         <div className="flex items-baseline gap-2">
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">{readonly ? 'Sản phẩm đã chọn' : 'Giỏ hàng PRO SPORTS'}</h1>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">{readonly ? 'Sản phẩm đã chọn' : 'Giỏ hàng KADY'}</h1>
           <span className="font-mono text-sm text-gray-500">({getTotalItems()} sản phẩm)</span>
         </div>
         {getTotalItems() > 0 && (
@@ -51,7 +51,7 @@ export default function CartItems({ readonly = false }: { readonly?: boolean }) 
                   </div>
                   <div className="flex flex-col gap-0.5 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-900 font-mono text-[10px] tracking-wider uppercase font-bold">PRO SPORTS</span>
+                      <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-900 font-mono text-[10px] tracking-wider uppercase font-bold">KADY</span>
                       <span className="text-xs font-semibold text-green-700">Còn hàng</span>
                     </div>
                     <h2 className="text-sm font-bold text-gray-900 truncate">

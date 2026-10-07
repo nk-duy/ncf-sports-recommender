@@ -7,6 +7,7 @@ class Product(Document):
     name: str = Field(..., description="Tên sản phẩm")
     price: float = Field(0.0, description="Giá sản phẩm")
     image_url: str = Field(..., description="Đường dẫn ảnh")
+    images: Optional[List[str]] = Field(default=[], description="Các ảnh bổ sung")
     product_type: Optional[str] = Field(default=None, description="Loại sản phẩm (Quần áo, Giày dép, Phụ kiện, Thiết bị)")
     sport_type: Optional[str] = Field(default=None, description="Môn thể thao (Bóng chuyền, Cầu lông, Đá bóng, Chạy bộ, Pickleball, Dã ngoại)")
     category: Optional[List[str]] = Field(default=[], description="Danh mục tổng hợp")
@@ -18,6 +19,7 @@ class Product(Document):
     gender: Optional[str] = Field(default="Unisex", description="Giới tính (Nam, Nữ, Unisex)")
     stock: Optional[int] = Field(default=100, description="Số lượng tồn kho")
     description: Optional[str] = Field(default="", description="Mô tả chi tiết sản phẩm")
+    discount_percent: Optional[int] = Field(default=0, description="Phần trăm giảm giá (nếu có)")
 
     class Settings:
         name = "products" # Tên collection trong MongoDB

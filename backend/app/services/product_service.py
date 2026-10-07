@@ -16,7 +16,8 @@ class ProductService:
         max_price: Optional[float] = None,
         sizes: Optional[str] = None,
         colors: Optional[str] = None,
-        gender: Optional[str] = None
+        gender: Optional[str] = None,
+        is_promotion: Optional[bool] = None
     ) -> List[Product]:
         query: Dict[str, Any] = {}
         
@@ -53,6 +54,9 @@ class ProductService:
             
         if gender:
             query["gender"] = gender
+            
+        if is_promotion:
+            query["discount_percent"] = {"$gt": 0}
 
         products = await Product.find(query).skip(skip).limit(limit).to_list()
         return products

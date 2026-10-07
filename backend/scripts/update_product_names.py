@@ -56,7 +56,7 @@ async def update_names():
             base_name = random.choice(NAMES["clothing"] + NAMES["shoes"])
             
         adj = random.choice(ADJECTIVES)
-        brand = product.brand if product.brand and product.brand.upper() != "UNKNOWN" else "PRO SPORTS"
+        brand = product.brand if product.brand and product.brand.upper() != "UNKNOWN" else "KADY"
         
         # Format: [Brand] [Base Name] [Adjective]
         new_name = f"{brand} {base_name} {adj}"

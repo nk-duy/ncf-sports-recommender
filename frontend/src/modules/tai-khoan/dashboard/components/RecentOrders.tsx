@@ -41,13 +41,12 @@ export default function RecentOrders() {
   };
 
   const getStatusInfo = (status: string) => {
-    switch(status) {
-      case 'pending': return { text: 'Chờ xử lý', bg: 'bg-orange-50', textCol: 'text-orange-700', border: 'border-orange-100', dot: 'bg-orange-500' };
-      case 'processing': return { text: 'Đang chuẩn bị', bg: 'bg-blue-50', textCol: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-500' };
-      case 'shipping': return { text: 'Đang giao', bg: 'bg-blue-50', textCol: 'text-blue-700', border: 'border-blue-100', dot: 'bg-blue-500' };
-      case 'completed': return { text: 'Đã giao', bg: 'bg-green-50', textCol: 'text-green-700', border: 'border-green-100', dot: 'bg-green-500' };
-      case 'cancelled': return { text: 'Đã hủy', bg: 'bg-red-50', textCol: 'text-red-700', border: 'border-red-100', dot: 'bg-red-500' };
-      default: return { text: status, bg: 'bg-gray-50', textCol: 'text-gray-700', border: 'border-gray-100', dot: 'bg-gray-500' };
+    switch(status?.toLowerCase()) {
+      case 'pending': return { text: 'Chờ duyệt', bg: 'bg-amber-50', textCol: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' };
+      case 'confirmed': return { text: 'Đã xác nhận', bg: 'bg-blue-50', textCol: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' };
+      case 'delivered': return { text: 'Đã giao', bg: 'bg-green-50', textCol: 'text-green-700', border: 'border-green-200', dot: 'bg-green-500' };
+      case 'rejected': return { text: 'Từ chối', bg: 'bg-red-50', textCol: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500' };
+      default: return { text: 'Đang xử lý', bg: 'bg-gray-50', textCol: 'text-gray-700', border: 'border-gray-100', dot: 'bg-gray-500' };
     }
   };
 
@@ -65,7 +64,7 @@ export default function RecentOrders() {
         </div>
         <Link 
           href="/tai-khoan/orders" 
-          className="mt-4 md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors"
+          className="mt-4 md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
         >
           Xem toàn bộ đơn hàng <ChevronRight size={16} className="ml-1" />
         </Link>
@@ -140,7 +139,7 @@ export default function RecentOrders() {
                     </div>
                   </Table.Td>
                   <Table.Td className="pr-6 py-4 text-right">
-                    <button className="px-4 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-md hover:bg-gray-800 transition-colors">
+                    <button className="px-4 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm">
                       Chi tiết
                     </button>
                   </Table.Td>

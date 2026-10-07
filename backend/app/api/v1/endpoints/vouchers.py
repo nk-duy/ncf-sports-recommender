@@ -6,7 +6,7 @@ from app.schemas.voucher import VoucherCreate, VoucherUpdate, VoucherResponse
 
 router = APIRouter()
 
-@router.get("/", response_model=List[VoucherResponse])
+@router.get("")
 async def get_vouchers():
     """Lấy danh sách tất cả các voucher"""
     vouchers = await Voucher.find_all().to_list()
@@ -15,7 +15,7 @@ async def get_vouchers():
     # We defined id: str = Field(alias="_id") in response schema, let's just return documents
     return vouchers
 
-@router.post("/", response_model=VoucherResponse)
+@router.post("")
 async def create_voucher(voucher_in: VoucherCreate):
     """Tạo voucher mới"""
     existing_voucher = await Voucher.find_one(Voucher.code == voucher_in.code.upper())
@@ -36,7 +36,7 @@ async def create_voucher(voucher_in: VoucherCreate):
     await voucher.insert()
     return voucher
 
-@router.get("/{voucher_id}", response_model=VoucherResponse)
+@router.get("/{voucher_id}")
 async def get_voucher(voucher_id: PydanticObjectId):
     """Lấy chi tiết một voucher"""
     voucher = await Voucher.get(voucher_id)
@@ -44,7 +44,7 @@ async def get_voucher(voucher_id: PydanticObjectId):
         raise HTTPException(status_code=404, detail="Không tìm thấy voucher.")
     return voucher
 
-@router.put("/{voucher_id}", response_model=VoucherResponse)
+@router.put("/{voucher_id}")
 async def update_voucher(voucher_id: PydanticObjectId, voucher_in: VoucherUpdate):
     """Cập nhật voucher"""
     voucher = await Voucher.get(voucher_id)
@@ -74,7 +74,7 @@ async def delete_voucher(voucher_id: PydanticObjectId):
     await voucher.delete()
     return {"message": "Đã xóa voucher thành công."}
 
-@router.get("/code/{code}", response_model=VoucherResponse)
+@router.get("/code/{code}")
 async def get_voucher_by_code(code: str):
     """Lấy thông tin voucher bằng mã code (dùng lúc apply ở Frontend)"""
     voucher = await Voucher.find_one(Voucher.code == code.upper())

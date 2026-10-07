@@ -13,7 +13,7 @@ import Footer from "@/modules/cot-loi/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PRO SPORTS - Đồ án Tốt nghiệp",
+  title: "KADY - Đồ án Tốt nghiệp",
   description: "Hệ thống gợi ý sản phẩm thể thao",
 };
 
@@ -21,9 +21,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
+    <html lang="vi" suppressHydrationWarning>
       <body
         className={`${inter.className} min-h-screen flex flex-col antialiased bg-[#F5F7FA] text-[#1A202C]`}
+        suppressHydrationWarning
       >
         <MantineProvider>
           <Notifications position="top-right" zIndex={1000} />

@@ -78,7 +78,7 @@ export default function AiCrossSell() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <BrainCircuit className="text-blue-600" size={24} />
-          <h2 className="text-lg font-bold text-gray-900 tracking-tight">Gợi ý mua kèm tối ưu từ AI PRO SPORTS</h2>
+          <h2 className="text-lg font-bold text-gray-900 tracking-tight">Gợi ý mua kèm tối ưu từ AI KADY</h2>
         </div>
         <span className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-mono text-xs font-bold flex items-center gap-1.5 border border-blue-100">
           <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block animate-pulse"></span>

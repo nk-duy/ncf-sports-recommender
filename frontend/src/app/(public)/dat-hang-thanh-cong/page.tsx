@@ -9,7 +9,7 @@ export default function SuccessPage() {
   return (
     <div className="bg-[#f8f9fa] min-h-screen pb-16">
       {/* Container chung */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 pt-4">
         
         {/* Top Progress Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-4 border-b border-gray-200">

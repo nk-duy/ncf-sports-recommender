@@ -65,6 +65,11 @@ export default function ProductCard({ product, isPromo = false }: { product: Pro
             <span className={styles.price}>
               {displayPrice}
             </span>
+            {product.originalPrice && (
+              <span className={styles.originalPrice}>
+                {product.originalPrice}
+              </span>
+            )}
           </div>
         </div>
       </div>

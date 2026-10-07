@@ -10,7 +10,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 w-full">
+    <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 px-4 py-8 w-full">
       <Breadcrumb items={breadcrumbItems} />
       <div className="flex flex-col md:flex-row gap-6 mt-4">
         <aside className="w-full md:w-72 flex-shrink-0">

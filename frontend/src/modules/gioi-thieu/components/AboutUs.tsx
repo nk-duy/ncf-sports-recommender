@@ -14,11 +14,11 @@ export default function AboutUs() {
     <div className="bg-white min-h-screen pb-20">
       {/* Hero Section */}
       <div className="bg-gray-50 py-12 border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <Breadcrumb items={breadcrumbItems} />
           <div className="mt-8 text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
-              Câu chuyện của <span className="text-blue-600">PRO SPORTS</span>
+              Câu chuyện của <span className="text-blue-600">KADY</span>
             </h1>
             <p className="text-lg text-gray-600 leading-relaxed">
               Chúng tôi tin rằng thể thao không chỉ là rèn luyện sức khỏe, mà còn là phong cách sống, là niềm đam mê bất tận. Sứ mệnh của chúng tôi là mang đến những sản phẩm thể thao chất lượng cao nhất.
@@ -28,7 +28,7 @@ export default function AboutUs() {
       </div>
 
       {/* Stats Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { label: 'Khách hàng', value: '100K+' },
@@ -45,7 +45,7 @@ export default function AboutUs() {
       </div>
 
       {/* Core Values */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900">Giá Trị Cốt Lõi</h2>
           <p className="mt-4 text-gray-500 max-w-2xl mx-auto">Những nguyên tắc định hướng cho mọi hoạt động và quyết định của chúng tôi.</p>

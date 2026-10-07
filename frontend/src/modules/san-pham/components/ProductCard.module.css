@@ -1,34 +1,29 @@
 .card {
-  background: #f9fafb; /* bg-gray-50 */
-  border: 1px solid #f3f4f6; /* border-gray-100 */
+  background: #ffffff;
+  border: 1px solid #f3f4f6; /* light border */
   border-radius: 0.5rem; /* rounded-lg */
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 1rem; /* p-4 */
+  padding: 0; /* Beyono cards usually have image touching edges or uniform padding, let's keep it 0 and add padding to content */
   transition: all 0.3s ease;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   cursor: pointer;
   height: 100%;
 }
 
 .card:hover {
-  background: rgba(243, 244, 246, 0.5); /* hover:bg-gray-100/50 */
-  border-color: #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .imageWrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: #ffffff;
-  border-radius: 0.375rem; /* rounded-md */
+  background: #f8f9fa; /* Light grey bg for image like Beyono */
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.75rem; /* mb-3 */
-  border: 1px solid #f3f4f6; /* border-gray-100 */
 }
 
 .image {
@@ -46,34 +41,33 @@
 
 .badgePrimary {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(4px);
-  color: #111827;
-  font-size: 0.625rem; /* text-[10px] */
+  top: 0;
+  right: 0;
+  background: #dc2626; /* Red for sale */
+  color: #ffffff;
+  font-size: 0.75rem; /* text-xs */
   font-weight: 700;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-bottom-left-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  z-index: 10;
 }
 
 .content {
   display: flex;
   flex-direction: column;
   flex: 1;
+  padding: 1rem;
 }
 
 .category {
-  font-size: 0.625rem; /* text-[10px] */
-  font-weight: 700;
-  color: #2563eb; /* text-blue-600 */
-  background: #eff6ff; /* bg-blue-50 */
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 600;
+  color: #6b7280; /* text-gray-500 */
   display: inline-block;
-  padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
   text-transform: uppercase;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   align-self: flex-start;
   max-width: 100%;
   white-space: nowrap;
@@ -82,21 +76,21 @@
 }
 
 .title {
-  font-size: 0.875rem; /* text-sm */
-  font-weight: 600; /* font-semibold */
-  color: #111827; /* text-gray-900 */
-  line-height: 1.25rem;
-  margin-bottom: 0.5rem; /* mb-2 */
+  font-size: 0.9375rem; /* 15px */
+  font-weight: 700; /* Bold like Beyono */
+  color: #1f2937; /* Dark gray/black */
+  line-height: 1.4;
+  margin-bottom: 0.75rem; /* mb-3 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   transition: color 0.2s ease;
-  height: 2.5rem; /* Fixed height for 2 lines */
+  min-height: 2.625rem;
 }
 
 .card:hover .title {
-  color: #2563eb; /* text-blue-600 */
+  color: #dc2626; /* text-red-600 on hover */
 }
 
 .footer {
@@ -108,16 +102,23 @@
 
 .priceWrapper {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
 .price {
-  font-size: 1rem; /* text-base instead of text-sm */
+  font-size: 1.125rem; /* 18px */
   font-weight: 800; /* Extra bold */
-  color: #111827; /* text-gray-900 */
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: #dc2626; /* Red color */
+}
+
+.originalPrice {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  color: #9ca3af; /* text-gray-400 */
+  text-decoration: line-through;
 }
 
 .addToCartBtn {

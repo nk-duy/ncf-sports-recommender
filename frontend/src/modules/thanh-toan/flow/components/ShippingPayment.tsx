@@ -16,7 +16,7 @@ export default function ShippingPayment() {
     <section className="bg-white p-5 sm:p-7 rounded-lg shadow-sm border border-gray-100 space-y-6 mt-6">
       <div className="flex items-center justify-between pb-2">
         <h2 className="text-lg font-bold text-gray-900 tracking-tight">Thông tin nhận hàng &amp; Giao vận</h2>
-        <span className="text-xs font-semibold text-gray-400">PRO SPORTS Fast Checkout</span>
+        <span className="text-xs font-semibold text-gray-400">KADY Fast Checkout</span>
       </div>
 
       {/* Delivery Address Form */}
@@ -64,7 +64,7 @@ export default function ShippingPayment() {
             <input defaultChecked className="mt-1 w-4 h-4 accent-gray-900 cursor-pointer" name="shipping-method" type="radio"/>
             <div className="flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-900">Tiêu chuẩn PRO SPORTS</span>
+                <span className="text-sm font-bold text-gray-900">Tiêu chuẩn KADY</span>
                 <span className="font-mono text-sm font-bold text-green-700">0 đ</span>
               </div>
               <p className="text-xs text-gray-500 mt-1">Dự kiến nhận hàng trong 2-3 ngày</p>
@@ -98,7 +98,7 @@ export default function ShippingPayment() {
                 onChange={() => setField('payment_method', 'VNPAY')}
                 className="w-4 h-4 accent-gray-900 cursor-pointer" name="payment-method" type="radio"/>
               <div>
-                <span className="text-sm font-bold text-gray-900">VNPAY-QR PRO SPORTS</span>
+                <span className="text-sm font-bold text-gray-900">VNPAY-QR KADY</span>
                 <span className="block text-xs font-semibold text-blue-600 mt-0.5">Giảm thêm 20.000 đ</span>
               </div>
             </div>

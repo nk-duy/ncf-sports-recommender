@@ -16,7 +16,7 @@ from app.models.user import User
 from app.core.config import settings
 
 def is_blacklisted(text: str):
-    blacklist = ['helmet', 'american football', 'nfl', 'pump', 'mouth guard', 'baseball', 'basketball', 'golf', 'hockey', 'softball', 'mouthguard', 'cleats']
+    blacklist = ['helmet', 'american football', 'nfl', 'pump', 'mouth guard', 'baseball', 'basketball', 'golf', 'hockey', 'softball', 'mouthguard', 'cleats', 'book', 'manual', 'guide', 'dvd', 'cd', 'video', 'chart', 'poster', 'map', 'bra']
     return any(b in text for b in blacklist)
 
 def get_sport_and_type(title_lower: str, cat_str: str):
@@ -118,7 +118,7 @@ NAMES_MAP = {
 }
 
 def localize_product(product_type, sport_type, default_name):
-    brands = BRAND_MAP.get(sport_type, ['PRO SPORTS'])
+    brands = BRAND_MAP.get(sport_type, ['KADY'])
     brand = random.choice(brands)
     
     adjectives = ['Cao Cấp', 'Chính Hãng', 'Siêu Bền', 'Nhập Khẩu', 'Thế Hệ Mới', 'PRO', 'Elite']
@@ -152,7 +152,7 @@ async def seed_curated_data():
         'Dã ngoại': 0,
         'Đa dụng': 0
     }
-    TARGET_PER_SPORT = 30 # 7 * 30 = 210 products total
+    TARGET_PER_SPORT = 60 # 7 * 60 = 420 products total
     
     batch = []
     
