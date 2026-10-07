@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './Login.module.css';
 import { useAuthStore } from '@/shared/store/authStore';
+import { notifications } from '@mantine/notifications';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,7 +50,12 @@ export default function LoginPage() {
           if (userRes.ok) {
             const user = await userRes.json();
             useAuthStore.getState().login(data.access_token, user);
-            router.push('/');
+            
+            if (user.role === 'admin') {
+              router.push('/admin');
+            } else {
+              router.push('/');
+            }
           }
         } else {
           const errData = await res.json();
@@ -77,7 +83,12 @@ export default function LoginPage() {
 
         if (res.ok) {
           setIsLogin(true);
-          setError('Đăng ký thành công! Hãy đăng nhập.');
+          setError('');
+          notifications.show({
+            title: 'Thành công',
+            message: 'Đăng ký thành công! Hãy đăng nhập.',
+            color: 'green',
+          });
         } else {
           const errData = await res.json();
           setError(errData.detail || 'Registration failed');
@@ -95,7 +106,7 @@ export default function LoginPage() {
         
         {error && <div className={styles.error}>{error}</div>}
 
-        <form onSubmit={handleSubmit} className={styles.form}>
+        <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
           <div className={styles.inputGroup}>
             <label>Tên đăng nhập</label>
             <input 
@@ -103,6 +114,8 @@ export default function LoginPage() {
               name="username" 
               value={formData.username} 
               onChange={handleChange} 
+              placeholder="Nhập tên đăng nhập"
+              autoComplete="off"
               required 
             />
           </div>
@@ -116,6 +129,8 @@ export default function LoginPage() {
                   name="email" 
                   value={formData.email} 
                   onChange={handleChange} 
+                  placeholder="Nhập địa chỉ email"
+                  autoComplete="off"
                   required 
                 />
               </div>
@@ -126,6 +141,8 @@ export default function LoginPage() {
                   name="full_name" 
                   value={formData.full_name} 
                   onChange={handleChange} 
+                  placeholder="Nhập họ và tên của bạn"
+                  autoComplete="off"
                 />
               </div>
             </>
@@ -138,6 +155,8 @@ export default function LoginPage() {
               name="password" 
               value={formData.password} 
               onChange={handleChange} 
+              placeholder="Nhập mật khẩu"
+              autoComplete="new-password"
               required 
             />
           </div>
@@ -150,6 +169,7 @@ export default function LoginPage() {
                 name="confirmPassword" 
                 value={formData.confirmPassword} 
                 onChange={handleChange} 
+                placeholder="Nhập lại mật khẩu"
                 required 
               />
             </div>

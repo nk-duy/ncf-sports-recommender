@@ -16,20 +16,28 @@ export default function PromotionsPage() {
   return (
     <div className="bg-gray-50 min-h-screen pb-10">
       {/* Container chung */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 pt-4">
         <Breadcrumb items={breadcrumbItems} />
         
         <PromotionsBanner />
         <PromotionsVoucher />
         <PromotionsTimeline />
-        <PromotionsFilter />
-        <PromotionsList />
+        
+        <div className="flex flex-col lg:flex-row gap-8 mt-10">
+          <div className="w-full lg:w-1/4 xl:w-1/5 shrink-0">
+            <PromotionsFilter />
+          </div>
+          <div className="w-full lg:w-3/4 xl:w-4/5">
+            <PromotionsList />
+          </div>
+        </div>
+        
         <PromotionsCombo />
       </div>
       
       {/* Features ở cuối trang */}
       <div className="bg-white py-10 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <Features />
         </div>
       </div>

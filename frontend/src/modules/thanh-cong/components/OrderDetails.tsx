@@ -6,7 +6,7 @@ export default function OrderDetails() {
       variant: "Màu: Xanh/Trắng • Size: 42 EU • SL: 1",
       price: 2450000,
       image: "https://www.gstop.vn/wp-content/uploads/2021/04/giay-nike-revolution-5-do-den-bq3204-600-2.jpg",
-      tag: "Chính hãng PRO SPORTS Pro"
+      tag: "Chính hãng KADY Pro"
     },
     {
       id: 2,
@@ -94,7 +94,7 @@ export default function OrderDetails() {
           <span className="font-bold text-gray-900">0 đ</span>
         </div>
         <div className="flex items-center justify-between text-red-500">
-          <span className="font-medium">Đặc quyền hội viên PRO SPORTS VIP (Gold - 5%)</span>
+          <span className="font-medium">Đặc quyền hội viên KADY VIP (Gold - 5%)</span>
           <span className="font-bold">-180.000 đ</span>
         </div>
         <div className="flex items-center justify-between text-red-500">

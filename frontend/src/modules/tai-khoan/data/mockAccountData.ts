@@ -30,7 +30,7 @@ export const mockRecentOrders = [
     summary: "Áo Thun Chạy Bộ",
     details: "Size M, Màu Đen",
     total: 350000,
-    status: "Đang giao",
+    status: "Đã xác nhận",
     statusColor: "blue",
     action: "Theo dõi"
   },

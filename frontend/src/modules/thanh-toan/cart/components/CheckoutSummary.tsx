@@ -94,7 +94,7 @@ export default function CheckoutSummary() {
     <div className="bg-white p-5 sm:p-7 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-5">
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 tracking-tight">Tóm tắt đơn hàng</h2>
-        <span className="font-mono text-xs font-semibold text-gray-400">PRO SPORTS #8942</span>
+        <span className="font-mono text-xs font-semibold text-gray-400">KADY #8942</span>
       </div>
 
       {/* Voucher Input */}
@@ -166,7 +166,7 @@ export default function CheckoutSummary() {
           )}
         </button>
         <div className="text-center text-xs font-medium text-gray-400 mt-3">
-          Nhấn "Đặt hàng" đồng nghĩa chấp thuận Điều khoản dịch vụ PRO SPORTS
+          Nhấn "Đặt hàng" đồng nghĩa chấp thuận Điều khoản dịch vụ KADY
         </div>
       </div>
     </div>

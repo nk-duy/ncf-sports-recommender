@@ -25,7 +25,7 @@ export default async function ProductsPage({
 
   return (
     <div className="bg-gray-50 min-h-screen pb-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <Breadcrumb items={breadcrumbItems} />
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="w-full lg:w-[280px] flex-shrink-0">
@@ -37,7 +37,7 @@ export default async function ProductsPage({
         </div>
       </div>
       <div className="bg-white mt-16 py-10 border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <Features />
         </div>
       </div>

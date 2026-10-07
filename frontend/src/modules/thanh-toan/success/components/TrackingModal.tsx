@@ -64,7 +64,7 @@ export default function TrackingModal({ isOpen, onClose, order }: TrackingModalP
               <span className="text-gray-300">•</span>
               <span>Đơn hàng: <strong className="font-mono text-gray-900">#{orderId}</strong></span>
               <span className="text-gray-300">•</span>
-              <span className="text-green-700 font-bold">PRO SPORTS Express Logistics</span>
+              <span className="text-green-700 font-bold">KADY Express Logistics</span>
             </div>
           </div>
           <button 
@@ -112,7 +112,7 @@ export default function TrackingModal({ isOpen, onClose, order }: TrackingModalP
                 <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider border border-blue-100">Mốc hiện tại</span>
               </div>
               <div className="text-base text-gray-900 font-bold">Đang chờ xác nhận</div>
-              <p className="text-sm text-gray-600 leading-relaxed max-w-md">Đơn hàng của bạn đã được tiếp nhận và đang chờ nhân viên của PRO SPORTS xác nhận trước khi đóng gói.</p>
+              <p className="text-sm text-gray-600 leading-relaxed max-w-md">Đơn hàng của bạn đã được tiếp nhận và đang chờ nhân viên của KADY xác nhận trước khi đóng gói.</p>
             </div>
 
             {/* Status 2 */}

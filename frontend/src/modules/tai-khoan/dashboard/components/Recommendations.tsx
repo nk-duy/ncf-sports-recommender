@@ -52,7 +52,7 @@ export default function AccountRecommendations() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
           <div className="flex items-start">
-            <div className="w-10 h-10 rounded-lg bg-gray-900 flex items-center justify-center text-yellow-400 mr-4 shadow-inner">
+            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center text-yellow-400 mr-4 shadow-inner">
               <Sparkles size={20} className="fill-yellow-400" />
             </div>
             <div>
@@ -66,7 +66,7 @@ export default function AccountRecommendations() {
           </div>
           <Link 
             href="/tai-khoan/recommendations" 
-            className="mt-4 md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-medium rounded-lg transition-colors"
+            className="mt-4 md:mt-0 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
           >
             Xem thêm gợi ý <ArrowRight size={16} className="ml-2" />
           </Link>

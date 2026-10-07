@@ -7,11 +7,10 @@ import { mockAllOrders } from "@/modules/tai-khoan/data/mockAccountData";
 
 const tabs = [
   { label: "Tất cả", value: "Tất cả" },
-  { label: "Chờ thanh toán", value: "Chờ thanh toán" },
-  { label: "Đang xử lý", value: "Đang xử lý" },
-  { label: "Đang vận chuyển", value: "Đang vận chuyển" },
-  { label: "Đã hoàn tất", value: "Đã hoàn tất" },
-  { label: "Đã hủy", value: "Đã hủy" }
+  { label: "Chờ duyệt", value: "Chờ duyệt" },
+  { label: "Đã xác nhận", value: "Đã xác nhận" },
+  { label: "Đã giao", value: "Đã giao" },
+  { label: "Từ chối", value: "Từ chối" }
 ];
 
 export default function OrdersList() {
@@ -29,31 +28,32 @@ export default function OrdersList() {
 
   const renderStatusBadge = (status: string) => {
     switch (status) {
-      case "Đang vận chuyển":
+      case "Đã xác nhận":
         return (
           <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5"></span>
             {status}
           </div>
         );
-      case "Đã hoàn tất":
+      case "Đã giao":
         return (
           <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
             {status}
           </div>
         );
-      case "Đã hủy":
+      case "Từ chối":
         return (
-          <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-500 mr-1.5"></span>
+          <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
             {status}
           </div>
         );
+      case "Chờ duyệt":
       default:
         return (
-          <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700">
-            <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1.5"></span>
+          <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
             {status}
           </div>
         );

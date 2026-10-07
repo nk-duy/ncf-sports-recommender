@@ -2,7 +2,7 @@ export default function NextBasketCrossSell() {
   const recommendations = [
     {
       id: 1,
-      name: "Đôi Tạ Tay Thông Minh Điều Chỉnh 10kg PRO SPORTS",
+      name: "Đôi Tạ Tay Thông Minh Điều Chỉnh 10kg KADY",
       description: "Cơ chế xoay đổi tạ từ 2kg - 10kg nhanh trong 1 giây, bổ trợ tăng sức bền cơ bắp khi chạy dài.",
       price: 1850000,
       tag: "Khớp 99% mục tiêu",
@@ -11,7 +11,7 @@ export default function NextBasketCrossSell() {
     },
     {
       id: 2,
-      name: "Quần Short Tập Gym Co Giãn 2 Lớp Thoáng Khí PRO SPORTS",
+      name: "Quần Short Tập Gym Co Giãn 2 Lớp Thoáng Khí KADY",
       description: "Thiết kế lớp lót ôm cơ đùi chống ma sát, đồng bộ màu sắc hoàn hảo với áo Dry-Fit bạn vừa...",
       price: 280000,
       tag: "Phối đồ chuẩn AI",
@@ -36,7 +36,7 @@ export default function NextBasketCrossSell() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
-          Gợi ý bổ trợ cho đơn hàng của bạn từ PRO SPORTS Engine
+          Gợi ý bổ trợ cho đơn hàng của bạn từ KADY Engine
           <span className="text-[9px] bg-emerald-500 text-white px-2 py-0.5 rounded shadow-sm font-bold uppercase tracking-widest ml-1">
             NCF NEXT-BASKET
           </span>

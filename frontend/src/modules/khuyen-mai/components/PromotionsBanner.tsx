@@ -14,24 +14,24 @@ export default function PromotionsBanner() {
   useEffect(() => {
     setMounted(true);
     
-    // Create a target date if none exists
+    // Create a target date if none exists or if it has expired
     let targetStr = localStorage.getItem('megaSaleTarget');
-    if (!targetStr) {
+    let targetDate = targetStr ? parseInt(targetStr) : 0;
+    
+    if (targetDate < new Date().getTime()) {
       // Set target to exactly 2 days, 14 hours, 38 mins, 52 secs from now
-      const targetTime = new Date().getTime() + (2 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000) + (38 * 60 * 1000) + (52 * 1000);
-      localStorage.setItem('megaSaleTarget', targetTime.toString());
-      targetStr = targetTime.toString();
+      targetDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000) + (38 * 60 * 1000) + (52 * 1000);
+      localStorage.setItem('megaSaleTarget', targetDate.toString());
     }
-
-    const targetDate = parseInt(targetStr);
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = targetDate - now;
 
       if (distance <= 0) {
-        clearInterval(interval);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // Automatically reset instead of stopping at 0
+        targetDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000) + (38 * 60 * 1000) + (52 * 1000);
+        localStorage.setItem('megaSaleTarget', targetDate.toString());
       } else {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -48,15 +48,15 @@ export default function PromotionsBanner() {
   const formatNum = (num: number) => num.toString().padStart(2, '0');
 
   return (
-    <div className="bg-[#111827] rounded-2xl p-6 md:p-10 text-white relative overflow-hidden mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
+    <div className="bg-gradient-to-r from-[#0B1E3F] to-[#1e3a8a] rounded-[2rem] p-8 md:p-14 text-white relative overflow-hidden mb-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-10">
       {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-1/2 h-full opacity-20 pointer-events-none">
-        <div className="absolute w-64 h-64 bg-red-600 rounded-full blur-[100px] top-10 right-20"></div>
-        <div className="absolute w-64 h-64 bg-blue-600 rounded-full blur-[100px] bottom-10 right-40"></div>
+      <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none">
+        <div className="absolute w-[500px] h-[500px] bg-red-600 rounded-full blur-[120px] -top-20 right-0"></div>
+        <div className="absolute w-64 h-64 bg-sky-400 rounded-full blur-[100px] bottom-10 right-40"></div>
       </div>
 
       <div className="relative z-10 w-full md:w-3/5">
-        <div className="inline-block px-3 py-1 bg-amber-500 rounded-tl-xl rounded-br-xl text-xs font-bold tracking-wider mb-4 text-white">
+        <div className="inline-block px-4 py-1.5 bg-amber-500 rounded-tl-xl rounded-br-xl text-sm font-black tracking-widest mb-6 text-white shadow-lg">
           ⚡ ĐẠI TIỆC MUA SẮM LỚN NHẤT NĂM 2025
         </div>
         

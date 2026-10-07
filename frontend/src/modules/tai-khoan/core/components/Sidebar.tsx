@@ -114,6 +114,7 @@ export default function AccountSidebar() {
         <button 
           onClick={handleLogout}
           className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
+          suppressHydrationWarning={true}
         >
           <LogOut size={20} className="mr-3" />
           Đăng xuất

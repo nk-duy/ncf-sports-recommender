@@ -8,26 +8,26 @@ export default function PromotionsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/products/?limit=8")
+    fetch("http://localhost:8000/api/v1/products/?limit=8&is_promotion=true")
       .then(res => res.json())
       .then(data => {
         const list = Array.isArray(data) ? data : (data.items || []);
-        // Process data to add promotional fields
+        // Process data using real discount_percent from DB
         const promoProducts = list.map((p: any, index: number) => {
-          // Fake a discount for demonstration
-          const discountPercent = 15 + (index % 3) * 10; // 15%, 25%, 35%
-          const originalPrice = p.price * (1 + discountPercent / 100);
+          const discountPercent = p.discount_percent || 0;
+          // Assuming p.price is the final discounted price, we calculate original price
+          const originalPrice = discountPercent > 0 ? Math.round(p.price / (1 - discountPercent / 100)) : p.price;
           
           return {
             id: p.product_id,
             name: p.name,
             category: p.category && p.category.length > 0 ? p.category[0] : "THỂ THAO",
             price: `${p.price.toLocaleString('vi-VN')}đ`,
-            originalPrice: `${originalPrice.toLocaleString('vi-VN')}đ`,
+            originalPrice: discountPercent > 0 ? `${originalPrice.toLocaleString('vi-VN')}đ` : undefined,
             rating: p.rating || 0,
             reviewsCount: p.reviews_count || 0,
             imageUrl: p.image_url,
-            discountLabel: `-${discountPercent}% SALE`,
+            discountLabel: discountPercent > 0 ? `-${discountPercent}% SALE` : undefined,
             secondaryLabel: index === 0 ? "BÁN CHẠY" : index === 1 ? "FLASH SALE" : "CHÍNH HÃNG",
             sold: p.sold || 0,
             total: 200

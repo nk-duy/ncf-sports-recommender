@@ -18,7 +18,7 @@ export default function SuccessHeader() {
         Đặt hàng thành công!
       </h1>
       <p className="text-gray-500 text-sm mb-6 max-w-md">
-        Cảm ơn bạn đã lựa chọn mua sắm tại PRO SPORTS. Đơn hàng của bạn đang được hệ thống phân loại tự động tại kho trung tâm.
+        Cảm ơn bạn đã lựa chọn mua sắm tại KADY. Đơn hàng của bạn đang được hệ thống phân loại tự động tại kho trung tâm.
       </p>
 
       {/* Order ID */}

@@ -23,7 +23,7 @@ export default function OrderSummary({ order }: { order?: any }) {
           items.map((item: any, idx: number) => (
             <div key={idx} className="py-4 flex gap-4 items-center">
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded bg-gray-50 flex-shrink-0 overflow-hidden flex items-center justify-center border border-gray-100">
-                <img alt="Product image" className="w-full h-full object-cover aspect-square" src={item.image_url || "https://placehold.co/150x150?text=PRO SPORTS"} />
+                <img alt="Product image" className="w-full h-full object-cover aspect-square" src={item.image_url || "https://placehold.co/150x150?text=KADY"} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
@@ -39,7 +39,7 @@ export default function OrderSummary({ order }: { order?: any }) {
                 </div>
                 <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold">
                   <Verified size={12} className="text-blue-600" />
-                  Chính hãng PRO SPORTS
+                  Chính hãng KADY
                 </span>
               </div>
             </div>

@@ -77,16 +77,16 @@ export default function CartPage() {
     <div className="bg-[#f5f5f5] min-h-screen pb-24">
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center gap-4">
+        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 h-20 flex items-center gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-blue-700 font-bold text-2xl tracking-tighter">PRO SPORTS</span>
+            <span className="text-blue-700 font-bold text-2xl tracking-tighter">KADY</span>
             <span className="text-blue-700 text-xl">|</span>
             <span className="text-blue-700 text-xl font-medium">Giỏ Hàng</span>
           </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 mt-6">
         
         {/* Table Header */}
         <div className="bg-white rounded shadow-sm flex items-center px-5 py-4 mb-3 text-sm text-gray-500">
@@ -193,7 +193,7 @@ export default function CartPage() {
       {/* Sticky Footer */}
       {items.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 h-16 flex items-center justify-between">
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input 

@@ -1,4 +1,16 @@
+"use client";
+
+import React from "react";
+
 export default function PromotionsCombo() {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText("COMBOMAX");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="bg-gradient-to-r from-amber-500 to-red-600 rounded-2xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 mb-16">
       {/* Background decoration */}
@@ -36,8 +48,11 @@ export default function PromotionsCombo() {
           <span className="text-[10px] text-red-200 uppercase tracking-widest font-bold mb-1">Mã voucher combo</span>
           <span className="text-xl font-black tracking-wider">COMBOMAX</span>
         </div>
-        <button className="bg-white hover:bg-gray-100 text-red-600 font-black py-4 px-6 rounded-xl whitespace-nowrap shadow-lg transition-transform hover:scale-105 active:scale-95 w-full sm:w-auto">
-          ÁP DỤNG NGAY
+        <button 
+          onClick={handleCopy}
+          className="bg-white hover:bg-gray-100 text-red-600 font-black py-4 px-6 rounded-xl whitespace-nowrap shadow-lg transition-transform hover:scale-105 active:scale-95 w-full sm:w-auto"
+        >
+          {copied ? "ĐÃ LƯU MÃ" : "LƯU MÃ NGAY"}
         </button>
       </div>
     </div>

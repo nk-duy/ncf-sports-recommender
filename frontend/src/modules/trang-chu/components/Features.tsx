@@ -35,7 +35,7 @@ export default function Features() {
 
   return (
     <section className="bg-white border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-8 md:py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, idx) => (
             <div key={idx} className="flex items-center p-4 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-colors gap-4 group">

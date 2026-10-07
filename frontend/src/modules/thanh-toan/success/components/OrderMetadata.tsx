@@ -15,6 +15,41 @@ export default function OrderMetadata({ order }: { order?: any }) {
 
   const orderDate = order?.created_at ? new Date(order.created_at).toLocaleString('vi-VN') : "Hôm nay";
 
+  const getStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return (
+          <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold text-[11px] uppercase tracking-wider border border-amber-200">
+            Chờ duyệt
+          </span>
+        );
+      case 'confirmed':
+        return (
+          <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-[11px] uppercase tracking-wider border border-blue-200">
+            Đã xác nhận
+          </span>
+        );
+      case 'delivered':
+        return (
+          <span className="px-2 py-0.5 rounded bg-green-50 text-green-700 font-semibold text-[11px] uppercase tracking-wider border border-green-200">
+            Đã giao
+          </span>
+        );
+      case 'rejected':
+        return (
+          <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 font-semibold text-[11px] uppercase tracking-wider border border-red-200">
+            Từ chối
+          </span>
+        );
+      default:
+        return (
+          <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-[11px] uppercase tracking-wider border border-blue-100">
+            Đã ghi nhận
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="w-full space-y-6 lg:border-l lg:border-gray-100 lg:pl-8">
       {/* Recipient Card */}
@@ -50,9 +85,7 @@ export default function OrderMetadata({ order }: { order?: any }) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-500 font-medium">Trạng thái:</span>
-            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold text-[11px] uppercase tracking-wider border border-blue-100">
-              Đã ghi nhận
-            </span>
+            {getStatusBadge(order?.status)}
           </div>
           <div className="flex items-center justify-between">
             <span className="text-gray-500 font-medium">Thời gian:</span>
@@ -68,7 +101,7 @@ export default function OrderMetadata({ order }: { order?: any }) {
           <h3 className="font-bold text-sm">Dịch vụ vận chuyển</h3>
         </div>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-sm font-semibold text-gray-900">PRO SPORTS Express (Tiêu chuẩn)</p>
+          <p className="text-sm font-semibold text-gray-900">KADY Express (Tiêu chuẩn)</p>
           <p className="text-sm text-gray-500 mt-1">
             Mã vận đơn: <span className="font-mono text-gray-900 font-bold ml-1">Đang cập nhật...</span>
           </p>

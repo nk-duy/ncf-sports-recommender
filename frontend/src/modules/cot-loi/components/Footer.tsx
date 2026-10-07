@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300 border-t border-gray-800 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -51,7 +51,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500">
-          <div>© 2026 PRO SPORTS Vietnam. Tất cả quyền được bảo lưu.</div>
+          <div>© 2026 KADY Vietnam. Tất cả quyền được bảo lưu.</div>
         </div>
       </div>
     </footer>

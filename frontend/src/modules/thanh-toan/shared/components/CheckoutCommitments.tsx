@@ -5,7 +5,7 @@ export default function CheckoutCommitments() {
   return (
     <div className="bg-white p-5 rounded-lg border border-gray-100 mt-4 space-y-4">
       <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-        Cam kết độc quyền PRO SPORTS
+        Cam kết độc quyền KADY
       </div>
       <ul className="space-y-3 text-sm text-gray-600 font-medium">
         <li className="flex items-start gap-3 text-gray-900">

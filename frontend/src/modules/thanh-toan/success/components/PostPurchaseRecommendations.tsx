@@ -29,7 +29,7 @@ export default function PostPurchaseRecommendations() {
           <div className="flex items-center gap-2">
             <BrainCircuit size={24} className="text-blue-600" />
             <h2 className="text-lg font-bold text-gray-900 tracking-tight">
-              Gợi ý bổ trợ cho đơn hàng của bạn từ PRO SPORTS Engine
+              Gợi ý bổ trợ cho đơn hàng của bạn từ KADY Engine
             </h2>
             <span className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-mono text-[10px] uppercase font-bold tracking-wider border border-blue-100">
               NCF Next-Basket
@@ -54,7 +54,7 @@ export default function PostPurchaseRecommendations() {
                 <img 
                   alt={product.name} 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                  src={product.image_url || "https://placehold.co/400x400/f3f4f6/a1a1aa?text=PRO SPORTS"}
+                  src={product.image_url || "https://placehold.co/400x400/f3f4f6/a1a1aa?text=KADY"}
                 />
                 <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-white/90 backdrop-blur-sm text-[10px] text-blue-600 font-bold shadow-sm">
                   {idx === 0 ? "Khớp 98% mục tiêu" : idx === 1 ? "Phối đồ chuẩn AI" : "Đồng hành rèn luyện"}
@@ -64,7 +64,7 @@ export default function PostPurchaseRecommendations() {
                 {product.name}
               </h4>
               <p className="text-xs text-gray-500 line-clamp-2 mb-3">
-                {product.description || "Sản phẩm chất lượng từ hệ sinh thái PRO SPORTS, nâng tầm trải nghiệm của bạn."}
+                {product.description || "Sản phẩm chất lượng từ hệ sinh thái KADY, nâng tầm trải nghiệm của bạn."}
               </p>
             </div>
             <div className="flex items-center justify-between pt-3 border-t border-gray-200">
