@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, Gift, Tags } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, Gift, Tags, BadgePercent, Layers, Image as ImageIcon } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -10,9 +10,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Tổng quan', path: '/admin', icon: <LayoutDashboard size={20} /> },
     { name: 'Sản phẩm', path: '/admin/san-pham', icon: <Package size={20} /> },
+    { name: 'SP Khuyến mãi', path: '/admin/san-pham-khuyen-mai', icon: <BadgePercent size={20} /> },
     { name: 'Đơn hàng', path: '/admin/don-hang', icon: <ShoppingCart size={20} /> },
     { name: 'Khuyến mãi', path: '/admin/khuyen-mai', icon: <Gift size={20} /> },
+    { name: 'Danh mục', path: '/admin/danh-muc', icon: <Layers size={20} /> },
     { name: 'Thuộc tính', path: '/admin/thuoc-tinh', icon: <Tags size={20} /> },
+    { name: 'Banner', path: '/admin/banners', icon: <ImageIcon size={20} /> },
   ];
 
   return (
@@ -23,7 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin" className="text-xl font-black tracking-tight text-white uppercase flex items-center gap-3">
             <img
               src="/logo.png"
-              alt="PRO SPORTS Logo"
+              alt="KADY Logo"
               className="h-10 w-auto object-contain bg-white rounded-lg p-1 shadow-sm"
             />
           </Link>

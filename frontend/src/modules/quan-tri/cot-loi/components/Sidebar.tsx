@@ -34,7 +34,7 @@ export default function AdminSidebar() {
             <Zap size={20} className="fill-white" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-bold text-gray-900 tracking-tight leading-none">PRO SPORTS</span>
+            <span className="text-xl font-bold text-gray-900 tracking-tight leading-none">KADY</span>
             <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Quản trị Hệ thống</span>
           </div>
         </div>
