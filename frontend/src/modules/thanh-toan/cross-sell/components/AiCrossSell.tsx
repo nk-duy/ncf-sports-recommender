@@ -18,16 +18,24 @@ export default function AiCrossSell() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const addItem = useCartStore((state) => state.addItem);
+  const cartItems = useCartStore((state) => state.items);
+  const cartItemIdsStr = JSON.stringify(cartItems.map(i => i.product_id));
 
   useEffect(() => {
     const fetchCrossSell = async () => {
+      setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/api/v1/products/");
+        const itemIds = JSON.parse(cartItemIdsStr);
+        const res = await fetch("http://localhost:8000/api/v1/recommendations/cross-sell?top_k=3", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(itemIds)
+        });
         if (res.ok) {
           const data = await res.json();
-          // Lấy ngẫu nhiên 3 sản phẩm để làm gợi ý mua kèm
-          const shuffled = data.sort(() => 0.5 - Math.random());
-          setProducts(shuffled.slice(0, 3));
+          setProducts(data);
         }
       } catch (error) {
         console.error("Failed to fetch cross-sell items", error);
@@ -35,8 +43,14 @@ export default function AiCrossSell() {
         setLoading(false);
       }
     };
-    fetchCrossSell();
-  }, []);
+    
+    if (cartItems.length > 0) {
+      fetchCrossSell();
+    } else {
+      setProducts([]);
+      setLoading(false);
+    }
+  }, [cartItemIdsStr]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
