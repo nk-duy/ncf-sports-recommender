@@ -1,6 +1,7 @@
 from beanie import Document
 from pydantic import Field
 from typing import Optional, List
+from datetime import datetime
 
 class Product(Document):
     product_id: str = Field(..., description="Mã sản phẩm (ASIN)")
@@ -20,6 +21,10 @@ class Product(Document):
     stock: Optional[int] = Field(default=100, description="Số lượng tồn kho")
     description: Optional[str] = Field(default="", description="Mô tả chi tiết sản phẩm")
     discount_percent: Optional[int] = Field(default=0, description="Phần trăm giảm giá (nếu có)")
+    discount_start_date: Optional[datetime] = Field(default=None, description="Thời gian bắt đầu giảm giá")
+    discount_end_date: Optional[datetime] = Field(default=None, description="Thời gian kết thúc giảm giá")
+    is_hidden: Optional[bool] = Field(default=False, description="Trạng thái ẩn sản phẩm")
+    is_deleted: Optional[bool] = Field(default=False, description="Đã chuyển vào thùng rác")
 
     class Settings:
         name = "products" # Tên collection trong MongoDB

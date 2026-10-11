@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Response
 from typing import List, Optional
 from app.schemas.product import ProductResponse, ProductCreate, ProductUpdate
 from app.services.product_service import product_service
@@ -7,6 +7,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[ProductResponse])
 async def get_products(
+    response: Response,
     skip: int = Query(0, ge=0, description="Số lượng bản ghi bỏ qua"),
     limit: int = Query(20, ge=1, le=100, description="Số lượng bản ghi tối đa lấy về"),
     category: Optional[str] = Query(None, description="Lọc theo danh mục"),
@@ -19,15 +20,28 @@ async def get_products(
     sizes: Optional[str] = Query(None, description="Kích thước, phân tách bằng dấu phẩy"),
     colors: Optional[str] = Query(None, description="Màu sắc, phân tách bằng dấu phẩy"),
     gender: Optional[str] = Query(None, description="Giới tính (Nam, Nữ, Unisex)"),
-    is_promotion: Optional[bool] = Query(None, description="Lọc sản phẩm đang giảm giá")
+    is_promotion: Optional[bool] = Query(None, description="Lọc sản phẩm đang giảm giá"),
+    sort_by: Optional[str] = Query(None, description="Sắp xếp: discount_desc, price_asc, price_desc, sold_desc, rating_desc"),
+    include_hidden: bool = Query(False, description="Bao gồm cả sản phẩm bị ẩn"),
+    include_deleted: bool = Query(False, description="Bao gồm cả sản phẩm trong thùng rác")
 ):
     """Lấy danh sách sản phẩm"""
-    products = await product_service.get_products(
+    products, total = await product_service.get_products_with_count(
         skip=skip, limit=limit, category=category, product_type=product_type, sport_type=sport_type, search=search,
         brand=brand, min_price=min_price, max_price=max_price,
-        sizes=sizes, colors=colors, gender=gender, is_promotion=is_promotion
+        sizes=sizes, colors=colors, gender=gender, is_promotion=is_promotion,
+        sort_by=sort_by,
+        include_hidden=include_hidden, include_deleted=include_deleted
     )
+    response.headers["X-Total-Count"] = str(total)
+    response.headers["Access-Control-Expose-Headers"] = "X-Total-Count"
     return products
+
+@router.get("/brands", response_model=List[str])
+async def get_brands():
+    """Lấy danh sách các thương hiệu có trong hệ thống"""
+    brands = await product_service.get_distinct_brands()
+    return brands
 
 @router.get("/featured", response_model=List[ProductResponse])
 async def get_featured_products(limit: int = Query(5, description="Số lượng sản phẩm nổi bật")):

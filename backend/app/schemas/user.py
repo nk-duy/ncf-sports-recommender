@@ -22,3 +22,10 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+class SocialLoginRequest(BaseModel):
+    provider: str
+    token: str
+    email: EmailStr
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
