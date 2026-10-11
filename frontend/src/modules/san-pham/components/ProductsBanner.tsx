@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowRight } from 'lucide-react';
 
 export default function ProductsBanner() {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
@@ -92,7 +92,7 @@ export default function ProductsBanner() {
         <div className="flex flex-wrap items-center gap-4">
           <Link href={`/san-pham/${currentProduct.product_id}`} className="px-6 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-sky-500/30 flex items-center gap-2">
             Xem chi tiết
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            <ArrowRight className="w-4 h-4" />
           </Link>
           <div className="flex flex-col">
             <span className="text-xs text-sky-200/70 font-medium line-through">{(currentProduct.price * 2).toLocaleString('vi-VN')}đ</span>
