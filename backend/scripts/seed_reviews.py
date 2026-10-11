@@ -99,6 +99,7 @@ async def seed_reviews():
 
                 review = Review(
                     user_id=str(user.id),
+                    user_name=user.full_name or user.username or "Khách hàng",
                     product_id=product.product_id,
                     rating=rating,
                     comment=comment,
