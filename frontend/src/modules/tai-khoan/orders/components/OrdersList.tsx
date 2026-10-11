@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { Search, ChevronDown, CheckCircle, Package, Truck, XCircle, FileText, Star, Image as ImageIcon } from "lucide-react";
+import { Search, ChevronDown, CheckCircle, Package, Truck, XCircle, FileText, Star, Image as ImageIcon, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { mockAllOrders } from "@/modules/tai-khoan/data/mockAccountData";
 
 const tabs = [
@@ -162,9 +162,7 @@ export default function OrdersList() {
               </div>
             </div>
             <button className="flex items-center justify-center px-4 py-2 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 text-sm font-medium transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mr-2">
-                <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <Filter size={16} className="mr-2" />
               Lọc đơn
             </button>
           </div>
@@ -283,16 +281,12 @@ export default function OrdersList() {
           </div>
           <div className="flex items-center gap-1 mt-4 sm:mt-0">
             <button className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-50" disabled>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <ChevronLeft size={20} />
             </button>
             <button className="w-8 h-8 rounded-md bg-blue-600 text-white font-medium flex items-center justify-center">1</button>
             <button className="w-8 h-8 rounded-md text-gray-600 hover:bg-gray-100 font-medium flex items-center justify-center transition-colors">2</button>
             <button className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>

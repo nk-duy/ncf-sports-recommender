@@ -44,10 +44,27 @@ export default function AdminVouchersPage() {
     setVouchers(vouchers.filter(v => v._id !== id));
   };
 
+  const handleStatusToggle = async (id: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/vouchers/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !currentStatus })
+      });
+      if (res.ok) {
+        setVouchers(vouchers.map(v => v._id === id ? { ...v, is_active: !currentStatus } : v));
+      } else {
+        alert("Không thể cập nhật trạng thái");
+      }
+    } catch (error) {
+      alert("Lỗi kết nối");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black text-gray-900 tracking-tight">Quản lý Kho Voucher</h1>
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý Kho Voucher</h1>
         <p className="text-sm text-gray-500">Tạo, chỉnh sửa và theo dõi các chiến dịch khuyến mãi.</p>
       </div>
       
@@ -84,6 +101,7 @@ export default function AdminVouchersPage() {
           onEdit={handleEdit} 
           onDelete={handleDelete} 
           onCreate={handleCreate} 
+          onStatusToggle={handleStatusToggle}
         />
       )}
 

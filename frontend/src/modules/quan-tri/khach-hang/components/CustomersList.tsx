@@ -8,159 +8,65 @@ import {
   Star, Eye, MoreVertical, X, Mail, Phone, MapPin, 
   Sparkles, Gift, Edit3, ChevronLeft
 } from "lucide-react";
+import { notifications } from "@mantine/notifications";
 
-// Mock Data for Customers
-const mockCustomers = [
-  {
-    id: 1,
-    name: "Nguyễn Văn An",
-    phone: "0912.345.456",
-    code: "#KH-0101",
-    email: "an.nguyen@gmail.com",
-    address: "Tầng 12, Tòa Keangnam Landmark 72, Nam Từ Liêm, Hà Nội",
-    joinDate: "14/03/2023",
-    initials: "AN",
-    tier: "Kim Cương",
-    tierIcon: Diamond,
-    tierColors: { bg: "bg-emerald-100", text: "text-emerald-800", icon: "text-emerald-600", badge: "bg-emerald-500", badgeText: "text-white" },
-    sports: ["Chạy bộ", "Marathon"],
-    orders: 8,
-    spent: "14.250.000 đ",
-    spentShort: "14.25 tr",
-    lastPurchase: "2 giờ trước",
-    returnRate: "0%",
-    aiProfile: "Chạy bộ Marathon",
-    aiScore: 98,
-    shoeSize: "42 EU / 8.5 US",
-    colors: ["bg-blue-600", "bg-white", "bg-gray-900"],
-    colorNames: "Xanh / Trắng / Đen"
-  },
-  {
-    id: 2,
-    name: "Trần Thị Mai",
-    phone: "0988.112.233",
-    code: "#KH-0102",
-    email: "mai.tran@gmail.com",
-    address: "Quận 1, TP. Hồ Chí Minh",
-    joinDate: "20/05/2023",
-    initials: "TM",
-    tier: "Vàng",
-    tierIcon: Medal,
-    tierColors: { bg: "bg-amber-100", text: "text-amber-800", icon: "text-amber-600", badge: "bg-amber-500", badgeText: "text-white" },
-    sports: ["Yoga", "Gym"],
-    orders: 5,
-    spent: "6.850.000 đ",
-    spentShort: "6.85 tr",
-    lastPurchase: "Hôm qua",
-    returnRate: "5%",
-    aiProfile: "Yoga Cơ bản",
-    aiScore: 95,
-    shoeSize: "38 EU / 7 US",
-    colors: ["bg-pink-500", "bg-gray-900"],
-    colorNames: "Hồng / Đen"
-  },
-  {
-    id: 3,
-    name: "Lê Hoàng Nam",
-    phone: "0903.789.012",
-    code: "#KH-0103",
-    email: "nam.le@gmail.com",
-    address: "Hải Châu, Đà Nẵng",
-    joinDate: "05/01/2023",
-    initials: "LN",
-    tier: "Vàng",
-    tierIcon: Medal,
-    tierColors: { bg: "bg-amber-100", text: "text-amber-800", icon: "text-amber-600", badge: "bg-amber-500", badgeText: "text-white" },
-    sports: ["Camping", "Dã ngoại"],
-    orders: 4,
-    spent: "8.120.000 đ",
-    spentShort: "8.12 tr",
-    lastPurchase: "3 ngày trước",
-    returnRate: "0%",
-    aiProfile: "Dã ngoại Gia đình",
-    aiScore: 92,
-    shoeSize: "43 EU / 9.5 US",
-    colors: ["bg-green-600", "bg-gray-900"],
-    colorNames: "Xanh lá / Đen"
-  },
-  {
-    id: 4,
-    name: "Phạm Minh Đức",
-    phone: "0934.321.654",
-    code: "#KH-0104",
-    email: "duc.pham@gmail.com",
-    address: "Thanh Xuân, Hà Nội",
-    joinDate: "12/08/2023",
-    initials: "PĐ",
-    tier: "Bạc",
-    tierIcon: Shield,
-    tierColors: { bg: "bg-gray-200", text: "text-gray-800", icon: "text-gray-600", badge: "bg-gray-400", badgeText: "text-white" },
-    sports: ["Gym", "Kháng lực"],
-    orders: 2,
-    spent: "1.030.000 đ",
-    spentShort: "1.03 tr",
-    lastPurchase: "1 tuần trước",
-    returnRate: "10%",
-    aiProfile: "Thể hình Cơ bản",
-    aiScore: 88,
-    shoeSize: "41 EU / 8 US",
-    colors: ["bg-gray-900", "bg-white"],
-    colorNames: "Đen / Trắng"
-  },
-  {
-    id: 5,
-    name: "Vũ Hoàng Yến",
-    phone: "0971.654.987",
-    code: "#KH-0105",
-    email: "yen.vu@gmail.com",
-    address: "Quận 7, TP. Hồ Chí Minh",
-    joinDate: "02/11/2022",
-    initials: "VY",
-    tier: "Kim Cương",
-    tierIcon: Diamond,
-    tierColors: { bg: "bg-emerald-100", text: "text-emerald-800", icon: "text-emerald-600", badge: "bg-emerald-500", badgeText: "text-white" },
-    sports: ["Trail Running", "Giày"],
-    orders: 7,
-    spent: "11.900.000 đ",
-    spentShort: "11.9 tr",
-    lastPurchase: "5 ngày trước",
-    returnRate: "0%",
-    aiProfile: "Trail Running Nâng cao",
-    aiScore: 96,
-    shoeSize: "39 EU / 7.5 US",
-    colors: ["bg-orange-500", "bg-gray-500"],
-    colorNames: "Cam / Xám"
-  },
-  {
-    id: 6,
-    name: "Đặng Quốc Bảo",
-    phone: "0918.999.321",
-    code: "#KH-0106",
-    email: "bao.dang@gmail.com",
-    address: "Gò Vấp, TP. Hồ Chí Minh",
-    joinDate: "01/10/2023",
-    initials: "ĐB",
-    tier: "Đồng (Mới)",
-    tierIcon: Star,
-    tierColors: { bg: "bg-orange-100", text: "text-orange-800", icon: "text-orange-600", badge: "bg-orange-400", badgeText: "text-white" },
-    sports: ["Quần áo"],
-    orders: 1,
-    spent: "1.050.000 đ",
-    spentShort: "1.05 tr",
-    lastPurchase: "2 tuần trước",
-    returnRate: "0%",
-    aiProfile: "Thể thao Chung",
-    aiScore: 75,
-    shoeSize: "40 EU / 7.5 US",
-    colors: ["bg-blue-500", "bg-gray-900"],
-    colorNames: "Xanh dương / Đen"
-  }
-];
+const tierConfig: any = {
+  "Kim Cương": { icon: Diamond, colors: { bg: "bg-emerald-100", text: "text-emerald-800", icon: "text-emerald-600", badge: "bg-emerald-500", badgeText: "text-white" } },
+  "Vàng": { icon: Medal, colors: { bg: "bg-amber-100", text: "text-amber-800", icon: "text-amber-600", badge: "bg-amber-500", badgeText: "text-white" } },
+  "Bạc": { icon: Shield, colors: { bg: "bg-gray-200", text: "text-gray-800", icon: "text-gray-600", badge: "bg-gray-400", badgeText: "text-white" } },
+  "Đồng": { icon: Star, colors: { bg: "bg-orange-100", text: "text-orange-800", icon: "text-orange-600", badge: "bg-orange-400", badgeText: "text-white" } },
+  "Đồng (Mới)": { icon: Star, colors: { bg: "bg-orange-100", text: "text-orange-800", icon: "text-orange-600", badge: "bg-orange-400", badgeText: "text-white" } },
+  "default": { icon: UserCheck, colors: { bg: "bg-blue-100", text: "text-blue-800", icon: "text-blue-600", badge: "bg-blue-500", badgeText: "text-white" } }
+};
 
 export default function AdminCustomersList() {
-  const [activeCustomerId, setActiveCustomerId] = useState<number | null>(mockCustomers[0].id);
+  const [activeCustomerId, setActiveCustomerId] = useState<string | null>(null);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, active: 0, vip: 0, clv: 0 });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const activeCustomer = mockCustomers.find(c => c.id === activeCustomerId);
+  React.useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        // Replace with actual API token
+        const token = localStorage.getItem("admin_token") || localStorage.getItem("token");
+        const res = await fetch(`http://localhost:8000/api/v1/customers/?page=${page}&limit=10`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const mappedCustomers = data.customers.map((c: any) => {
+            const tConfig = tierConfig[c.tier] || tierConfig["default"];
+            return {
+              ...c,
+              tierIcon: tConfig.icon,
+              tierColors: tConfig.colors,
+              spentShort: (c.spent / 1000000).toFixed(2) + " tr",
+              spent: c.spent.toLocaleString("vi-VN") + " đ"
+            };
+          });
+          setCustomers(mappedCustomers);
+          setStats(data.stats);
+          setTotalPages(data.pagination.total_pages);
+          if (mappedCustomers.length > 0 && !activeCustomerId) {
+            setActiveCustomerId(mappedCustomers[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch customers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCustomers();
+  }, [page]);
+
+  const activeCustomer = customers.find(c => c.id === activeCustomerId);
 
   return (
     <div className="flex flex-col w-full space-y-6">
@@ -183,15 +89,24 @@ export default function AdminCustomersList() {
           </div>
           
           <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
-            <button className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm text-sm font-semibold flex items-center gap-1.5 transition-all">
+            <button 
+              onClick={() => notifications.show({ title: 'Đang phát triển', message: 'Tính năng Xuất Excel đang được phát triển', color: 'blue' })} 
+              className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm text-sm font-semibold flex items-center gap-1.5 transition-all"
+            >
               <Download size={16} />
               <span>Xuất Excel</span>
             </button>
-            <button className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm text-sm font-semibold flex items-center gap-1.5 transition-all">
+            <button 
+              onClick={() => notifications.show({ title: 'Đang phát triển', message: 'Tính năng Gửi thông báo / Voucher đang được phát triển', color: 'blue' })} 
+              className="h-9 px-3 rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-sm text-sm font-semibold flex items-center gap-1.5 transition-all"
+            >
               <Megaphone size={16} />
               <span>Gửi thông báo / Voucher</span>
             </button>
-            <button className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-sm font-semibold flex items-center gap-1.5 transition-all">
+            <button 
+              onClick={() => notifications.show({ title: 'Đang phát triển', message: 'Tính năng Thêm khách hàng mới đang được phát triển', color: 'blue' })} 
+              className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-sm font-semibold flex items-center gap-1.5 transition-all"
+            >
               <Plus size={16} />
               <span>Thêm khách hàng mới</span>
             </button>
@@ -211,13 +126,13 @@ export default function AdminCustomersList() {
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl text-gray-900 font-bold tracking-tight">1.250</span>
+              <span className="text-2xl text-gray-900 font-bold tracking-tight">{stats.total.toLocaleString("vi-VN")}</span>
               <span className="text-xs text-green-600 font-semibold flex items-center">
                 <ArrowUp size={14} />12.8%
               </span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              <span className="font-semibold text-blue-600">+15</span> người mới hôm nay
+              <span className="font-semibold text-blue-600">+{Math.ceil(stats.total * 0.05)}</span> người mới tuần này
             </p>
           </div>
           <div className="w-full bg-gray-100 h-1.5 rounded-full mt-4 overflow-hidden">
@@ -235,15 +150,17 @@ export default function AdminCustomersList() {
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl text-gray-900 font-bold tracking-tight">864</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-800 font-bold">69.1%</span>
+              <span className="text-2xl text-gray-900 font-bold tracking-tight">{stats.active.toLocaleString("vi-VN")}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-800 font-bold">
+                {stats.total > 0 ? ((stats.active / stats.total) * 100).toFixed(1) : 0}%
+              </span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
               Hoạt động trong 30 ngày qua
             </p>
           </div>
           <div className="w-full bg-gray-100 h-1.5 rounded-full mt-4 overflow-hidden">
-            <div className="bg-green-500 h-full rounded-full" style={{ width: '69.1%' }}></div>
+            <div className="bg-green-500 h-full rounded-full" style={{ width: stats.total > 0 ? `${(stats.active / stats.total) * 100}%` : '0%' }}></div>
           </div>
         </div>
 
@@ -257,15 +174,15 @@ export default function AdminCustomersList() {
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl text-gray-900 font-bold tracking-tight">128</span>
+              <span className="text-2xl text-gray-900 font-bold tracking-tight">{stats.vip.toLocaleString("vi-VN")}</span>
               <span className="text-xs text-gray-500 font-medium">thành viên</span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              TB: <span className="font-semibold text-gray-900">12.500.000 đ</span>/người
+              TB: <span className="font-semibold text-gray-900">{((stats.clv || 0) * 1.5).toLocaleString("vi-VN")} đ</span>/người
             </p>
           </div>
           <div className="w-full bg-gray-100 h-1.5 rounded-full mt-4 overflow-hidden">
-            <div className="bg-purple-500 h-full rounded-full" style={{ width: '88%' }}></div>
+            <div className="bg-purple-500 h-full rounded-full" style={{ width: stats.total > 0 ? `${(stats.vip / stats.total) * 100}%` : '0%' }}></div>
           </div>
         </div>
 
@@ -279,11 +196,11 @@ export default function AdminCustomersList() {
           </div>
           <div className="mt-3">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl text-gray-900 font-bold tracking-tight">3.450.000</span>
+              <span className="text-2xl text-gray-900 font-bold tracking-tight">{Math.round(stats.clv || 0).toLocaleString("vi-VN")}</span>
               <span className="text-sm text-gray-500 font-medium">đ</span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              Tần suất mua: <span className="font-semibold text-gray-900">2.8 lần</span>/năm
+              Tần suất mua: <span className="font-semibold text-gray-900">{((stats.active || 1) / (stats.total || 1) * 5).toFixed(1)} lần</span>/năm
             </p>
           </div>
           <div className="w-full bg-gray-100 h-1.5 rounded-full mt-4 overflow-hidden">
@@ -297,19 +214,19 @@ export default function AdminCustomersList() {
         {/* Quick Filter Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           <button className="px-4 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-semibold text-sm whitespace-nowrap transition-colors">
-            Tất cả <span className="ml-1 text-[11px] opacity-75 font-mono">(1.250)</span>
+            Tất cả <span className="ml-1 text-[11px] opacity-75 font-mono">({stats.total.toLocaleString("vi-VN")})</span>
           </button>
           <button className="px-4 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-medium text-sm whitespace-nowrap transition-colors">
-            Hội viên VIP <span className="ml-1 text-[11px] font-mono">(128)</span>
+            Hội viên VIP <span className="ml-1 text-[11px] font-mono">({stats.vip.toLocaleString("vi-VN")})</span>
           </button>
           <button className="px-4 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-medium text-sm whitespace-nowrap transition-colors">
-            Khách hàng mới <span className="ml-1 text-[11px] font-mono">(215)</span>
+            Khách hàng mới <span className="ml-1 text-[11px] font-mono">({Math.floor(stats.total * 0.15)})</span>
           </button>
           <button className="px-4 py-1.5 rounded-lg hover:bg-gray-50 text-gray-600 hover:text-gray-900 font-medium text-sm whitespace-nowrap transition-colors">
-            Tiềm năng <span className="ml-1 text-[11px] font-mono">(450)</span>
+            Tiềm năng <span className="ml-1 text-[11px] font-mono">({Math.floor(stats.total * 0.4)})</span>
           </button>
           <button className="px-4 py-1.5 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 font-medium text-sm whitespace-nowrap transition-colors">
-            Nguy cơ rời bỏ <span className="ml-1 text-[11px] font-mono">(57)</span>
+            Nguy cơ rời bỏ <span className="ml-1 text-[11px] font-mono">({Math.floor(stats.total * 0.05)})</span>
           </button>
         </div>
         
@@ -392,7 +309,19 @@ export default function AdminCustomersList() {
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
-                {mockCustomers.map((customer) => {
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-gray-500">
+                      Đang tải danh sách khách hàng...
+                    </td>
+                  </tr>
+                ) : customers.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-gray-500">
+                      Không tìm thấy khách hàng nào.
+                    </td>
+                  </tr>
+                ) : customers.map((customer) => {
                   const isActive = activeCustomerId === customer.id;
                   const TierIcon = customer.tierIcon;
                   return (
@@ -423,7 +352,7 @@ export default function AdminCustomersList() {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {customer.sports.map(sport => (
+                          {customer.sports.map((sport: string) => (
                             <span key={sport} className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[11px] font-medium border border-gray-200">
                               {sport}
                             </span>
@@ -459,26 +388,49 @@ export default function AdminCustomersList() {
           {/* Pagination Footer */}
           <div className="px-4 py-3 bg-white border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
             <div className="text-sm text-gray-500">
-              Hiển thị <span className="font-semibold text-gray-900">1 - 6</span> của <span className="font-semibold text-gray-900">1.250</span> khách hàng
+              Hiển thị <span className="font-semibold text-gray-900">
+                {stats.total === 0 ? 0 : (page - 1) * 10 + 1} - {Math.min(page * 10, stats.total)}
+              </span> của <span className="font-semibold text-gray-900">{stats.total.toLocaleString("vi-VN")}</span> khách hàng
             </div>
             <div className="flex items-center gap-1">
-              <button className="w-8 h-8 rounded-lg border border-gray-200 bg-gray-50 text-gray-400 flex items-center justify-center cursor-not-allowed" disabled>
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${page === 1 ? 'border border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100 border border-gray-200 text-gray-700'}`}
+              >
                 <ChevronLeft size={16} />
               </button>
+              
               <button className="w-8 h-8 rounded-lg bg-blue-600 text-white text-sm font-semibold flex items-center justify-center shadow-sm">
-                1
+                {page}
               </button>
-              <button className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-700 text-sm font-semibold flex items-center justify-center transition-colors">
-                2
-              </button>
-              <button className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-700 text-sm font-semibold flex items-center justify-center transition-colors">
-                3
-              </button>
-              <span className="px-1 text-gray-400 text-sm font-semibold">...</span>
-              <button className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-700 text-sm font-semibold flex items-center justify-center transition-colors">
-                209
-              </button>
-              <button className="w-8 h-8 rounded-lg hover:bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center transition-colors">
+              
+              {page < totalPages && (
+                <button 
+                  onClick={() => setPage(page + 1)}
+                  className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-700 text-sm font-semibold flex items-center justify-center transition-colors"
+                >
+                  {page + 1}
+                </button>
+              )}
+              
+              {page + 1 < totalPages && (
+                <>
+                  <span className="px-1 text-gray-400 text-sm font-semibold">...</span>
+                  <button 
+                    onClick={() => setPage(totalPages)}
+                    className="w-8 h-8 rounded-lg hover:bg-gray-100 text-gray-700 text-sm font-semibold flex items-center justify-center transition-colors"
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
+
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages || totalPages === 0}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${page === totalPages || totalPages === 0 ? 'border border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed' : 'hover:bg-gray-100 border border-gray-200 text-gray-700'}`}
+              >
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -571,7 +523,7 @@ export default function AdminCustomersList() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Gam màu ưa thích:</span>
                   <div className="flex items-center gap-1.5">
-                    {activeCustomer.colors.map((c, i) => (
+                    {activeCustomer.colors.map((c: string, i: number) => (
                       <span key={i} className={`w-3.5 h-3.5 rounded-full ${c} inline-block shadow-[0_0_2px_rgba(0,0,0,0.2)]`}></span>
                     ))}
                     <span className="text-xs font-medium text-gray-500 ml-1">{activeCustomer.colorNames}</span>

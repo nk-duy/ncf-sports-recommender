@@ -17,25 +17,10 @@ export default function CheckoutSummary() {
     setMounted(true);
   }, []);
 
-  const handlePlaceOrder = async () => {
-    if (items.length === 0) {
-      notifications.show({
-        title: 'Lỗi',
-        message: 'Giỏ hàng của bạn đang trống!',
-        color: 'red',
-      });
-      return;
-    }
-    
-    if (!customer_name.trim() || !customer_phone.trim() || !customer_address.trim()) {
-      notifications.show({
-        title: 'Thiếu thông tin',
-        message: 'Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng!',
-        color: 'red',
-      });
-      return;
-    }
-    
+  const [showQR, setShowQR] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  const executeOrder = async () => {
     setLoading(true);
     try {
       // Gọi API tạo đơn hàng
@@ -80,6 +65,33 @@ export default function CheckoutSummary() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePlaceOrder = async () => {
+    if (items.length === 0) {
+      notifications.show({ title: 'Lỗi', message: 'Giỏ hàng của bạn đang trống!', color: 'red' });
+      return;
+    }
+    if (!customer_name.trim() || !customer_phone.trim() || !customer_address.trim()) {
+      notifications.show({ title: 'Thiếu thông tin', message: 'Vui lòng nhập đầy đủ Họ tên, Số điện thoại và Địa chỉ!', color: 'red' });
+      return;
+    }
+    
+    if (payment_method === 'VNPAY') {
+      setShowQR(true);
+      return;
+    }
+    
+    await executeOrder();
+  };
+
+  const simulatePaymentSuccess = async () => {
+    setIsProcessingPayment(true);
+    setTimeout(async () => {
+      setIsProcessingPayment(false);
+      setShowQR(false);
+      await executeOrder();
+    }, 2000);
   };
 
   const formatPrice = (price: number) => {
@@ -169,6 +181,59 @@ export default function CheckoutSummary() {
           Nhấn "Đặt hàng" đồng nghĩa chấp thuận Điều khoản dịch vụ KADY
         </div>
       </div>
+
+      {/* QR Code Modal for VNPay / Banking */}
+      {showQR && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-gradient-to-r from-blue-700 to-blue-500 p-4 text-center">
+              <h3 className="text-xl font-black text-white uppercase tracking-wider">Thanh Toán Đơn Hàng</h3>
+              <p className="text-blue-100 text-sm font-medium mt-1">Quét mã QR qua ứng dụng ngân hàng hoặc ví điện tử</p>
+            </div>
+            
+            <div className="p-6 flex flex-col items-center">
+              <div className="text-center mb-4">
+                <p className="text-gray-500 text-sm font-semibold uppercase tracking-widest">Tổng tiền cần thanh toán</p>
+                <p className="text-3xl font-black text-gray-900 font-mono mt-1 text-blue-600">{formatPrice(total)}</p>
+              </div>
+              
+              <div className="p-3 bg-white border-2 border-dashed border-blue-200 rounded-xl mb-6 relative">
+                {/* Dynamically generated VietQR Code */}
+                <img 
+                  src={`https://img.vietqr.io/image/970415-113366668888-compact2.jpg?amount=${total}&addInfo=KADY%20${customer_phone}&accountName=KADY%20SPORTS`} 
+                  alt="VietQR Code" 
+                  className={`w-64 h-64 object-contain transition-opacity duration-300 ${isProcessingPayment ? 'opacity-30 blur-sm' : 'opacity-100'}`}
+                />
+                
+                {isProcessingPayment && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+                    <span className="text-sm font-bold text-gray-900 tracking-wider">Đang xác thực...</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="w-full space-y-3">
+                <button 
+                  onClick={simulatePaymentSuccess}
+                  disabled={isProcessingPayment}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:shadow-none"
+                >
+                  <Verified size={20} />
+                  <span>Tôi đã thanh toán xong</span>
+                </button>
+                <button 
+                  onClick={() => !isProcessingPayment && setShowQR(false)}
+                  disabled={isProcessingPayment}
+                  className="w-full py-2 text-gray-500 hover:text-gray-900 font-semibold text-sm disabled:opacity-50"
+                >
+                  Hủy và chọn phương thức khác
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,7 +10,8 @@ import {
   Receipt,
   Users,
   Brain,
-  Ticket
+  Ticket,
+  MapPin
 } from "lucide-react";
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/admin/don-hang", label: "Đơn hàng", icon: Receipt },
   { href: "/admin/khach-hang", label: "Khách hàng", icon: Users },
   { href: "/admin/khuyen-mai", label: "Kho Voucher", icon: Ticket },
+  { href: "/admin/cua-hang", label: "Cửa hàng", icon: MapPin },
   { href: "/admin/ai-monitor", label: "Giám sát AI", icon: Brain },
 ];
 

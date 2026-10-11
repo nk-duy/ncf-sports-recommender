@@ -1,5 +1,8 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
+import { Zap, Clock, Flame, Ticket, Gift, ArrowRight, ShieldCheck, Sparkles, Check } from "lucide-react";
+import { notifications } from "@mantine/notifications";
 
 export default function PromotionsBanner() {
   const [timeLeft, setTimeLeft] = useState({
@@ -10,18 +13,18 @@ export default function PromotionsBanner() {
   });
   
   const [mounted, setMounted] = useState(false);
+  const [copiedPromo, setCopiedPromo] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
     
-    // Create a target date if none exists or if it has expired
-    let targetStr = localStorage.getItem('megaSaleTarget');
+    // Countdown target date
+    let targetStr = localStorage.getItem("kadyMegaSaleTarget");
     let targetDate = targetStr ? parseInt(targetStr) : 0;
     
-    if (targetDate < new Date().getTime()) {
-      // Set target to exactly 2 days, 14 hours, 38 mins, 52 secs from now
-      targetDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000) + (38 * 60 * 1000) + (52 * 1000);
-      localStorage.setItem('megaSaleTarget', targetDate.toString());
+    if (!targetDate || targetDate < new Date().getTime()) {
+      targetDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000) + (8 * 60 * 60 * 1000) + (45 * 60 * 1000);
+      localStorage.setItem("kadyMegaSaleTarget", targetDate.toString());
     }
 
     const interval = setInterval(() => {
@@ -29,9 +32,8 @@ export default function PromotionsBanner() {
       const distance = targetDate - now;
 
       if (distance <= 0) {
-        // Automatically reset instead of stopping at 0
-        targetDate = new Date().getTime() + (2 * 24 * 60 * 60 * 1000) + (14 * 60 * 60 * 1000) + (38 * 60 * 1000) + (52 * 1000);
-        localStorage.setItem('megaSaleTarget', targetDate.toString());
+        targetDate = new Date().getTime() + (3 * 24 * 60 * 60 * 1000);
+        localStorage.setItem("kadyMegaSaleTarget", targetDate.toString());
       } else {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -45,116 +47,218 @@ export default function PromotionsBanner() {
     return () => clearInterval(interval);
   }, []);
 
-  const formatNum = (num: number) => num.toString().padStart(2, '0');
+  const formatNum = (num: number) => num.toString().padStart(2, "0");
+
+  const handleCopyCode = (code: string, desc: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedPromo(code);
+    notifications.show({
+      title: "Đã sao chép mã ưu đãi!",
+      message: `Mã ${code} (${desc}) đã được lưu vào bộ nhớ tạm. Dán khi thanh toán!`,
+      color: "red",
+      icon: <Check size={16} />,
+      autoClose: 2500,
+    });
+    setTimeout(() => setCopiedPromo(null), 2500);
+  };
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   return (
-    <div className="bg-gradient-to-r from-[#0B1E3F] to-[#1e3a8a] rounded-[2rem] p-8 md:p-14 text-white relative overflow-hidden mb-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-10">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-1/2 h-full opacity-30 pointer-events-none">
-        <div className="absolute w-[500px] h-[500px] bg-red-600 rounded-full blur-[120px] -top-20 right-0"></div>
-        <div className="absolute w-64 h-64 bg-sky-400 rounded-full blur-[100px] bottom-10 right-40"></div>
-      </div>
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-[#0B1528] to-[#1a0a1e] text-white shadow-2xl border border-slate-800/80 mb-10">
+      {/* Background glow effects */}
+      <div className="absolute top-0 right-0 w-[550px] h-[550px] bg-red-600/20 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] bg-amber-500/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -top-20 left-10 w-[350px] h-[350px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="relative z-10 w-full md:w-3/5">
-        <div className="inline-block px-4 py-1.5 bg-amber-500 rounded-tl-xl rounded-br-xl text-sm font-black tracking-widest mb-6 text-white shadow-lg">
-          ⚡ ĐẠI TIỆC MUA SẮM LỚN NHẤT NĂM 2025
-        </div>
-        
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-1 tracking-tight leading-none uppercase">
-          MEGA FLASH SALE
-        </h1>
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-5 tracking-tight leading-none uppercase">
-          <span className="text-amber-400">GIẢM ĐẾN 50%</span> TOÀN BỘ SẢN PHẨM
-        </h2>
-        
-        <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-6 max-w-xl">
-          Hàng ngàn mẫu giày chạy bộ, trang phục thể thao Dry-fit, lều cắm trại dã ngoại và 
-          thiết bị tập thể hình chính hãng đang loạt giảm sốc. Số lượng có hạn!
-        </p>
-        
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div className="flex items-center gap-2 text-sm font-bold bg-gray-800/80 rounded-lg px-4 py-3 border border-gray-700">
-            <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Kết thúc sau
-            
-            <div className="flex items-center gap-1.5 ml-2">
-              <div className="bg-red-600 rounded pt-1 pb-0.5 px-2 text-center w-12 flex flex-col items-center">
-                <span className="text-lg leading-none font-black block">{mounted ? formatNum(timeLeft.days) : '02'}</span>
-                <span className="text-[8px] uppercase tracking-wider block opacity-80 mt-1">NGÀY</span>
+      {/* Grid pattern overlay */}
+      <div 
+        className="absolute inset-0 opacity-[0.04] pointer-events-none" 
+        style={{ backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+      />
+
+      <div className="relative z-10 p-6 sm:p-10 lg:p-14 flex flex-col lg:flex-row items-center justify-between gap-10">
+        {/* Left Column: Hero Headline & Timer */}
+        <div className="w-full lg:w-3/5 space-y-6">
+          {/* Badge */}
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-600 to-amber-500 text-white text-xs font-black tracking-wider uppercase shadow-lg shadow-red-500/25 animate-pulse">
+              <Zap className="w-3.5 h-3.5 fill-white" />
+              ĐẠI TIỆC SIÊU SALE THỂ THAO
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/80 text-amber-300 text-xs font-semibold backdrop-blur-sm">
+              <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              Hơn 200+ Sản Phẩm Giảm Sốc
+            </span>
+          </div>
+
+          {/* Heading */}
+          <div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight uppercase leading-[1.08]">
+              MEGA SPORTS <span className="bg-gradient-to-r from-red-500 via-amber-400 to-yellow-300 bg-clip-text text-transparent">FESTIVAL</span>
+            </h1>
+            <p className="mt-2 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-100 uppercase tracking-tight flex items-center gap-2">
+              GIẢM ĐẾN <span className="text-red-500 underline decoration-amber-400 decoration-wavy decoration-2">50% TOÀN BỘ</span> SẢN PHẨM
+            </p>
+          </div>
+
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl font-medium">
+            Cơ hội sở hữu giày thể thao, vợt pickleball & cầu lông, trang phục Dry-fit cùng thiết bị tập luyện chính hãng với mức giá hời nhất năm. Số lượng giới hạn theo từng khung giờ!
+          </p>
+
+          {/* Live Countdown Box */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl backdrop-blur-md max-w-lg">
+            <div className="flex items-center justify-between mb-3">
+              <span className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-wide">
+                <Clock className="w-4 h-4 animate-spin text-amber-400" style={{ animationDuration: "12s" }} />
+                Thời gian ưu đãi còn lại
+              </span>
+              <span className="text-[11px] font-semibold text-slate-400 uppercase">
+                Flash Sale Kết Thúc Sớm
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 sm:gap-3">
+              <div className="flex-1 bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 rounded-xl py-2 px-1 text-center shadow-inner">
+                <span className="block text-2xl sm:text-3xl font-black text-white leading-none font-mono">
+                  {mounted ? formatNum(timeLeft.days) : "02"}
+                </span>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">NGÀY</span>
               </div>
-              <span className="text-gray-500 font-bold">:</span>
-              <div className="bg-red-600 rounded pt-1 pb-0.5 px-2 text-center w-12 flex flex-col items-center">
-                <span className="text-lg leading-none font-black block">{mounted ? formatNum(timeLeft.hours) : '14'}</span>
-                <span className="text-[8px] uppercase tracking-wider block opacity-80 mt-1">GIỜ</span>
+              <span className="text-xl font-bold text-red-500">:</span>
+
+              <div className="flex-1 bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 rounded-xl py-2 px-1 text-center shadow-inner">
+                <span className="block text-2xl sm:text-3xl font-black text-white leading-none font-mono">
+                  {mounted ? formatNum(timeLeft.hours) : "14"}
+                </span>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">GIỜ</span>
               </div>
-              <span className="text-gray-500 font-bold">:</span>
-              <div className="bg-red-600 rounded pt-1 pb-0.5 px-2 text-center w-12 flex flex-col items-center">
-                <span className="text-lg leading-none font-black block">{mounted ? formatNum(timeLeft.minutes) : '38'}</span>
-                <span className="text-[8px] uppercase tracking-wider block opacity-80 mt-1">PHÚT</span>
+              <span className="text-xl font-bold text-red-500">:</span>
+
+              <div className="flex-1 bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-700 rounded-xl py-2 px-1 text-center shadow-inner">
+                <span className="block text-2xl sm:text-3xl font-black text-white leading-none font-mono">
+                  {mounted ? formatNum(timeLeft.minutes) : "38"}
+                </span>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">PHÚT</span>
               </div>
-              <span className="text-gray-500 font-bold">:</span>
-              <div className="bg-red-600 rounded pt-1 pb-0.5 px-2 text-center w-12 flex flex-col items-center">
-                <span className="text-lg leading-none font-black block">{mounted ? formatNum(timeLeft.seconds) : '52'}</span>
-                <span className="text-[8px] uppercase tracking-wider block opacity-80 mt-1">GIÂY</span>
+              <span className="text-xl font-bold text-red-500">:</span>
+
+              <div className="flex-1 bg-gradient-to-b from-red-950 to-red-900 border border-red-700/80 rounded-xl py-2 px-1 text-center shadow-inner">
+                <span className="block text-2xl sm:text-3xl font-black text-amber-300 leading-none font-mono">
+                  {mounted ? formatNum(timeLeft.seconds) : "52"}
+                </span>
+                <span className="block text-[10px] font-bold text-red-300 uppercase tracking-wider mt-1">GIÂY</span>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <button className="bg-amber-400 hover:bg-amber-500 text-gray-900 font-black py-3 px-8 rounded-lg text-lg flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.4)]">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            SĂN DEAL NGAY
-          </button>
-          <span className="text-sm text-gray-300 flex items-center gap-1.5">
-            <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Áp dụng đồng thời voucher vận chuyển 0đ
-          </span>
-        </div>
-      </div>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-4 pt-2">
+            <button
+              onClick={() => scrollToSection("khuyen-mai-products")}
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white font-extrabold text-sm sm:text-base tracking-wide uppercase shadow-lg shadow-red-600/40 hover:shadow-red-600/60 transform hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer"
+            >
+              <Flame className="w-5 h-5 fill-white" />
+              Săn Deal Ngay
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </button>
 
-      <div className="relative z-10 w-full md:w-2/5 flex flex-col gap-4">
-        {/* Box 1 */}
-        <div className="bg-[#b91c1c] rounded-xl p-5 relative overflow-hidden shadow-lg border border-red-500/30">
-          <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-            <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-            </svg>
-          </div>
-          <div className="inline-block px-2 py-0.5 bg-red-950 text-red-200 text-[10px] font-bold tracking-wider rounded uppercase mb-2">
-            Ưu đãi thanh toán
-          </div>
-          <h3 className="text-xl font-bold mb-1">Giảm thêm 10% qua VNPay & MoMo</h3>
-          <p className="text-red-200 text-xs">Tối đa 100.000đ cho đơn từ 600.000đ</p>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-red-800/50 p-2 rounded-lg">
-            <svg className="w-8 h-8 text-red-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-            </svg>
+            <button
+              onClick={() => scrollToSection("kho-voucher")}
+              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-bold text-sm tracking-wide uppercase backdrop-blur-sm transition-all cursor-pointer"
+            >
+              <Ticket className="w-4 h-4 text-amber-400" />
+              Lấy Mã Toàn Sàn
+            </button>
           </div>
         </div>
 
-        {/* Box 2 */}
-        <div className="bg-[#1e3a8a] rounded-xl p-5 relative overflow-hidden shadow-lg border border-blue-500/30">
-          <div className="absolute right-[-10px] bottom-[-10px] opacity-10">
-            <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M20 6h-2.18c.11-.31.18-.65.18-1a2.996 2.996 0 00-5.5-1.65l-.5.67-.5-.68C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zM9 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76l1-1.36 1 1.36L15.38 12 17 10.83 14.92 8H20v6z" />
-            </svg>
+        {/* Right Column: Special Perks & Fast Copy Cards */}
+        <div className="w-full lg:w-2/5 flex flex-col gap-4">
+          {/* Card 1: VNPAY / MOMO */}
+          <div className="group relative rounded-2xl bg-gradient-to-r from-slate-900/90 to-red-950/60 p-5 border border-slate-800 hover:border-red-500/50 shadow-xl backdrop-blur-md transition-all duration-300">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-red-600/20 border border-red-500/40 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30 mb-1">
+                    Ưu Đãi Thanh Toán
+                  </span>
+                  <h3 className="font-bold text-slate-100 text-base leading-tight">
+                    Giảm thêm 10% qua VNPay & MoMo
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Giảm tối đa 100.000đ khi thanh toán đơn từ 600.000đ
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleCopyCode("VNPAY10", "Giảm 10% qua VNPay")}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
+              >
+                {copiedPromo === "VNPAY10" ? "Đã lưu" : "Lưu mã"}
+              </button>
+            </div>
           </div>
-          <div className="inline-block px-2 py-0.5 bg-blue-950 text-blue-200 text-[10px] font-bold tracking-wider rounded uppercase mb-2">
-            Quà tặng kèm
+
+          {/* Card 2: Free Gift */}
+          <div className="group relative rounded-2xl bg-gradient-to-r from-slate-900/90 to-blue-950/60 p-5 border border-slate-800 hover:border-blue-500/50 shadow-xl backdrop-blur-md transition-all duration-300">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center shrink-0">
+                  <Gift className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30 mb-1">
+                    Quà Tặng Thể Thao 0Đ
+                  </span>
+                  <h3 className="font-bold text-slate-100 text-base leading-tight">
+                    Tặng Bình Nước Thể Thao 750ml
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Áp dụng tự động cho mọi đơn hàng giá trị từ 1.200.000đ
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 px-2.5 py-1 rounded-md text-[11px] font-bold text-blue-300 bg-blue-950/80 border border-blue-800">
+                Tự động
+              </span>
+            </div>
           </div>
-          <h3 className="text-xl font-bold mb-1">Tặng Bình Nước Thể Thao 750ml</h3>
-          <p className="text-blue-200 text-xs">Cho hóa đơn thể thao từ 1.200.000đ</p>
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-blue-800/50 p-2 rounded-lg">
-            <svg className="w-8 h-8 text-blue-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
+
+          {/* Card 3: Free Shipping */}
+          <div className="group relative rounded-2xl bg-gradient-to-r from-slate-900/90 to-emerald-950/60 p-5 border border-slate-800 hover:border-emerald-500/50 shadow-xl backdrop-blur-md transition-all duration-300">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-1">
+                    Vận Chuyển Hỏa Tốc
+                  </span>
+                  <h3 className="font-bold text-slate-100 text-base leading-tight">
+                    Miễn phí vận chuyển toàn quốc 0Đ
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Áp dụng đồng thời cùng voucher giảm giá và quà tặng
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleCopyCode("FREESHIP0D", "Freeship toàn sàn")}
+                className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer"
+              >
+                {copiedPromo === "FREESHIP0D" ? "Đã lưu" : "Lưu mã"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

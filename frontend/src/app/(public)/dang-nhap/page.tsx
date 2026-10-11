@@ -1,191 +1,45 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import styles from './Login.module.css';
-import { useAuthStore } from '@/shared/store/authStore';
-import { notifications } from '@mantine/notifications';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import LoginForm from '@/modules/dang-nhap/components/LoginForm';
+import RegisterForm from '@/modules/dang-nhap/components/RegisterForm';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    confirmPassword: '',
-    email: '',
-    full_name: ''
-  });
-  const [error, setError] = useState('');
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    try {
-      if (isLogin) {
-        // Login API calls expect application/x-www-form-urlencoded
-        const formDataParams = new URLSearchParams();
-        formDataParams.append('username', formData.username);
-        formDataParams.append('password', formData.password);
-
-        const res = await fetch('http://localhost:8000/api/v1/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: formDataParams,
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          // Sau khi login, fetch thông tin user
-          const userRes = await fetch('http://localhost:8000/api/v1/auth/me', {
-            headers: { 'Authorization': `Bearer ${data.access_token}` }
-          });
-          if (userRes.ok) {
-            const user = await userRes.json();
-            useAuthStore.getState().login(data.access_token, user);
-            
-            if (user.role === 'admin') {
-              router.push('/admin');
-            } else {
-              router.push('/');
-            }
-          }
-        } else {
-          const errData = await res.json();
-          setError(errData.detail || 'Login failed');
-        }
-      } else {
-        // Register API
-        if (formData.password !== formData.confirmPassword) {
-          setError('Mật khẩu nhập lại không khớp!');
-          return;
-        }
-
-        const res = await fetch('http://localhost:8000/api/v1/auth/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username: formData.username,
-            email: formData.email,
-            password: formData.password,
-            full_name: formData.full_name
-          }),
-        });
-
-        if (res.ok) {
-          setIsLogin(true);
-          setError('');
-          notifications.show({
-            title: 'Thành công',
-            message: 'Đăng ký thành công! Hãy đăng nhập.',
-            color: 'green',
-          });
-        } else {
-          const errData = await res.json();
-          setError(errData.detail || 'Registration failed');
-        }
-      }
-    } catch (err) {
-      setError('Network error');
-    }
-  };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.glassCard}>
-        <h2 className={styles.title}>{isLogin ? 'Đăng Nhập' : 'Tạo Tài Khoản'}</h2>
-        
-        {error && <div className={styles.error}>{error}</div>}
+    <div 
+      className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=1920&auto=format&fit=crop")' }}
+    >
+      {/* Overlay to darken the background image */}
+      <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-[2px] z-0"></div>
 
-        <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
-          <div className={styles.inputGroup}>
-            <label>Tên đăng nhập</label>
-            <input 
-              type="text" 
-              name="username" 
-              value={formData.username} 
-              onChange={handleChange} 
-              placeholder="Nhập tên đăng nhập"
-              autoComplete="off"
-              required 
-            />
+      {/* Back to Home Link - Fixed at top left */}
+      <div className="absolute top-8 left-8 z-20">
+        <Link href="/" className="flex items-center justify-center gap-2 text-gray-200 hover:text-white transition-colors font-medium drop-shadow">
+          <ArrowLeft size={18} />
+          Trở về trang chủ
+        </Link>
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md z-10">
+        <div className="bg-white/95 backdrop-blur-2xl py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/40">
+          
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <img src="/logo.png" alt="KADY Logo" className="h-14 w-auto object-contain" />
           </div>
           
-          {!isLogin && (
-            <>
-              <div className={styles.inputGroup}>
-                <label>Email</label>
-                <input 
-                  type="email" 
-                  name="email" 
-                  value={formData.email} 
-                  onChange={handleChange} 
-                  placeholder="Nhập địa chỉ email"
-                  autoComplete="off"
-                  required 
-                />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Họ và Tên</label>
-                <input 
-                  type="text" 
-                  name="full_name" 
-                  value={formData.full_name} 
-                  onChange={handleChange} 
-                  placeholder="Nhập họ và tên của bạn"
-                  autoComplete="off"
-                />
-              </div>
-            </>
+          {isLogin ? (
+            <LoginForm onSwitchToRegister={() => setIsLogin(false)} />
+          ) : (
+            <RegisterForm onSwitchToLogin={() => setIsLogin(true)} />
           )}
 
-          <div className={styles.inputGroup}>
-            <label>Mật khẩu</label>
-            <input 
-              type="password" 
-              name="password" 
-              value={formData.password} 
-              onChange={handleChange} 
-              placeholder="Nhập mật khẩu"
-              autoComplete="new-password"
-              required 
-            />
-          </div>
-
-          {!isLogin && (
-            <div className={styles.inputGroup}>
-              <label>Nhập lại mật khẩu</label>
-              <input 
-                type="password" 
-                name="confirmPassword" 
-                value={formData.confirmPassword} 
-                onChange={handleChange} 
-                placeholder="Nhập lại mật khẩu"
-                required 
-              />
-            </div>
-          )}
-
-          <button type="submit" className={styles.submitBtn}>
-            {isLogin ? 'ĐĂNG NHẬP' : 'ĐĂNG KÝ'}
-          </button>
-        </form>
-
-        <p className={styles.toggleText}>
-          {isLogin ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-          <span onClick={() => setIsLogin(!isLogin)} className={styles.toggleLink}>
-            {isLogin ? 'Đăng ký ngay' : 'Đăng nhập'}
-          </span>
-        </p>
+        </div>
       </div>
     </div>
   );
