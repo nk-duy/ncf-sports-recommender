@@ -1,4 +1,5 @@
 import React from 'react';
+import { X, Scissors, Ruler } from 'lucide-react';
 
 interface SizeGuideModalProps {
   isOpen: boolean;
@@ -22,9 +23,7 @@ export default function SizeGuideModal({ isOpen, onClose, categories }: SizeGuid
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">Hướng dẫn chọn size</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-red-500 hover:rotate-90 transition-all duration-300">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="w-6 h-6" />
           </button>
         </div>
         
@@ -32,7 +31,7 @@ export default function SizeGuideModal({ isOpen, onClose, categories }: SizeGuid
           {isClothing ? (
             <div>
               <div className="flex items-center gap-3 mb-4 text-blue-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" /></svg>
+                <Scissors className="w-6 h-6" />
                 <h3 className="text-lg font-semibold text-gray-800">Bảng số đo (Quần áo)</h3>
               </div>
               <p className="text-sm text-gray-500 mb-4">Sử dụng thước dây để đo các vòng trên cơ thể của bạn, sau đó đối chiếu với bảng dưới đây để chọn size phù hợp nhất.</p>
@@ -78,7 +77,7 @@ export default function SizeGuideModal({ isOpen, onClose, categories }: SizeGuid
           ) : (
             <div>
               <div className="flex items-center gap-3 mb-4 text-blue-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                <Ruler className="w-6 h-6" />
                 <h3 className="text-lg font-semibold text-gray-800">Bảng chiều cao và cân nặng (Giày dép)</h3>
               </div>
               <p className="text-sm text-gray-500 mb-4">Lựa chọn size phù hợp với chiều cao và cân nặng của bạn theo thông số đề xuất dưới đây.</p>

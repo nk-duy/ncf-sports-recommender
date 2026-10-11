@@ -1,5 +1,6 @@
 import ProductCard from "./ProductCard";
 import { CATEGORY_PRODUCTS_MOCK } from "../data/mockProducts";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function ProductsList() {
   return (
@@ -30,9 +31,7 @@ export default function ProductsList() {
       {/* Pagination */}
       <div className="flex items-center justify-center gap-2 mt-8">
         <button className="w-9 h-9 rounded-full flex items-center justify-center border border-gray-200 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ChevronLeft className="w-4 h-4" />
         </button>
         <button className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-600 text-white font-bold shadow-sm">
           1
@@ -50,9 +49,7 @@ export default function ProductsList() {
           12
         </button>
         <button className="w-9 h-9 rounded-full flex items-center justify-center border border-gray-200 text-gray-600 hover:border-gray-900 hover:bg-gray-50 transition-colors">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <ChevronRight className="w-4 h-4" />
         </button>
       </div>
     </div>
