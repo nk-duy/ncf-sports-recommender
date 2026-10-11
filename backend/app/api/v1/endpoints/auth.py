@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from app.schemas.user import UserCreate, UserResponse, Token
+from app.schemas.user import UserCreate, UserResponse, Token, SocialLoginRequest
 from app.services.auth_service import auth_service
 from app.api.deps import get_current_active_user
 from app.models.user import User
+import uuid
 
 router = APIRouter()
 
@@ -61,3 +62,33 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
         role=current_user.role,
         created_at=current_user.created_at
     )
+
+@router.post("/social-login", response_model=Token)
+async def social_login(req: SocialLoginRequest):
+    # This is a mocked social login that skips real Firebase Token validation for demo purposes.
+    # In a real app, you would use firebase_admin.auth.verify_id_token(req.token) here.
+    
+    # Check if user with this email exists
+    user = await auth_service.get_user_by_email(req.email)
+    
+    if not user:
+        # If user doesn't exist, create a new one automatically
+        # Generate a random password since they use social login
+        random_password = str(uuid.uuid4())
+        # Use email prefix as username if possible, or a random one
+        base_username = req.email.split('@')[0]
+        
+        # Check if username exists, if so append random str
+        existing_user = await auth_service.get_user_by_username(base_username)
+        username = base_username if not existing_user else f"{base_username}_{str(uuid.uuid4())[:8]}"
+        
+        user_in = UserCreate(
+            username=username,
+            email=req.email,
+            password=random_password,
+            full_name=req.full_name or base_username
+        )
+        user = await auth_service.register_user(user_in)
+        
+    access_token = auth_service.create_token(user.username)
+    return {"access_token": access_token, "token_type": "bearer"}

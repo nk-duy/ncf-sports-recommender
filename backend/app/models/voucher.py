@@ -14,6 +14,7 @@ class Voucher(Document):
     valid_from: Optional[datetime] = Field(None, description="Ngày bắt đầu có hiệu lực")
     valid_until: Optional[datetime] = Field(None, description="Ngày hết hạn")
     is_active: bool = Field(True, description="Trạng thái kích hoạt")
+    applicable_categories: Optional[list[str]] = Field(None, description="Danh sách danh mục áp dụng (None = áp dụng tất cả)")
 
     class Settings:
         name = "vouchers"

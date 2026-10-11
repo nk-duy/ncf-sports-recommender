@@ -80,4 +80,55 @@ class RecommendationService:
             from fastapi import HTTPException
             raise HTTPException(status_code=500, detail=str(e))
 
+    async def get_cross_sell_recommendations(self, cart_item_ids: List[str], top_k: int = 3) -> List[Product]:
+        """Gợi ý cross-sell dựa trên độ tương đồng Cosine của Item Embeddings trong NCF"""
+        if not self._load_model() or not cart_item_ids:
+            return await self._get_fallback_cross_sell(cart_item_ids, top_k)
+            
+        item_to_index = self.mappings["item_to_index"]
+        index_to_item = self.mappings["index_to_item"]
+        
+        cart_indices = [item_to_index[i_id] for i_id in cart_item_ids if i_id in item_to_index]
+        if not cart_indices:
+            return await self._get_fallback_cross_sell(cart_item_ids, top_k)
+            
+        with torch.no_grad():
+            all_item_embeds = self.model.item_embedding.weight
+            cart_tensor = torch.tensor(cart_indices, dtype=torch.long)
+            cart_embeds = self.model.item_embedding(cart_tensor)
+            
+            # Đại diện giỏ hàng là trung bình các embeddings của các sản phẩm bên trong
+            basket_embed = cart_embeds.mean(dim=0, keepdim=True)
+            
+            from torch.nn.functional import cosine_similarity
+            similarities = cosine_similarity(basket_embed, all_item_embeds)
+            
+            # Loại trừ các sản phẩm đã có trong giỏ hàng
+            similarities[cart_indices] = -1.0
+            
+            top_indices = torch.topk(similarities, k=top_k).indices.tolist()
+            
+        recommended_product_ids = [index_to_item[str(idx)] for idx in top_indices]
+        
+        recommended_products = []
+        for p_id in recommended_product_ids:
+            product = await Product.find_one(Product.product_id == p_id)
+            if product and not product.is_hidden:
+                recommended_products.append(product)
+                
+        # Nếu model gợi ý không đủ số lượng do database thiếu data, fallback
+        if len(recommended_products) < top_k:
+            fallback = await self._get_fallback_cross_sell(cart_item_ids, top_k - len(recommended_products))
+            recommended_products.extend(fallback)
+            
+        return recommended_products
+
+    async def _get_fallback_cross_sell(self, cart_item_ids: List[str], top_k: int) -> List[Product]:
+        try:
+            # Fallback đơn giản lấy phụ kiện hoặc rating cao
+            products = await Product.find({"product_id": {"$nin": cart_item_ids}}).limit(top_k).to_list()
+            return products
+        except:
+            return []
+
 recommendation_service = RecommendationService()
