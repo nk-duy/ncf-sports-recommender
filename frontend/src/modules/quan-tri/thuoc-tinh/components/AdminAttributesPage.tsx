@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Save } from 'lucide-react';
+import { Plus, Trash2, Save, X } from 'lucide-react';
 import { notifications } from '@mantine/notifications';
 
 export default function AdminAttributesPage() {
@@ -52,6 +52,23 @@ export default function AdminAttributesPage() {
     setter(newList);
   };
 
+  const getColorCode = (colorName: string) => {
+    const map: Record<string, string> = {
+      'Đen': '#000000',
+      'Trắng': '#FFFFFF',
+      'Đỏ': '#EF4444',
+      'Xanh Dương': '#3B82F6',
+      'Xám': '#9CA3AF',
+      'Vàng': '#F59E0B',
+      'Xanh Lá': '#10B981',
+      'Cam': '#F97316',
+      'Hồng': '#EC4899',
+      'Tím': '#8B5CF6',
+      'Nâu': '#78350F'
+    };
+    return map[colorName] || '#E5E7EB';
+  };
+
   const AttributeSection = ({ title, items, setter, placeholder }: { title: string, items: string[], setter: any, placeholder: string }) => {
     const [input, setInput] = useState('');
     return (
@@ -60,6 +77,12 @@ export default function AdminAttributesPage() {
         <div className="flex flex-wrap gap-2 mb-4">
           {items.map((item, idx) => (
             <div key={idx} className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-700">
+              {title === 'Màu sắc' && (
+                <span 
+                  className="w-3 h-3 rounded-full border border-gray-300 shadow-sm"
+                  style={{ backgroundColor: getColorCode(item) }}
+                ></span>
+              )}
               {item}
               <button onClick={() => removeItem(setter, items, idx)} className="text-gray-400 hover:text-red-500">
                 <X size={14} />
@@ -88,10 +111,7 @@ export default function AdminAttributesPage() {
     );
   };
 
-  // Local X icon component to avoid passing lucide explicitly inside
-  const X = ({size}: {size: number}) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-  );
+
 
   return (
     <div className="space-y-6 max-w-5xl">

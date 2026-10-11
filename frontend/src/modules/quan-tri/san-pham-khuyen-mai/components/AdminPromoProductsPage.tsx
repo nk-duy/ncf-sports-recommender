@@ -26,7 +26,7 @@ export default function AdminPromoProductsPage() {
   const fetchPromoProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/products?limit=100&is_promotion=true');
+      const res = await fetch('http://localhost:8000/api/v1/products?limit=100&is_promotion=true&include_hidden=true');
       const data = await res.json();
       if (Array.isArray(data)) {
         setPromoProducts(data);
@@ -42,7 +42,7 @@ export default function AdminPromoProductsPage() {
 
   const fetchAllProducts = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/products?limit=100');
+      const res = await fetch('http://localhost:8000/api/v1/products?limit=100&include_hidden=true');
       const data = await res.json();
       if (Array.isArray(data)) {
         setAllProducts(data);
@@ -145,7 +145,7 @@ export default function AdminPromoProductsPage() {
   const searchFilteredAvailable = availableProductsToAdd.filter(p => 
     p.name.toLowerCase().includes(addSearchQuery.toLowerCase()) || 
     p.product_id.toLowerCase().includes(addSearchQuery.toLowerCase())
-  ).slice(0, 10); // Limit to 10 for performance in dropdown
+  ); // Hiển thị toàn bộ sản phẩm phù hợp thay vì chỉ 10
 
   return (
     <div className="space-y-6">
@@ -212,8 +212,8 @@ export default function AdminPromoProductsPage() {
                   <td colSpan={6} className="px-6 py-10 text-center text-gray-500">Không có sản phẩm khuyến mãi nào</td>
                 </tr>
               ) : (
-                filteredPromoProducts.map((product) => (
-                  <tr key={product.product_id} className="hover:bg-gray-50 transition">
+                filteredPromoProducts.map((product, index) => (
+                  <tr key={`${product.product_id}-${index}`} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-3 flex items-center gap-4">
                       <img src={product.image_url} alt={product.name} className="w-12 h-12 object-cover rounded-md border border-gray-200" />
                       <span className="font-semibold text-gray-900 line-clamp-2 max-w-[250px]">{product.name}</span>
@@ -293,7 +293,7 @@ export default function AdminPromoProductsPage() {
       {/* Add Promotion Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-6 border-b border-gray-100">
               <h2 className="text-xl font-bold">Thêm sản phẩm khuyến mãi</h2>
             </div>
@@ -308,28 +308,25 @@ export default function AdminPromoProductsPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
-              
-              {addSearchQuery && (
-                <div className="border border-gray-200 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                  {searchFilteredAvailable.length === 0 ? (
-                    <div className="p-3 text-sm text-gray-500 text-center">Không tìm thấy sản phẩm phù hợp</div>
-                  ) : (
-                    searchFilteredAvailable.map(p => (
-                      <div 
-                        key={p.product_id}
-                        onClick={() => setSelectedProductId(p.product_id)}
-                        className={`p-2 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition border-b border-gray-100 last:border-0 ${selectedProductId === p.product_id ? 'bg-blue-50 border-blue-200' : ''}`}
-                      >
-                        <img src={p.image_url} alt="" className="w-10 h-10 rounded object-cover" />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold line-clamp-1">{p.name}</p>
-                          <p className="text-xs text-gray-500 font-mono">{p.product_id} - {formatPrice(p.price)}</p>
-                        </div>
+              <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden max-h-96 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-2 p-2">
+                {searchFilteredAvailable.length === 0 ? (
+                  <div className="p-3 text-sm text-gray-500 text-center">Không tìm thấy sản phẩm phù hợp</div>
+                ) : (
+                  searchFilteredAvailable.map((p, index) => (
+                    <div 
+                      key={`${p.product_id}-${index}`}
+                      onClick={() => setSelectedProductId(p.product_id)}
+                      className={`p-2 flex items-center gap-3 cursor-pointer hover:bg-blue-50 transition border-b border-gray-100 last:border-0 ${selectedProductId === p.product_id ? 'bg-blue-50 border-blue-200' : ''}`}
+                    >
+                      <img src={p.image_url} alt="" className="w-10 h-10 rounded object-cover" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold line-clamp-1">{p.name}</p>
+                        <p className="text-xs text-gray-500 font-mono">{p.product_id} - {formatPrice(p.price)}</p>
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
+                    </div>
+                  ))
+                )}
+              </div>
 
               {selectedProductId && (
                 <div className="mt-4">
