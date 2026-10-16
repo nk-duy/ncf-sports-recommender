@@ -80,7 +80,8 @@ export default function PostPurchaseRecommendations() {
                     quantity: 1,
                     image_url: product.image_url,
                     color: product.colors?.[0] || 'Mặc định',
-                    size: product.sizes?.[0] || 'Freesize'
+                    size: product.sizes?.[0] || 'Freesize',
+                    stock: 100
                   });
                   alert('Đã thêm sản phẩm gợi ý vào giỏ hàng!');
                 }}

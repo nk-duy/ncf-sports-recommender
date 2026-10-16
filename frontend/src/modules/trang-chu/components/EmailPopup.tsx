@@ -6,6 +6,7 @@ export default function EmailPopup() {
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [voucherCode, setVoucherCode] = useState('KADY10');
   const [errorMsg, setErrorMsg] = useState('');
 

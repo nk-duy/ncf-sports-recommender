@@ -139,9 +139,9 @@ export default function RecentOrders() {
                     </div>
                   </Table.Td>
                   <Table.Td className="pr-6 py-4 text-right">
-                    <button className="px-4 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm">
+                    <Link href="/tai-khoan/orders" className="inline-block px-4 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition-colors shadow-sm">
                       Chi tiết
-                    </button>
+                    </Link>
                   </Table.Td>
                 </Table.Tr>
               )})

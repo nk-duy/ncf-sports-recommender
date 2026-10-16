@@ -13,31 +13,35 @@ import {
   Star,
   Phone
 } from "lucide-react";
-import { mockUserProfile } from "@/modules/tai-khoan/data/mockAccountData";
 import { useAuthStore } from "@/shared/store/authStore";
+import { useWishlistStore } from "@/shared/store/wishlistStore";
 import { useRouter } from "next/navigation";
-
-const menuItems = [
-  { icon: LayoutDashboard, label: "Tổng quan tài khoản", href: "/tai-khoan" },
-  { icon: ShoppingBag, label: "Lịch sử mua hàng", href: "/tai-khoan/orders", badge: 0 },
-  { icon: Heart, label: "Sản phẩm yêu thích", href: "/tai-khoan/wishlist", badge: 0, badgeColor: "red" },
-  { icon: Zap, label: "Gợi ý riêng cho bạn", href: "/tai-khoan/recommendations", badge: "AI", badgeColor: "blue" },
-  { icon: Settings, label: "Cài đặt tài khoản", href: "/tai-khoan/settings" },
-];
 
 export default function AccountSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuthStore();
+  const { items: wishlistItems } = useWishlistStore();
   
   const handleLogout = () => {
     logout();
     router.push('/dang-nhap');
   };
 
-  const displayName = user?.full_name || user?.username || mockUserProfile.name;
-  const displayEmail = user?.email || mockUserProfile.email;
+  const displayName = user?.full_name || user?.username || "Tài khoản";
+  const displayEmail = user?.email || "chua_dang_nhap@kadysports.vn";
   const initials = displayName.substring(0, 2).toUpperCase();
+  const favoriteSport = user?.interested_sports && user.interested_sports.length > 0 
+    ? user.interested_sports.join(", ") 
+    : "Chạy bộ, Thể hình";
+
+  const menuItems = [
+    { icon: LayoutDashboard, label: "Tổng quan tài khoản", href: "/tai-khoan" },
+    { icon: ShoppingBag, label: "Lịch sử mua hàng", href: "/tai-khoan/orders" },
+    { icon: Heart, label: "Sản phẩm yêu thích", href: "/tai-khoan/wishlist", badge: wishlistItems.length > 0 ? wishlistItems.length : undefined, badgeColor: "red" },
+    { icon: Zap, label: "Gợi ý riêng cho bạn", href: "/tai-khoan/recommendations", badge: "AI", badgeColor: "blue" },
+    { icon: Settings, label: "Cài đặt tài khoản", href: "/tai-khoan/settings" },
+  ];
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
@@ -49,25 +53,27 @@ export default function AccountSidebar() {
           </span>
           <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1">
+        <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">
           {displayName}
         </h2>
-        <p className="text-sm text-gray-500 mb-3">
+        <p className="text-sm text-gray-500 mb-3 text-center">
           {displayEmail}
         </p>
-        <div className="bg-yellow-50 text-yellow-700 px-4 py-1.5 rounded-full flex items-center text-sm font-medium border border-yellow-200 w-full justify-center">
-          <Star size={16} className="fill-yellow-500 text-yellow-500 mr-2" />
-          Hạng thành viên: <span className="font-bold ml-1">Thành viên Mới</span>
+        <div className="bg-amber-50 text-amber-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium border border-amber-200 w-full justify-center">
+          <Star size={16} className="fill-amber-500 text-amber-500 mr-2" />
+          Hạng thành viên: <span className="font-bold ml-1">{user?.tier || "Thành viên Thể thao"}</span>
         </div>
         
         <div className="w-full mt-6 space-y-2 text-sm">
           <div className="flex justify-between items-center text-gray-600">
-            <span>Ngày tham gia:</span>
-            <span className="font-medium text-gray-900">Chưa cập nhật</span>
+            <span>SĐT:</span>
+            <span className="font-medium text-gray-900">{user?.phone || "Chưa cập nhật"}</span>
           </div>
           <div className="flex justify-between items-center text-gray-600">
             <span>Môn yêu thích:</span>
-            <span className="font-medium text-gray-900">Chưa cập nhật</span>
+            <span className="font-medium text-gray-900 truncate max-w-[140px]" title={favoriteSport}>
+              {favoriteSport}
+            </span>
           </div>
         </div>
       </div>

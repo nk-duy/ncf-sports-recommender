@@ -34,8 +34,9 @@ export default function ProductDetailPage() {
   // Toast thông báo Wishlist
   const [wishlistToast, setWishlistToast] = useState('');
 
-  // State for Size Guide Modal
+  // State for Size Guide Modal & Selected Size
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [selectedSize, setSelectedSize] = useState('');
 
   useEffect(() => {
     // 1. Fetch Product
@@ -140,6 +141,8 @@ export default function ProductDetailPage() {
               product={product} 
               onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
               setWishlistToast={setWishlistToast}
+              selectedSize={selectedSize}
+              onSelectSize={(s) => setSelectedSize(s)}
             />
 
           </div>
@@ -184,6 +187,8 @@ export default function ProductDetailPage() {
         isOpen={isSizeGuideOpen} 
         onClose={() => setIsSizeGuideOpen(false)} 
         categories={product.category || []} 
+        productName={product.name}
+        onSelectSize={(size) => setSelectedSize(size)}
       />
     </div>
   );

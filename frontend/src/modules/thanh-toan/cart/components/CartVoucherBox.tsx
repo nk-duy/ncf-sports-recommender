@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from "react";
-import { Ticket, X, Check, Loader2 } from "lucide-react";
+import { Ticket, X, Check, Loader2, Zap } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import { useCheckoutStore } from "@/shared/store/checkoutStore";
 import {
@@ -10,11 +10,13 @@ import {
   fetchVoucherByCode,
   formatVND,
   getVoucherError,
+  findBestVoucher,
+  calcEffectiveShippingFee,
 } from "@/shared/lib/cart";
 
 /** Ô nhập mã + danh sách voucher khả dụng ở trang giỏ hàng */
 export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
-  const { appliedVoucher, setAppliedVoucher } = useCheckoutStore();
+  const { appliedVoucher, setAppliedVoucher, shipping_id } = useCheckoutStore();
   const [code, setCode] = useState('');
   const [applying, setApplying] = useState(false);
   const [available, setAvailable] = useState<Voucher[]>([]);
@@ -25,7 +27,7 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
       .then((r) => (r.ok ? r.json() : []))
       .then((data: Voucher[]) => {
         if (cancelled || !Array.isArray(data)) return;
-        // Chỉ hiện voucher còn hiệu lực (bỏ qua điều kiện giá trị đơn tối thiểu để người dùng thấy cần mua thêm bao nhiêu)
+        // Chỉ hiện voucher còn hiệu lực
         setAvailable(data.filter((v) => getVoucherError(v, Number.MAX_SAFE_INTEGER) === null));
       })
       .catch(() => {});
@@ -33,6 +35,33 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
       cancelled = true;
     };
   }, []);
+
+  const handleAutoApplyBest = () => {
+    if (subtotal <= 0) {
+      notifications.show({
+        title: 'Chưa chọn sản phẩm',
+        message: 'Hãy chọn sản phẩm trong giỏ hàng để tìm ưu đãi tốt nhất.',
+        color: 'orange',
+      });
+      return;
+    }
+    const currentShippingFee = calcEffectiveShippingFee(subtotal, shipping_id);
+    const best = findBestVoucher(available, subtotal, currentShippingFee);
+    if (!best) {
+      notifications.show({
+        title: 'Chưa có voucher phù hợp',
+        message: 'Chưa có voucher nào thỏa điều kiện giá trị đơn hàng hiện tại.',
+        color: 'blue',
+      });
+      return;
+    }
+    setAppliedVoucher(best);
+    notifications.show({
+      title: 'Đã áp dụng voucher tốt nhất',
+      message: `${best.code}: ${describeVoucher(best)}`,
+      color: 'green',
+    });
+  };
 
   const applyVoucher = async (rawCode: string) => {
     if (!rawCode.trim()) {
@@ -73,9 +102,21 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-full">
-      <div className="flex items-center gap-2 mb-4">
-        <Ticket size={20} className="text-blue-600" />
-        <h2 className="text-base font-bold text-gray-900">Voucher KADY</h2>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <Ticket size={20} className="text-blue-600" />
+          <h2 className="text-base font-bold text-gray-900">Voucher KADY</h2>
+        </div>
+        {available.length > 0 && subtotal > 0 && (
+          <button
+            type="button"
+            onClick={handleAutoApplyBest}
+            className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <Zap size={13} className="fill-blue-600 text-blue-600" />
+            Chọn ưu đãi tốt nhất
+          </button>
+        )}
       </div>
 
       {/* Voucher đang áp dụng */}

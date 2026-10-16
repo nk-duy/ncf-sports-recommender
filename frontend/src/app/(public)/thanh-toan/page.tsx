@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useCartStore, cartKey } from "@/shared/store/cartStore";
 import { useCheckoutStore } from "@/shared/store/checkoutStore";
 import { useAuthStore } from "@/shared/store/authStore";
-import { calcVoucherDiscount, getShippingOption } from "@/shared/lib/cart";
+import { calcVoucherDiscount, getShippingOption, calcEffectiveShippingFee } from "@/shared/lib/cart";
 import { notifications } from "@mantine/notifications";
 
 import CheckoutAddressForm from "@/modules/thanh-toan/components/CheckoutAddressForm";
@@ -21,8 +21,9 @@ export default function CheckoutPage() {
   const {
     customer_name, customer_phone, payment_method, 
     shipping_id, selectedKeys, setSelectedKeys, appliedVoucher, setAppliedVoucher,
+    setField
   } = useCheckoutStore();
-  const { token, isAuthenticated } = useAuthStore();
+  const { token, isAuthenticated, user } = useAuthStore();
   
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -34,11 +35,32 @@ export default function CheckoutPage() {
   const [streetAddress, setStreetAddress] = useState('');
   const [note, setNote] = useState('');
 
-  const shippingMethod = getShippingOption(shipping_id);
-
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Tự động điền thông tin người dùng nếu đã đăng nhập và form còn trống
+  useEffect(() => {
+    if (user) {
+      if (!customer_name && user.full_name) {
+        setField('customer_name', user.full_name);
+      }
+      if (!customer_phone && user.phone) {
+        setField('customer_phone', user.phone);
+      }
+      if (!streetAddress && user.address) {
+        setStreetAddress(user.address);
+      }
+    }
+  }, [user, customer_name, customer_phone, streetAddress, setField]);
+
+  const selectedCartItems = cartItems.filter(i => selectedKeys.includes(cartKey(i)));
+  const items = selectedCartItems.length > 0 ? selectedCartItems : cartItems;
+
+  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const shippingFee = calcEffectiveShippingFee(total, shipping_id);
+  const discountAmount = calcVoucherDiscount(appliedVoucher, total, shippingFee);
+  const finalTotal = Math.max(0, total + shippingFee - discountAmount);
 
   const handlePlaceOrderClick = () => {
     setHasAttemptedSubmit(true);
@@ -93,6 +115,8 @@ export default function CheckoutPage() {
             size: i.size,
             color: i.color || ""
           })),
+          subtotal: total,
+          shipping_fee: shippingFee,
           total_amount: finalTotal,
           voucher_code: appliedVoucher && discountAmount > 0 ? appliedVoucher.code : undefined,
           discount_amount: discountAmount
@@ -118,14 +142,6 @@ export default function CheckoutPage() {
   };
 
   if (!mounted) return <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">Đang tải...</div>;
-
-  const selectedCartItems = cartItems.filter(i => selectedKeys.includes(cartKey(i)));
-  const items = selectedCartItems.length > 0 ? selectedCartItems : cartItems;
-
-  const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shippingFee = shippingMethod.price;
-  const discountAmount = calcVoucherDiscount(appliedVoucher, total, shippingFee);
-  const finalTotal = Math.max(0, total + shippingFee - discountAmount);
 
   return (
     <div className="bg-[#f5f5f5] min-h-screen pb-16">

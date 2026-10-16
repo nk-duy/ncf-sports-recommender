@@ -67,7 +67,8 @@ export default function AiCrossSell() {
       image_url: product.image_url,
       quantity: 1,
       size: defaultSize,
-      color: defaultColor
+      color: defaultColor,
+      stock: 100
     });
     notifications.show({
       title: 'Thành công',
