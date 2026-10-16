@@ -7,8 +7,8 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 
 // Nếu báo lỗi @, hãy đổi thành đường dẫn tương đối (vd: "../modules/...")
-import Header from "@/modules/cot-loi/components/Header";
-import Footer from "@/modules/cot-loi/components/Footer";
+import Header from "@/modules/public/cot-loi/components/Header";
+import Footer from "@/modules/public/cot-loi/components/Footer";
 
 const inter = Inter({ 
   subsets: ["latin", "vietnamese"],

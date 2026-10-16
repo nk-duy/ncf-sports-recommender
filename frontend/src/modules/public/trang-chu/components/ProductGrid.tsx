@@ -1,5 +1,5 @@
 import React from "react";
-import ProductCard from "@/modules/san-pham/components/ProductCard";
+import ProductCard from "@/modules/public/san-pham/components/ProductCard";
 
 // Interface matches backend response
 interface ProductAPI {

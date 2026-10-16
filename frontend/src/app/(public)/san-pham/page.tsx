@@ -1,7 +1,7 @@
 import Breadcrumb from "@/shared/components/Breadcrumb";
-import ProductsSidebar from "@/modules/san-pham/components/ProductsSidebar";
+import ProductsSidebar from "@/modules/public/san-pham/components/ProductsSidebar";
 import DynamicProductList from "@/shared/components/DynamicProductList";
-import Features from "@/modules/trang-chu/components/Features";
+import Features from "@/modules/public/trang-chu/components/Features";
 export default async function ProductsPage({
   searchParams,
 }: {

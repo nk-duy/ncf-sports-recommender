@@ -1,5 +1,5 @@
 'use client';
-import DashboardManager from '@/modules/quan-tri/tong-quan/components/DashboardManager';
+import DashboardManager from '@/modules/admin/tong-quan/components/DashboardManager';
 
 export default function AdminDashboardPage() {
   return <DashboardManager />;

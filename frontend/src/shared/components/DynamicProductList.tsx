@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import ProductCard from '@/modules/san-pham/components/ProductCard';
+import ProductCard from '@/modules/public/san-pham/components/ProductCard';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Pagination from '@/shared/components/Pagination';

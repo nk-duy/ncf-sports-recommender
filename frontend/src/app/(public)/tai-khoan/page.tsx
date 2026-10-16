@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useAuthStore } from "@/shared/store/authStore";
-import SummaryCards from "@/modules/tai-khoan/dashboard/components/SummaryCards";
-import RecentOrders from "@/modules/tai-khoan/dashboard/components/RecentOrders";
-import AccountRecommendations from "@/modules/tai-khoan/dashboard/components/Recommendations";
+import SummaryCards from "@/modules/user/dashboard/components/SummaryCards";
+import RecentOrders from "@/modules/user/dashboard/components/RecentOrders";
+import AccountRecommendations from "@/modules/user/dashboard/components/Recommendations";
 
 export default function AccountOverviewPage() {
   const { user } = useAuthStore();

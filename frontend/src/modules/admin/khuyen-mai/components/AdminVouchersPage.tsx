@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import VoucherTable from "@/modules/quan-tri/khuyen-mai/components/VoucherTable";
-import VoucherFormModal from "@/modules/quan-tri/khuyen-mai/components/VoucherFormModal";
+import VoucherTable from "@/modules/admin/khuyen-mai/components/VoucherTable";
+import VoucherFormModal from "@/modules/admin/khuyen-mai/components/VoucherFormModal";
 import { Download, Plus, Ticket, CheckCircle2, PauseCircle, TrendingUp } from "lucide-react";
 
 export default function AdminVouchersPage() {

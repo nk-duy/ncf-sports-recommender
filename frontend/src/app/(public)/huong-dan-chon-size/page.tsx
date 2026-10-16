@@ -1,5 +1,5 @@
 import React from 'react';
-import SizeGuideContent from '@/modules/chinh-sach/components/SizeGuideContent';
+import SizeGuideContent from '@/modules/public/chinh-sach/components/SizeGuideContent';
 
 export const metadata = {
   title: 'Hướng dẫn chọn size chuẩn xác | KADY Sport',

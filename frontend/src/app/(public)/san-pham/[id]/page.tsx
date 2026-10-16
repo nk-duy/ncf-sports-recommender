@@ -4,10 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Breadcrumb from '@/shared/components/Breadcrumb';
 import SizeGuideModal from '@/shared/components/SizeGuideModal';
-import ProductImageGallery from '@/modules/san-pham/components/ProductImageGallery';
-import ProductInfoSection from '@/modules/san-pham/components/ProductInfoSection';
-import ProductReviewsSection from '@/modules/san-pham/components/ProductReviewsSection';
-import ProductRecommendations from '@/modules/san-pham/components/ProductRecommendations';
+import ProductImageGallery from '@/modules/public/san-pham/components/ProductImageGallery';
+import ProductInfoSection from '@/modules/public/san-pham/components/ProductInfoSection';
+import ProductReviewsSection from '@/modules/public/san-pham/components/ProductReviewsSection';
+import ProductRecommendations from '@/modules/public/san-pham/components/ProductRecommendations';
 
 interface ProductAPI {
   product_id: string;
