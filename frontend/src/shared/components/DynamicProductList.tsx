@@ -1,8 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import ProductCard from '@/modules/san-pham/components/ProductCard';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import Pagination from '@/shared/components/Pagination';
 
 interface DynamicProductListProps {
   initialCategory?: string;
@@ -135,68 +136,14 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-4 pb-8">
-          <button
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage <= 1}
-            className={`flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
-              currentPage <= 1
-                ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
-                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:border-blue-500 shadow-sm'
-            }`}
-          >
-            <ChevronLeft size={16} />
-            <span>Trang trước</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 mx-2">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => {
-              // Show first, last, current, and surrounding pages
-              if (
-                pNum === 1 ||
-                pNum === totalPages ||
-                (pNum >= currentPage - 1 && pNum <= currentPage + 1)
-              ) {
-                const isActive = pNum === currentPage;
-                return (
-                  <button
-                    key={pNum}
-                    onClick={() => goToPage(pNum)}
-                    className={`w-10 h-10 rounded-xl text-sm font-bold transition-all ${
-                      isActive
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600'
-                    }`}
-                  >
-                    {pNum}
-                  </button>
-                );
-              } else if (
-                pNum === currentPage - 2 ||
-                pNum === currentPage + 2
-              ) {
-                return (
-                  <span key={pNum} className="px-1 text-gray-400 font-bold">
-                    ...
-                  </span>
-                );
-              }
-              return null;
-            })}
-          </div>
-
-          <button
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-            className={`flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${
-              currentPage >= totalPages
-                ? 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
-                : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:border-blue-500 shadow-sm'
-            }`}
-          >
-            <span>Trang sau</span>
-            <ChevronRight size={16} />
-          </button>
+        <div className="pt-4 pb-10">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            siblingCount={1}
+            showEllipsis={totalPages > 6}
+          />
         </div>
       )}
     </div>

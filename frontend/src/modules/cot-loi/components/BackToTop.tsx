@@ -17,9 +17,10 @@ export default function BackToTop() {
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Về đầu trang"
-      className="fixed bottom-24 right-6 z-40 w-11 h-11 rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-110 transition-all duration-200 flex items-center justify-center"
+      className="fixed bottom-6 right-20 z-40 w-11 h-11 rounded-full bg-white text-gray-700 hover:text-blue-600 border border-gray-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center group"
+      title="Lên đầu trang"
     >
-      <ArrowUp size={20} />
+      <ArrowUp size={20} className="group-hover:-translate-y-0.5 transition-transform" />
     </button>
   );
 }

@@ -13,14 +13,27 @@ export interface ShippingOption {
   eta: string;
 }
 
+export const FREESHIP_THRESHOLD = 500000; // Đơn từ 500.000đ được miễn phí vận chuyển tiêu chuẩn
+
 export const SHIPPING_OPTIONS: ShippingOption[] = [
-  { id: 'vnexpress', name: 'VNExpress', price: 30000, eta: '3-5 ngày' },
+  { id: 'vnexpress', name: 'VNExpress Tiêu chuẩn', price: 30000, eta: '3-5 ngày' },
   { id: 'fast', name: 'Giao Hàng Nhanh', price: 35000, eta: '2-3 ngày' },
-  { id: 'express', name: 'Hỏa tốc', price: 60000, eta: 'Trong 24 giờ' },
+  { id: 'express', name: 'Hỏa Tốc 24H', price: 60000, eta: 'Trong 24 giờ' },
 ];
 
 export const getShippingOption = (id: string): ShippingOption =>
   SHIPPING_OPTIONS.find((o) => o.id === id) || SHIPPING_OPTIONS[1];
+
+/** Tính phí vận chuyển thực tế sau khi áp dụng ngưỡng Freeship (đơn >= 500k giảm tối đa 30.000đ hoặc miễn phí VNExpress) */
+export const calcEffectiveShippingFee = (subtotal: number, shippingId: string): number => {
+  if (subtotal <= 0) return 0;
+  const option = getShippingOption(shippingId);
+  if (subtotal >= FREESHIP_THRESHOLD) {
+    // Đơn từ 500k: Giảm 30.000đ phí vận chuyển
+    return Math.max(0, option.price - 30000);
+  }
+  return option.price;
+};
 
 export const calcOriginalPrice = (price: number, discountPercent?: number | null): number =>
   discountPercent && discountPercent > 0 && discountPercent < 100
@@ -68,6 +81,23 @@ export function calcVoucherDiscount(v: Voucher | null, subtotal: number, shippin
     return Math.min(discount, subtotal);
   }
   return 0;
+}
+
+/** Tìm voucher mang lại mức giảm cao nhất trong danh sách voucher khả dụng */
+export function findBestVoucher(vouchers: Voucher[], subtotal: number, shippingFee: number): Voucher | null {
+  if (!vouchers.length || subtotal <= 0) return null;
+  let bestVoucher: Voucher | null = null;
+  let maxDiscount = 0;
+
+  for (const v of vouchers) {
+    const discount = calcVoucherDiscount(v, subtotal, shippingFee);
+    if (discount > maxDiscount) {
+      maxDiscount = discount;
+      bestVoucher = v;
+    }
+  }
+
+  return bestVoucher;
 }
 
 export function describeVoucher(v: Voucher): string {

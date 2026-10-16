@@ -6,7 +6,7 @@ const messages = [
   { text: '🚚 Miễn phí giao hàng cho đơn từ 499.000đ', link: '/san-pham' },
   { text: '🔄 Đổi trả miễn phí trong 30 ngày', link: '/chinh-sach' },
   { text: '🎁 Nhập KADY10 — Giảm 10% cho đơn hàng đầu tiên', link: '/khuyen-mai' },
-  { text: '📞 Hotline hỗ trợ 24/7: 1900 6868', link: '/lien-he' },
+  { text: '📞 Hotline hỗ trợ 24/7: 1900 6868', link: 'tel:19006868' },
 ];
 
 export default function AnnouncementBar() {

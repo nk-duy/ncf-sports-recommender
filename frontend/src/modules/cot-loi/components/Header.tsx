@@ -14,7 +14,10 @@ import {
   Dumbbell, 
   Compass, 
   ShoppingBag,
-  Zap
+  Zap,
+  Globe,
+  MapPin,
+  ChevronDown
 } from "lucide-react";
 import SearchAutocomplete from "./SearchAutocomplete";
 import AnnouncementBar from "./AnnouncementBar";
@@ -42,6 +45,10 @@ export default function Header() {
   const { user, isAuthenticated, isAdmin, checkAuth } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [menu, setMenu] = useState<MegaMenuSport[]>(defaultMenu);
+  const [language, setLanguage] = useState<'vi' | 'en'>('vi');
+  const [locationCity, setLocationCity] = useState('TP. Hồ Chí Minh');
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showLocMenu, setShowLocMenu] = useState(false);
 
   const getSportIcon = (sport: string) => {
     const s = sport.toLowerCase();
@@ -82,26 +89,116 @@ export default function Header() {
       <AnnouncementBar />
 
       {/* Main Header Bar */}
-      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-4">
-        <div className="flex items-center justify-between gap-8">
-          {/* Logo */}
+      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-2.5">
+        <div className="flex items-center justify-between gap-6">
+          {/* Logo - To rõ ràng hơn */}
           <Link className="flex flex-shrink-0 items-center" href="/">
             <img
               src="/logo.png"
               alt="KADY Logo"
-              className="h-14 md:h-16 w-auto object-contain hover:opacity-80 transition-opacity bg-transparent rounded-xl"
+              className="h-14 md:h-16 w-auto object-contain hover:opacity-85 transition-transform hover:scale-105 bg-transparent rounded-xl"
             />
           </Link>
 
           {/* Search Autocomplete */}
           <SearchAutocomplete />
 
-          {/* User & Cart */}
-          <div className="flex items-center gap-6 flex-shrink-0">
+          {/* Top Actions: Location, Language, User & Cart */}
+          <div className="flex items-center gap-3 sm:gap-4 md:gap-5 flex-shrink-0">
+            {/* Nút Vị trí / Tỉnh thành */}
+            <div className="relative hidden lg:block">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLocMenu(!showLocMenu);
+                  setShowLangMenu(false);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:text-blue-600 hover:bg-gray-50 border border-gray-200 transition"
+                title="Chọn vị trí nhận hàng"
+              >
+                <MapPin size={15} className="text-rose-500 shrink-0" />
+                <span className="max-w-[110px] truncate">{locationCity}</span>
+                <ChevronDown size={12} className="text-gray-400" />
+              </button>
+
+              {showLocMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <p className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50">
+                    Khu vực giao hàng
+                  </p>
+                  {['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'].map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => {
+                        setLocationCity(city);
+                        setShowLocMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between ${
+                        locationCity === city ? 'text-blue-600 font-bold bg-blue-50/50' : 'text-gray-700'
+                      }`}
+                    >
+                      <span>{city}</span>
+                      {locationCity === city && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Nút Chuyển đổi Ngôn ngữ */}
+            <div className="relative hidden sm:block">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLangMenu(!showLangMenu);
+                  setShowLocMenu(false);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-50 border border-gray-200 transition"
+                title="Chuyển đổi ngôn ngữ"
+              >
+                <Globe size={15} className="text-blue-600 shrink-0" />
+                <span>{language === 'vi' ? 'VI' : 'EN'}</span>
+                <ChevronDown size={12} className="text-gray-400" />
+              </button>
+
+              {showLangMenu && (
+                <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguage('vi');
+                      setShowLangMenu(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2 ${
+                      language === 'vi' ? 'text-blue-600 font-bold bg-blue-50/50' : 'text-gray-700'
+                    }`}
+                  >
+                    <span>🇻🇳</span>
+                    <span>Tiếng Việt</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLanguage('en');
+                      setShowLangMenu(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-blue-50 hover:text-blue-600 transition flex items-center gap-2 ${
+                      language === 'en' ? 'text-blue-600 font-bold bg-blue-50/50' : 'text-gray-700'
+                    }`}
+                  >
+                    <span>🇺🇸</span>
+                    <span>English</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* User Login/Profile */}
             {mounted && isAuthenticated ? (
               <div className="relative group cursor-pointer">
                 <div className="flex items-center gap-3 text-gray-700 hover:text-blue-600 transition">
-                  <div className="flex flex-col text-right">
+                  <div className="flex flex-col text-right hidden sm:flex">
                     <span className="text-[13px] font-bold leading-none mb-1 text-gray-900">{user?.full_name || user?.username}</span>
                     <span className="text-[10px] text-gray-500 font-medium">{isAdmin ? "Admin" : "Khách hàng"}</span>
                   </div>
@@ -128,8 +225,8 @@ export default function Header() {
                 </div>
               </div>
             ) : (
-              <a href="/dang-nhap" className="flex items-center gap-3 group text-gray-700 hover:text-blue-600 transition">
-                <div className="flex flex-col text-right">
+              <a href="/dang-nhap" className="flex items-center gap-2.5 group text-gray-700 hover:text-blue-600 transition">
+                <div className="flex flex-col text-right hidden sm:flex">
                   <span className="text-[13px] font-bold leading-none mb-1 text-gray-900">Đăng Nhập</span>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 shadow-inner group-hover:scale-105 transition-transform">
@@ -140,8 +237,9 @@ export default function Header() {
               </a>
             )}
 
+            {/* Cart Button */}
             <a
-              className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-xl transition border border-gray-200 group text-gray-900 shadow-sm"
+              className="flex items-center gap-2.5 bg-gray-50 hover:bg-gray-100 px-3.5 py-2.5 rounded-xl transition border border-gray-200 group text-gray-900 shadow-sm"
               href="/gio-hang"
             >
               <div className="relative">
@@ -154,16 +252,16 @@ export default function Header() {
                   </span>
                 )}
               </div>
-              <span className="text-sm font-bold">Giỏ hàng</span>
+              <span className="text-sm font-bold hidden sm:inline">Giỏ hàng</span>
             </a>
           </div>
         </div>
       </div>
 
-      {/* Navigation Bar */}
+      {/* Navigation Bar - Thu gọn padding từ py-4 xuống py-2.5 */}
       <div className="bg-white border-t border-gray-100">
         <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
-          <nav className="flex justify-center items-center gap-10 md:gap-14 py-4 text-base font-black uppercase tracking-wide text-gray-800">
+          <nav className="flex justify-center items-center gap-7 md:gap-11 py-2.5 text-sm md:text-[15px] font-black uppercase tracking-wide text-gray-800">
             <Link href="/" className={`transition ${(pathname || '') === '/' ? 'text-blue-600 border-b-2 border-blue-600 pb-0.5' : 'hover:text-blue-600'}`}>
               Trang chủ
             </Link>
@@ -288,11 +386,11 @@ export default function Header() {
               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
               SALE
             </Link>
+            <Link href="/tra-cuu-don-hang" className={`transition ${(pathname || '') === '/tra-cuu-don-hang' ? 'text-blue-600 border-b-2 border-blue-600 pb-0.5' : 'hover:text-blue-600'}`}>
+              Tra cứu đơn
+            </Link>
             <Link href="/gioi-thieu" className={`transition ${(pathname || '') === '/gioi-thieu' ? 'text-blue-600 border-b-2 border-blue-600 pb-0.5' : 'hover:text-blue-600'}`}>
               Giới thiệu
-            </Link>
-            <Link href="/lien-he" className={`transition ${(pathname || '') === '/lien-he' ? 'text-blue-600 border-b-2 border-blue-600 pb-0.5' : 'hover:text-blue-600'}`}>
-              Liên hệ
             </Link>
           </nav>
         </div>

@@ -5,6 +5,11 @@ interface User {
   username: string;
   email: string;
   full_name: string;
+  phone?: string;
+  address?: string;
+  tier?: string;
+  interested_sports?: string[];
+  shoe_size?: string;
   role: string;
 }
 
@@ -14,6 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isAdmin: boolean;
   login: (token: string, user: User) => void;
+  setUser: (user: User) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
 }
@@ -30,6 +36,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       token,
       user,
       isAuthenticated: true,
+      isAdmin: user.role === 'admin'
+    });
+  },
+
+  setUser: (user) => {
+    set({
+      user,
       isAdmin: user.role === 'admin'
     });
   },

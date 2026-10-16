@@ -10,7 +10,10 @@ import { Notifications } from "@mantine/notifications";
 import Header from "@/modules/cot-loi/components/Header";
 import Footer from "@/modules/cot-loi/components/Footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "KADY - Đồ án Tốt nghiệp",
