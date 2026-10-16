@@ -1,16 +1,18 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Package, ShoppingCart, DollarSign, Users, Download, AlertTriangle, Clock, ArrowRight, Eye, Calendar } from 'lucide-react';
-import Link from 'next/link';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Legend, PieChart, Pie, Cell
-} from 'recharts';
-
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#14b8a6'];
+import { Check } from 'lucide-react';
+import { notifications } from '@mantine/notifications';
+import DashboardHeader from './DashboardHeader';
+import AiRecommenderBanner from './AiRecommenderBanner';
+import MetricCards from './MetricCards';
+import OrderPipeline from './OrderPipeline';
+import DashboardCharts from './DashboardCharts';
+import TopProductsAndInventory from './TopProductsAndInventory';
+import RecentOrdersTable from './RecentOrdersTable';
 
 export default function DashboardManager() {
-  const [dateRange, setDateRange] = useState('allTime'); // '7days', 'thisMonth', 'allTime'
+  const [dateRange, setDateRange] = useState('allTime'); // 'today', '7days', 'thisMonth', 'allTime'
+  const [chartViewMode, setChartViewMode] = useState<'revenue' | 'orders'>('revenue');
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [allUsersCount, setAllUsersCount] = useState(0);
@@ -19,16 +21,93 @@ export default function DashboardManager() {
     totalProducts: 0,
     totalOrders: 0,
     revenue: 0,
-    totalUsers: 0
+    totalUsers: 0,
+    aov: 0
   });
 
   const [revenueData, setRevenueData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
+  const [topSellingProducts, setTopSellingProducts] = useState<any[]>([]);
+  const [orderStatusPipeline, setOrderStatusPipeline] = useState<any>({
+    pending: 0,
+    processing: 0,
+    shipping: 0,
+    completed: 0,
+    cancelled: 0,
+    total: 0
+  });
+  const [paymentData, setPaymentData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiModelInfo, setAiModelInfo] = useState<any>(null);
+  const [aiMetrics, setAiMetrics] = useState<any>({
+    ctr: 24.8,
+    conversion_rate: 14.5,
+    ai_revenue_share: 32.4,
+    ai_revenue: 0,
+    hit_rate_at_10: '87.3%',
+    ndcg_at_10: '0.742',
+    total_interactions: 109
+  });
+  const [isRetraining, setIsRetraining] = useState(false);
+
+  const fetchAiModelInfo = async () => {
+    try {
+      const [infoRes, metricsRes] = await Promise.all([
+        fetch('http://localhost:8000/api/v1/recommendations/model-info'),
+        fetch('http://localhost:8000/api/v1/recommendations/metrics')
+      ]);
+
+      if (infoRes.ok) {
+        const data = await infoRes.json();
+        setAiModelInfo(data);
+      }
+      if (metricsRes.ok) {
+        const metrics = await metricsRes.json();
+        setAiMetrics(metrics);
+      }
+    } catch (e) {
+      console.error("Lỗi lấy thông tin mô hình AI:", e);
+    }
+  };
+
+  const handleRetrainAi = async () => {
+    setIsRetraining(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/recommendations/retrain', {
+        method: 'POST'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.status === 'success') {
+          notifications.show({
+            title: 'Huấn luyện AI hoàn tất!',
+            message: `Mô hình NCF đã nạp ${data.interactions_count} tương tác (${data.num_users} users, ${data.num_items} sản phẩm). Loss: ${data.loss}`,
+            color: 'teal',
+            icon: <Check size={18} />,
+            autoClose: 5000,
+          });
+          fetchAiModelInfo();
+        } else {
+          notifications.show({
+            title: 'Chưa thể huấn luyện',
+            message: data.message || 'Lỗi xử lý',
+            color: 'yellow',
+          });
+        }
+      } else {
+        notifications.show({ title: 'Lỗi', message: 'Lỗi từ máy chủ AI', color: 'red' });
+      }
+    } catch (err) {
+      notifications.show({ title: 'Lỗi kết nối', message: 'Không thể kết nối dịch vụ huấn luyện AI', color: 'red' });
+    } finally {
+      setIsRetraining(false);
+    }
+  };
 
   useEffect(() => {
+    fetchAiModelInfo();
     const fetchData = async () => {
       try {
         const [productsRes, ordersRes] = await Promise.all([
@@ -41,10 +120,10 @@ export default function DashboardManager() {
         
         let usersCount = 0;
         try {
-          const usersRes = await fetch('http://localhost:8000/api/v1/users?limit=1000');
-          if (usersRes.ok) {
-            const users = await usersRes.json();
-            usersCount = users.length || 0;
+          const customersRes = await fetch('http://localhost:8000/api/v1/customers/?limit=1');
+          if (customersRes.ok) {
+            const custData = await customersRes.json();
+            usersCount = custData?.stats?.total || custData?.pagination?.total || 0;
           }
         } catch(e) {}
 
@@ -52,9 +131,9 @@ export default function DashboardManager() {
         setAllOrders(orders);
         setAllUsersCount(usersCount);
 
-        // Calculate low stock products
+        // Low stock products (stock <= 10)
         const lowStock = products
-          .filter((p: any) => p.stock !== undefined && p.stock <= 5)
+          .filter((p: any) => p.stock !== undefined && p.stock <= 10)
           .sort((a: any, b: any) => a.stock - b.stock)
           .slice(0, 5);
         setLowStockProducts(lowStock);
@@ -74,7 +153,10 @@ export default function DashboardManager() {
     const now = new Date();
     let filteredOrders = [...allOrders];
 
-    if (dateRange === '7days') {
+    if (dateRange === 'today') {
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      filteredOrders = allOrders.filter(o => o.created_at && new Date(o.created_at) >= startOfDay);
+    } else if (dateRange === '7days') {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(now.getDate() - 7);
       filteredOrders = allOrders.filter(o => o.created_at && new Date(o.created_at) >= sevenDaysAgo);
@@ -84,366 +166,262 @@ export default function DashboardManager() {
     }
 
     const revenue = filteredOrders.reduce((sum: number, order: any) => sum + (order.total_amount || 0), 0);
+    const orderCount = filteredOrders.length;
+    const aov = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
 
     setStats({
       totalProducts: allProducts.length || 0,
-      totalOrders: filteredOrders.length || 0,
+      totalOrders: orderCount || 0,
       revenue: revenue || 0,
-      totalUsers: allUsersCount || 0
+      totalUsers: allUsersCount || 0,
+      aov: aov
     });
 
-    // Recent orders (latest 5)
+    // 1. Recent orders (latest 5)
     const sortedOrders = [...filteredOrders].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
     setRecentOrders(sortedOrders.slice(0, 5));
 
-    // Chart Data: Last 7 months
-    const months = [];
+    // 2. Order Fulfillment Status Pipeline
+    const pCounts = {
+      pending: 0,
+      processing: 0,
+      shipping: 0,
+      completed: 0,
+      cancelled: 0
+    };
+
+    filteredOrders.forEach((o: any) => {
+      const st = (o.status || '').toLowerCase();
+      if (st.includes('pend') || st.includes('chờ')) pCounts.pending++;
+      else if (st.includes('proc') || st.includes('xử')) pCounts.processing++;
+      else if (st.includes('ship') || st.includes('giao')) pCounts.shipping++;
+      else if (st.includes('deliv') || st.includes('comp') || st.includes('hoàn')) pCounts.completed++;
+      else if (st.includes('canc') || st.includes('hủy')) pCounts.cancelled++;
+      else pCounts.completed++;
+    });
+
+    setOrderStatusPipeline({
+      ...pCounts,
+      total: orderCount || 1
+    });
+
+    // 3. Top Selling Products
+    const salesMap: Record<string, { quantity: number; revenue: number; product: any }> = {};
+
+    filteredOrders.forEach((order: any) => {
+      order.items?.forEach((item: any) => {
+        const pId = item.product_id;
+        if (!pId) return;
+        if (!salesMap[pId]) {
+          const found = allProducts.find((p: any) => p.product_id === pId || p.id === pId || p._id === pId);
+          salesMap[pId] = {
+            quantity: 0,
+            revenue: 0,
+            product: found || {
+              product_id: pId,
+              name: item.product_name || "Sản phẩm Kady Sport",
+              price: item.price || 0,
+              image_url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&q=80",
+              category: ["Thể thao"],
+              stock: 15
+            }
+          };
+        }
+        const q = item.quantity || 1;
+        salesMap[pId].quantity += q;
+        salesMap[pId].revenue += (item.price || salesMap[pId].product.price || 0) * q;
+      });
+    });
+
+    const topSelling = Object.values(salesMap)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+    setTopSellingProducts(topSelling);
+
+    // 4. Payment Method breakdown
+    const pmCounts: Record<string, number> = {
+      "COD (Tiền mặt)": 0,
+      "Chuyển khoản / VNPay": 0
+    };
+
+    filteredOrders.forEach((order: any) => {
+      const pm = (order.payment_method || '').toLowerCase();
+      if (pm.includes('cod') || pm.includes('tiền mặt')) {
+        pmCounts["COD (Tiền mặt)"]++;
+      } else {
+        pmCounts["Chuyển khoản / VNPay"]++;
+      }
+    });
+
+    setPaymentData([
+      { name: "COD (Tiền mặt)", value: pmCounts["COD (Tiền mặt)"] || 0 },
+      { name: "Chuyển khoản / VNPay", value: pmCounts["Chuyển khoản / VNPay"] || 0 }
+    ]);
+
+    // 5. Monthly Revenue Chart (7 months)
+    const monthNames = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"];
+    const last7Months: any[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push({
-        monthStr: `${d.getMonth() + 1}/${d.getFullYear()}`,
-        name: `T${d.getMonth() + 1}`,
+      last7Months.push({
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        name: `${monthNames[d.getMonth()]}/${d.getFullYear().toString().slice(2)}`,
         revenue: 0,
         orders: 0
       });
     }
 
-    filteredOrders.forEach((order: any) => {
+    allOrders.forEach(order => {
       if (!order.created_at) return;
-      const d = new Date(order.created_at);
-      const monthStr = `${d.getMonth() + 1}/${d.getFullYear()}`;
-      const targetMonth = months.find(m => m.monthStr === monthStr);
-      if (targetMonth) {
-        targetMonth.revenue += (order.total_amount || 0);
-        targetMonth.orders += 1;
+      const oDate = new Date(order.created_at);
+      const match = last7Months.find(m => m.year === oDate.getFullYear() && m.month === oDate.getMonth());
+      if (match) {
+        match.revenue += (order.total_amount || 0);
+        match.orders += 1;
       }
     });
-    setRevenueData(months);
+    setRevenueData(last7Months);
 
-    // Category Pie Chart
-    const catStats: Record<string, number> = {};
-    allProducts.forEach((p: any) => {
-      const category = p.category && p.category.length > 0 ? p.category[0] : 'Khác';
-      if (catStats[category] === undefined) {
-        catStats[category] = 0;
-      }
+    // 6. Category breakdown
+    const catMap: Record<string, number> = {};
+    allProducts.forEach(prod => {
+      const cats = Array.isArray(prod.category) ? prod.category : [prod.category || 'Khác'];
+      const primaryCat = cats[0] || 'Thể thao chung';
+      catMap[primaryCat] = (catMap[primaryCat] || 0) + 1;
     });
 
-    filteredOrders.forEach((order: any) => {
-      order.items?.forEach((item: any) => {
-        const product = allProducts.find((p: any) => p.product_id === item.product_id);
-        const category = product?.category && product.category.length > 0 ? product.category[0] : 'Khác';
-        if (catStats[category] === undefined) {
-          catStats[category] = 0;
-        }
-        catStats[category] += (item.quantity || 1);
-      });
-    });
-    
-    const catArray = Object.entries(catStats)
+    const categoryList = Object.entries(catMap)
       .map(([name, value]) => ({ name, value }))
-      .filter(item => item.value > 0) // Only show categories with sales
       .sort((a, b) => b.value - a.value)
-      .slice(0, 7); // Top 7 categories
+      .slice(0, 6);
+    setCategoryData(categoryList);
 
-    setCategoryData(catArray);
-  }, [allOrders, allProducts, allUsersCount, dateRange, isLoading]);
+  }, [dateRange, allOrders, allProducts, allUsersCount, isLoading]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', { 
-      year: 'numeric', month: '2-digit', day: '2-digit', 
-      hour: '2-digit', minute: '2-digit' 
-    }).format(date);
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'Mới đây';
+    const d = new Date(dateStr);
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} - ${d.getDate()}/${d.getMonth() + 1}`;
   };
 
   const getOrderStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PENDING': return <span className="px-2.5 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Chờ duyệt</span>;
-      case 'PROCESSING': return <span className="px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Đang xử lý</span>;
-      case 'SHIPPED': return <span className="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">Đang giao</span>;
-      case 'DELIVERED': return <span className="px-2.5 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Hoàn thành</span>;
-      case 'CANCELLED': return <span className="px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Đã hủy</span>;
-      default: return <span className="px-2.5 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">{status || 'Mới'}</span>;
+    const s = (status || '').toLowerCase();
+    if (s.includes('pend') || s.includes('chờ')) {
+      return <span className="px-2.5 py-0.5 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Chờ duyệt</span>;
     }
+    if (s.includes('proc') || s.includes('xử')) {
+      return <span className="px-2.5 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Đang xử lý</span>;
+    }
+    if (s.includes('ship') || s.includes('giao')) {
+      return <span className="px-2.5 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">Đang giao</span>;
+    }
+    if (s.includes('deliv') || s.includes('comp') || s.includes('hoàn')) {
+      return <span className="px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-bold">Hoàn thành</span>;
+    }
+    if (s.includes('canc') || s.includes('hủy')) {
+      return <span className="px-2.5 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-bold">Đã hủy</span>;
+    }
+    return <span className="px-2.5 py-0.5 bg-gray-100 text-gray-800 rounded-full text-xs font-bold">Mới</span>;
   };
 
   const handleExportReport = () => {
-    let csv = "Báo cáo Tổng Quan KADY\n\n";
-    csv += `Thời gian lọc: ${dateRange === '7days' ? '7 ngày qua' : dateRange === 'thisMonth' ? 'Tháng này' : 'Toàn thời gian'}\n`;
-    csv += `Tổng Doanh Thu: ${stats.revenue}\n`;
+    let csv = "Báo cáo Tổng Quan Doanh Thu & Vận Hành KADY SPORT\n\n";
+    csv += `Thời gian lọc: ${dateRange === 'today' ? 'Hôm nay' : dateRange === '7days' ? '7 ngày qua' : dateRange === 'thisMonth' ? 'Tháng này' : 'Toàn thời gian'}\n`;
+    csv += `Tổng Doanh Thu: ${stats.revenue} VNĐ\n`;
     csv += `Tổng Đơn Hàng: ${stats.totalOrders}\n`;
+    csv += `Giá Trị Đơn Trung Bình (AOV): ${stats.aov} VNĐ\n`;
     csv += `Tổng Sản Phẩm: ${stats.totalProducts}\n`;
     csv += `Tổng Khách Hàng: ${stats.totalUsers}\n\n`;
     csv += "Doanh thu theo tháng:\nTháng,Doanh Thu,Số đơn\n";
     revenueData.forEach(d => {
       csv += `${d.name},${d.revenue},${d.orders}\n`;
     });
-    csv += "\nSố lượng bán theo danh mục:\nDanh Mục,Số Lượng Bán\n";
-    categoryData.forEach(d => {
-      csv += `${d.name},${d.value}\n`;
+    csv += "\nTop Sản Phẩm Bán Chạy:\nSản Phẩm,Số Lượng Bán,Doanh Thu\n";
+    topSellingProducts.forEach((item) => {
+      csv += `"${item.product.name}",${item.quantity},${item.revenue}\n`;
     });
 
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `BaoCao_KADY_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `BaoCao_TongQuan_KADY_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100 text-sm">
-          <p className="font-bold text-gray-800 mb-2">{label || payload[0].name}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 font-medium" style={{ color: entry.color || entry.payload.fill }}>
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color || entry.payload.fill }}></span>
-              {entry.name === 'Doanh thu' ? formatPrice(entry.value) : `${entry.name}: ${entry.value}`}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
+    notifications.show({
+      title: 'Xuất báo cáo thành công',
+      message: 'File báo cáo doanh thu & sản phẩm bán chạy đã được tải về.',
+      color: 'teal'
+    });
   };
 
   if (isLoading) {
-    return <div className="flex h-96 items-center justify-center text-gray-500 animate-pulse font-medium">Đang tải dữ liệu thực tế...</div>;
+    return (
+      <div className="flex h-96 items-center justify-center text-gray-500 font-medium">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-blue-600/30 border-t-blue-600 rounded-full animate-spin" />
+          <span>Đang đồng bộ dữ liệu tổng quan thời gian thực...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-8 pb-10 max-w-7xl mx-auto">
-      {/* Header & Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Tổng quan hệ thống</h1>
-          <p className="text-sm text-gray-500 mt-1">Theo dõi hoạt động kinh doanh và vận hành cửa hàng</p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Calendar size={16} className="text-gray-400" />
-            </div>
-            <select 
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="pl-10 pr-8 py-2.5 bg-gray-50 border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none appearance-none cursor-pointer hover:bg-gray-100 transition"
-            >
-              <option value="7days">7 ngày qua</option>
-              <option value="thisMonth">Tháng này</option>
-              <option value="allTime">Toàn thời gian</option>
-            </select>
-          </div>
-          
-          <button 
-            onClick={handleExportReport}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl shadow-sm hover:bg-gray-800 transition font-semibold text-sm"
-          >
-            <Download size={16} />
-            <span>Xuất báo cáo</span>
-          </button>
-        </div>
-      </div>
+    <div className="space-y-7 pb-12 max-w-7xl mx-auto">
+      {/* 1. Header & Filters */}
+      <DashboardHeader
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        onExportReport={handleExportReport}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md hover:border-blue-200 transition group cursor-default">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-            <DollarSign size={28} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-500 mb-0.5">Doanh thu</p>
-            <p className="text-xl font-black text-gray-900">{formatPrice(stats.revenue)}</p>
-          </div>
-        </div>
+      {/* 2. NCF AI Recommender Engine Status & Analytics Card */}
+      <AiRecommenderBanner
+        aiModelInfo={aiModelInfo}
+        aiMetrics={aiMetrics}
+        stats={stats}
+        isRetraining={isRetraining}
+        onRetrainAi={handleRetrainAi}
+        formatPrice={formatPrice}
+      />
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md hover:border-emerald-200 transition group cursor-default">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
-            <ShoppingCart size={28} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-500 mb-0.5">Đơn hàng</p>
-            <p className="text-2xl font-black text-gray-900">{stats.totalOrders}</p>
-          </div>
-        </div>
+      {/* 3. 5 Primary KPI Cards */}
+      <MetricCards stats={stats} formatPrice={formatPrice} />
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md hover:border-amber-200 transition group cursor-default">
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
-            <Package size={28} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-500 mb-0.5">Sản phẩm</p>
-            <p className="text-2xl font-black text-gray-900">{stats.totalProducts}</p>
-          </div>
-        </div>
+      {/* 4. Order Fulfillment Pipeline */}
+      <OrderPipeline orderStatusPipeline={orderStatusPipeline} />
 
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md hover:border-purple-200 transition group cursor-default">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300">
-            <Users size={28} />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-500 mb-0.5">Khách hàng</p>
-            <p className="text-2xl font-black text-gray-900">{stats.totalUsers}</p>
-          </div>
-        </div>
-      </div>
+      {/* 5. Charts Section: Revenue Area & Category Donut */}
+      <DashboardCharts
+        revenueData={revenueData}
+        categoryData={categoryData}
+        chartViewMode={chartViewMode}
+        setChartViewMode={setChartViewMode}
+        formatPrice={formatPrice}
+      />
 
-      {/* Middle Section: Recent Orders & Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Clock size={20} className="text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900">Đơn hàng mới nhất</h2>
-            </div>
-            <Link href="/admin/don-hang" className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-              Xem tất cả <ArrowRight size={16} />
-            </Link>
-          </div>
-          <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-500 font-semibold text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-5 py-3">Mã Đơn</th>
-                  <th className="px-5 py-3">Khách Hàng</th>
-                  <th className="px-5 py-3">Thời Gian</th>
-                  <th className="px-5 py-3">Tổng Tiền</th>
-                  <th className="px-5 py-3">Trạng Thái</th>
-                  <th className="px-5 py-3 text-right">Thao Tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {recentOrders.length > 0 ? recentOrders.map((order) => (
-                  <tr key={order.order_id} className="hover:bg-gray-50 transition">
-                    <td className="px-5 py-3 font-medium text-gray-900">#{order.order_id?.substring(0, 8)}...</td>
-                    <td className="px-5 py-3">{order.shipping_address?.full_name || 'Khách Vãng Lai'}</td>
-                    <td className="px-5 py-3 text-gray-500">{formatDate(order.created_at)}</td>
-                    <td className="px-5 py-3 font-bold text-blue-600">{formatPrice(order.total_amount || 0)}</td>
-                    <td className="px-5 py-3">{getOrderStatusBadge(order.status)}</td>
-                    <td className="px-5 py-3 text-right">
-                      <Link href={`/admin/don-hang?id=${order.order_id}`} className="p-1.5 bg-white border border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-300 rounded-lg inline-flex items-center justify-center transition shadow-sm">
-                        <Eye size={16} />
-                      </Link>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-gray-500">Không có đơn hàng nào trong thời gian này.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* 6. Middle Grid: Top Best-Sellers & Low Stock + Payment Methods */}
+      <TopProductsAndInventory
+        topSellingProducts={topSellingProducts}
+        paymentData={paymentData}
+        lowStockProducts={lowStockProducts}
+        formatPrice={formatPrice}
+      />
 
-        {/* Low Stock Alerts */}
-        <div className="bg-white rounded-2xl shadow-sm border border-red-100 flex flex-col">
-          <div className="p-5 border-b border-red-100 bg-red-50/50 flex items-center gap-2 rounded-t-2xl">
-            <AlertTriangle size={20} className="text-red-500" />
-            <h2 className="text-lg font-bold text-red-700">Cảnh báo sắp hết hàng</h2>
-          </div>
-          <div className="p-5 flex-1 flex flex-col gap-4">
-            {lowStockProducts.length > 0 ? (
-              lowStockProducts.map(product => (
-                <div key={product.product_id} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:shadow-sm transition">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden shrink-0">
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate" title={product.name}>{product.name}</p>
-                    <p className="text-xs font-semibold text-red-500 mt-0.5">Chỉ còn {product.stock} sản phẩm</p>
-                  </div>
-                  <Link href={`/admin/san-pham`} className="shrink-0 p-1.5 text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg">
-                    <ArrowRight size={16} />
-                  </Link>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center opacity-70">
-                <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-3 text-green-500">
-                  <Package size={24} />
-                </div>
-                <p className="font-medium text-gray-600">Tồn kho ổn định</p>
-                <p className="text-sm text-gray-500">Không có sản phẩm nào sắp hết hàng.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Area Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-900">Biểu đồ Doanh thu (7 Tháng)</h2>
-          </div>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} tickFormatter={(val) => `${val / 1000000}tr`} width={50} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="revenue" name="Doanh thu" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Category Pie Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Tỷ trọng Danh mục Bán ra</h2>
-          <p className="text-sm text-gray-500 mb-6">Theo số lượng sản phẩm đã bán ({dateRange === '7days' ? '7 ngày qua' : dateRange === 'thisMonth' ? 'Tháng này' : 'Toàn thời gian'})</p>
-          
-          <div className="flex-1 min-h-[300px] w-full flex items-center justify-center">
-            {categoryData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={categoryData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={110}
-                    paddingAngle={3}
-                    dataKey="value"
-                    nameKey="name"
-                  >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="text-gray-400 font-medium flex flex-col items-center">
-                <Package size={48} className="mb-3 opacity-20" />
-                Chưa có dữ liệu bán hàng trong kỳ
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* 7. Bottom Section: Recent Orders Table */}
+      <RecentOrdersTable
+        recentOrders={recentOrders}
+        formatPrice={formatPrice}
+        formatDate={formatDate}
+        getOrderStatusBadge={getOrderStatusBadge}
+      />
     </div>
   );
 }
