@@ -36,6 +36,7 @@ export default function ProductReviewsSection({
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -232,7 +233,7 @@ export default function ProductReviewsSection({
               : 'Không có bài nhận xét nào phù hợp với bộ lọc đã chọn.'}
           </div>
         ) : (
-          filteredReviews.map((rev) => {
+          (isExpanded ? filteredReviews : filteredReviews.slice(0, 2)).map((rev) => {
             const displayName = rev.user_name || 'Khách hàng KADY';
             const avatarChar = displayName.charAt(0).toUpperCase();
 
@@ -302,6 +303,33 @@ export default function ProductReviewsSection({
           })
         )}
       </div>
+
+      {/* Nút Xem thêm / Thu gọn bình luận */}
+      {!loading && filteredReviews.length > 2 && (
+        <div className="pt-6 border-t border-gray-100 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold shadow-2xs transition-all cursor-pointer"
+          >
+            {isExpanded ? (
+              <>
+                <span>Thu gọn đánh giá</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </>
+            ) : (
+              <>
+                <span>Xem thêm {filteredReviews.length - 2} đánh giá khác</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Modal viết đánh giá */}
       {isWriteModalOpen && (
