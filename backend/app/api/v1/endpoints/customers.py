@@ -52,11 +52,13 @@ async def get_customers(
     
     # 1. Search Filter
     if search and search.strip():
+        import re
         s = search.strip()
+        regex_pattern = re.compile(re.escape(s), re.IGNORECASE)
         query["$or"] = [
-            {"full_name": {"$regex": s, "$options": "i"}},
-            {"email": {"$regex": s, "$options": "i"}},
-            {"phone": {"$regex": s, "$options": "i"}}
+            {"full_name": regex_pattern},
+            {"email": regex_pattern},
+            {"phone": regex_pattern}
         ]
         
     # 2. Tier Filter
