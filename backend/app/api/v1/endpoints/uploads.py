@@ -2,8 +2,9 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
 from fastapi.responses import JSONResponse
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -11,7 +12,8 @@ UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/")
-async def upload_image(file: UploadFile = File(...)):
+@limiter.limit("20/minute")
+async def upload_image(request: Request, file: UploadFile = File(...)):
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Chỉ hỗ trợ định dạng hình ảnh")
     

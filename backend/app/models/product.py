@@ -38,3 +38,11 @@ class Product(Document):
 
     class Settings:
         name = "products" # Tên collection trong MongoDB
+        indexes = [
+            "product_id",
+            [("sport_type", 1), ("product_type", 1), ("price", 1)],
+            [("is_hidden", 1), ("is_deleted", 1)],
+            [("discount_percent", -1), ("price", 1)],
+            [("rating", -1), ("reviews_count", -1)],
+            [("name", "text"), ("description", "text")]
+        ]

@@ -31,3 +31,9 @@ class Order(Document):
 
     class Settings:
         name = "orders"
+        indexes = [
+            [("user_id", 1), ("created_at", -1)],
+            [("status", 1), ("created_at", -1)],
+            "customer_phone",
+            [("created_at", -1)]
+        ]

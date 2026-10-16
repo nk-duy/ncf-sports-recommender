@@ -163,61 +163,117 @@ class RecommendationService:
         }
 
     async def get_recommendations_for_user(self, user_id: str, top_k: int = 5) -> List[Product]:
-        if not self._load_model():
-            # Fallback nếu model chưa train: trả về featured products
-            return await self._get_fallback_recommendations(top_k)
-            
-        user_to_index = self.mappings["user_to_index"]
-        item_to_index = self.mappings["item_to_index"]
-        index_to_item = self.mappings["index_to_item"]
+        """
+        Hybrid Recommendation Pipeline:
+        1. Nếu user_id tồn tại và đã có trong NCF mapping -> Dự đoán bằng Neural Collaborative Filtering
+        2. Nếu user mới (Cold-start) nhưng có lịch sử tương tác hoặc profile sở thích (interested_sports) -> Content-based / Preference recommendation
+        3. Fallback tổng thể -> Top trending & best-seller có rating cao nhất
+        """
+        model_loaded = self._load_model()
         
-        if user_id not in user_to_index:
-            # User mới (Cold start), trả về fallback
-            return await self._get_fallback_recommendations(top_k)
-            
-        u_idx = user_to_index[user_id]
-        
-        # Dự đoán cho tất cả các items
-        all_item_indices = list(item_to_index.values())
-        u_tensor = torch.tensor([u_idx] * len(all_item_indices), dtype=torch.long)
-        i_tensor = torch.tensor(all_item_indices, dtype=torch.long)
-        
-        with torch.no_grad():
-            predictions = self.model(u_tensor, i_tensor)
-            
-        # Lấy top_k items có prediction score cao nhất
-        top_indices = torch.topk(predictions, k=min(top_k, len(all_item_indices))).indices.tolist()
-        
-        recommended_product_ids = [index_to_item[str(all_item_indices[idx])] for idx in top_indices]
-        
-        # Query DB lấy product models
-        recommended_products = []
-        for p_id in recommended_product_ids:
-            product = await Product.find_one({"product_id": p_id, "is_hidden": {"$ne": True}, "is_deleted": {"$ne": True}})
-            if product:
-                recommended_products.append(product)
+        # 1. NCF Collaborative Filtering nếu user đã có trong embedding weights
+        if model_loaded and user_id and user_id in self.mappings.get("user_to_index", {}):
+            try:
+                user_to_index = self.mappings["user_to_index"]
+                item_to_index = self.mappings["item_to_index"]
+                index_to_item = self.mappings["index_to_item"]
                 
-        # Nếu model trả về thiếu do các sản phẩm bị ẩn hoặc xoá, bù thêm bằng fallback
-        if len(recommended_products) < top_k:
-            needed = top_k - len(recommended_products)
-            existing_ids = [p.product_id for p in recommended_products]
-            fallback_items = await Product.find({
-                "product_id": {"$nin": existing_ids},
-                "is_hidden": {"$ne": True},
-                "is_deleted": {"$ne": True},
-                "rating": {"$gte": 4.0}
-            }).limit(needed).to_list()
-            recommended_products.extend(fallback_items)
+                u_idx = user_to_index[user_id]
+                all_item_indices = list(item_to_index.values())
+                u_tensor = torch.tensor([u_idx] * len(all_item_indices), dtype=torch.long)
+                i_tensor = torch.tensor(all_item_indices, dtype=torch.long)
                 
-        return recommended_products[:top_k]
+                with torch.no_grad():
+                    predictions = self.model(u_tensor, i_tensor)
+                    
+                top_indices = torch.topk(predictions, k=min(top_k * 2, len(all_item_indices))).indices.tolist()
+                recommended_product_ids = [index_to_item[str(all_item_indices[idx])] for idx in top_indices]
+                
+                recommended_products = []
+                for p_id in recommended_product_ids:
+                    product = await Product.find_one({"product_id": p_id, "is_hidden": {"$ne": True}, "is_deleted": {"$ne": True}})
+                    if product:
+                        recommended_products.append(product)
+                        if len(recommended_products) >= top_k:
+                            break
+                            
+                if len(recommended_products) >= top_k:
+                    return recommended_products[:top_k]
+            except Exception as e:
+                print(f"[NCF] Error predicting for user {user_id}: {e}")
 
-    async def _get_fallback_recommendations(self, top_k: int) -> List[Product]:
-        try:
-            products = await Product.find({
-                "rating": {"$gte": 4.0},
+        # 2. Cold-Start Level 1: Dựa trên Profile người dùng (interested_sports) & Lịch sử tương tác gần nhất
+        hybrid_recs = await self._get_cold_start_preference_recommendations(user_id, top_k)
+        if len(hybrid_recs) >= top_k:
+            return hybrid_recs[:top_k]
+
+        # 3. Cold-Start Level 2: Bù thêm các sản phẩm Best-Seller / Rating cao nhất
+        needed = top_k - len(hybrid_recs)
+        existing_ids = [p.product_id for p in hybrid_recs]
+        fallback_items = await self._get_fallback_recommendations(needed, exclude_ids=existing_ids)
+        hybrid_recs.extend(fallback_items)
+        return hybrid_recs[:top_k]
+
+    async def _get_cold_start_preference_recommendations(self, user_id: str, top_k: int) -> List[Product]:
+        """Gợi ý thông minh cho khách hàng mới dựa trên môn thể thao quan tâm hoặc sản phẩm vừa tương tác"""
+        from app.models.user import User
+        from app.models.interaction import Interaction
+        
+        target_sports = []
+        exclude_ids = []
+
+        # 2.1 Kiểm tra profile người dùng
+        if user_id:
+            try:
+                from beanie import PydanticObjectId
+                user = await User.get(PydanticObjectId(user_id)) if PydanticObjectId.is_valid(user_id) else await User.find_one(User.username == user_id)
+                if user and user.interested_sports:
+                    target_sports.extend(user.interested_sports)
+            except Exception:
+                pass
+
+        # 2.2 Kiểm tra các tương tác gần nhất của user (Click, View, Add to cart)
+        if user_id:
+            try:
+                recent_interactions = await Interaction.find(Interaction.user_id == user_id).sort("-timestamp").limit(5).to_list()
+                interacted_ids = [i.product_id for i in recent_interactions]
+                exclude_ids.extend(interacted_ids)
+                
+                if interacted_ids:
+                    interacted_prods = await Product.find({"product_id": {"$in": interacted_ids}}).to_list()
+                    for p in interacted_prods:
+                        if p.sport_type and p.sport_type not in target_sports:
+                            target_sports.append(p.sport_type)
+            except Exception:
+                pass
+
+        # 2.3 Query sản phẩm theo môn thể thao quan tâm
+        if target_sports:
+            query = {
+                "sport_type": {"$in": target_sports},
                 "is_hidden": {"$ne": True},
                 "is_deleted": {"$ne": True}
-            }).limit(top_k).to_list()
+            }
+            if exclude_ids:
+                query["product_id"] = {"$nin": exclude_ids}
+
+            recs = await Product.find(query).sort("-rating", "-reviews_count").limit(top_k).to_list()
+            return recs
+
+        return []
+
+    async def _get_fallback_recommendations(self, top_k: int, exclude_ids: Optional[List[str]] = None) -> List[Product]:
+        """Gợi ý Fallback toàn diện: Lấy các sản phẩm có đánh giá cao nhất và bán chạy nhất"""
+        try:
+            query = {
+                "is_hidden": {"$ne": True},
+                "is_deleted": {"$ne": True}
+            }
+            if exclude_ids:
+                query["product_id"] = {"$nin": exclude_ids}
+
+            # Ưu tiên sản phẩm rating >= 4.5 và nhiều review
+            products = await Product.find(query).sort("-rating", "-reviews_count", "-sold").limit(top_k).to_list()
             if not products:
                 products = await Product.find({
                     "is_hidden": {"$ne": True},
@@ -225,68 +281,103 @@ class RecommendationService:
                 }).limit(top_k).to_list()
             return products
         except Exception as e:
-            from fastapi import HTTPException
-            raise HTTPException(status_code=500, detail=str(e))
+            print(f"[Recommendation] Fallback error: {e}")
+            return []
 
     async def get_cross_sell_recommendations(self, cart_item_ids: List[str], top_k: int = 3) -> List[Product]:
-        """Gợi ý cross-sell dựa trên độ tương đồng Cosine của Item Embeddings trong NCF"""
+        """
+        Gợi ý cross-sell (bán chéo kèm giỏ hàng):
+        1. Sử dụng kết hợp GMF + MLP Item Embeddings từ mô hình NCF
+        2. Dựa trên độ tương đồng Cosine giữa vector giỏ hàng và toàn bộ sản phẩm
+        3. Fallback sang phụ kiện thể thao cùng môn nếu thiếu
+        """
         if not self._load_model() or not cart_item_ids:
             return await self._get_fallback_cross_sell(cart_item_ids, top_k)
             
-        item_to_index = self.mappings["item_to_index"]
-        index_to_item = self.mappings["index_to_item"]
-        
-        cart_indices = [item_to_index[i_id] for i_id in cart_item_ids if i_id in item_to_index]
-        if not cart_indices:
-            return await self._get_fallback_cross_sell(cart_item_ids, top_k)
+        try:
+            item_to_index = self.mappings["item_to_index"]
+            index_to_item = self.mappings["index_to_item"]
             
-        with torch.no_grad():
-            all_item_embeds = self.model.item_embedding.weight
-            cart_tensor = torch.tensor(cart_indices, dtype=torch.long)
-            cart_embeds = self.model.item_embedding(cart_tensor)
-            
-            # Đại diện giỏ hàng là trung bình các embeddings của các sản phẩm bên trong
-            basket_embed = cart_embeds.mean(dim=0, keepdim=True)
-            
-            from torch.nn.functional import cosine_similarity
-            similarities = cosine_similarity(basket_embed, all_item_embeds)
-            
-            # Loại trừ các sản phẩm đã có trong giỏ hàng
-            similarities[cart_indices] = -1.0
-            
-            top_indices = torch.topk(similarities, k=top_k * 2).indices.tolist()
-            
-        recommended_product_ids = [index_to_item[str(idx)] for idx in top_indices]
-        
-        recommended_products = []
-        for p_id in recommended_product_ids:
-            product = await Product.find_one({
-                "product_id": p_id,
-                "is_hidden": {"$ne": True},
-                "is_deleted": {"$ne": True}
-            })
-            if product:
-                recommended_products.append(product)
-                if len(recommended_products) >= top_k:
-                    break
+            cart_indices = [item_to_index[i_id] for i_id in cart_item_ids if i_id in item_to_index]
+            if not cart_indices:
+                return await self._get_fallback_cross_sell(cart_item_ids, top_k)
                 
-        # Nếu model gợi ý không đủ số lượng do database thiếu data, fallback
-        if len(recommended_products) < top_k:
-            fallback = await self._get_fallback_cross_sell(cart_item_ids + [p.product_id for p in recommended_products], top_k - len(recommended_products))
-            recommended_products.extend(fallback)
+            with torch.no_grad():
+                # Trích xuất trọng số embedding của cả GMF và MLP
+                all_embed_mf = self.model.embedding_item_mf.weight   # [num_items, 16]
+                all_embed_mlp = self.model.embedding_item_mlp.weight # [num_items, 16]
+                all_item_embeds = torch.cat([all_embed_mf, all_embed_mlp], dim=-1) # [num_items, 32]
+                
+                cart_tensor = torch.tensor(cart_indices, dtype=torch.long)
+                cart_embeds = all_item_embeds[cart_tensor]
+                
+                # Vector đại diện giỏ hàng (mean embedding)
+                basket_embed = cart_embeds.mean(dim=0, keepdim=True)
+                
+                from torch.nn.functional import cosine_similarity
+                similarities = cosine_similarity(basket_embed, all_item_embeds)
+                
+                # Không gợi ý lại các món đã có trong giỏ hàng
+                similarities[cart_indices] = -1.0
+                
+                top_indices = torch.topk(similarities, k=min(top_k * 3, len(similarities))).indices.tolist()
+                
+            recommended_product_ids = [index_to_item[str(idx)] for idx in top_indices]
             
-        return recommended_products[:top_k]
+            recommended_products = []
+            for p_id in recommended_product_ids:
+                product = await Product.find_one({
+                    "product_id": p_id,
+                    "is_hidden": {"$ne": True},
+                    "is_deleted": {"$ne": True}
+                })
+                if product:
+                    recommended_products.append(product)
+                    if len(recommended_products) >= top_k:
+                        break
+                    
+            if len(recommended_products) < top_k:
+                needed = top_k - len(recommended_products)
+                already_ids = cart_item_ids + [p.product_id for p in recommended_products]
+                fallback = await self._get_fallback_cross_sell(already_ids, needed)
+                recommended_products.extend(fallback)
+                
+            return recommended_products[:top_k]
+        except Exception as e:
+            print(f"[NCF Cross-sell] Error: {e}")
+            return await self._get_fallback_cross_sell(cart_item_ids, top_k)
 
     async def _get_fallback_cross_sell(self, cart_item_ids: List[str], top_k: int) -> List[Product]:
+        """Gợi ý bán kèm thông minh: Phụ kiện thể thao (tất, túi, bình nước) cùng môn của các món trong giỏ"""
         try:
-            # Fallback đơn giản lấy phụ kiện hoặc rating cao
-            products = await Product.find({
+            cart_products = await Product.find({"product_id": {"$in": cart_item_ids}}).to_list()
+            cart_sports = list({p.sport_type for p in cart_products if p.sport_type})
+            
+            # Ưu tiên gợi ý Phụ kiện cùng môn thể thao trong giỏ
+            query = {
                 "product_id": {"$nin": cart_item_ids},
                 "is_hidden": {"$ne": True},
                 "is_deleted": {"$ne": True}
-            }).limit(top_k).to_list()
-            return products
-        except:
+            }
+            if cart_sports:
+                query["sport_type"] = {"$in": cart_sports}
+                query["product_type"] = "Phụ kiện"
+
+            accessories = await Product.find(query).sort("-rating").limit(top_k).to_list()
+            if len(accessories) >= top_k:
+                return accessories[:top_k]
+                
+            # Nếu không đủ phụ kiện cùng môn, lấy phụ kiện bán chạy chung
+            general_query = {
+                "product_id": {"$nin": cart_item_ids + [p.product_id for p in accessories]},
+                "is_hidden": {"$ne": True},
+                "is_deleted": {"$ne": True}
+            }
+            more_items = await Product.find(general_query).sort("-rating", "-reviews_count").limit(top_k - len(accessories)).to_list()
+            accessories.extend(more_items)
+            return accessories[:top_k]
+        except Exception as e:
+            print(f"[Cross-sell Fallback] Error: {e}")
             return []
 
 recommendation_service = RecommendationService()
