@@ -3,7 +3,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from app.core.config import settings
 from app.models.user import User
-from app.models.order import Order
+from app.models.order import Order, OrderItem
+from app.models.product import Product
 from app.core.security import get_password_hash
 import random
 
@@ -11,7 +12,7 @@ async def seed_customers():
     client = AsyncIOMotorClient(settings.MONGODB_URI)
     database = client[settings.MONGODB_DB_NAME]
     
-    await init_beanie(database=database, document_models=[User, Order])
+    await init_beanie(database=database, document_models=[User, Order, Product])
     
     print("Seeding customers...")
     
@@ -152,15 +153,29 @@ async def seed_customers():
         user_orders_count = await Order.find({"user_id": str(user.id)}).count()
         if user_orders_count < 2:
             num_orders = random.randint(2, 6)
+            all_prods = await Product.find({"is_deleted": {"$ne": True}}).limit(20).to_list()
             for _ in range(num_orders):
-                amount = random.randint(500000, 3000000)
+                chosen_prods = random.sample(all_prods, min(random.randint(1, 3), len(all_prods))) if all_prods else []
+                order_items = []
+                for p in chosen_prods:
+                    order_items.append(OrderItem(
+                        product_id=p.product_id,
+                        product_name=p.name,
+                        quantity=random.randint(1, 2),
+                        price=float(p.price or 450000),
+                        size=random.choice(p.sizes) if p.sizes else "L",
+                        color=random.choice(p.colors) if p.colors else "Đen"
+                    ))
+                subtotal = sum(it.price * it.quantity for it in order_items) if order_items else random.randint(500000, 2000000)
                 order = Order(
                     customer_name=user.full_name or "Khách hàng",
                     customer_phone=user.phone or "",
                     customer_address=user.address or "",
                     payment_method="COD",
-                    items=[],
-                    total_amount=amount,
+                    items=order_items,
+                    subtotal=subtotal,
+                    shipping_fee=0.0 if subtotal >= 500000 else 30000.0,
+                    total_amount=subtotal,
                     status="completed",
                     user_id=str(user.id)
                 )
