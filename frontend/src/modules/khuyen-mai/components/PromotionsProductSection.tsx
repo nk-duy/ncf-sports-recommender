@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
 import { notifications } from "@mantine/notifications";
+import Pagination from "@/shared/components/Pagination";
 
 interface ProductItem {
   id?: string;
@@ -630,66 +631,13 @@ export default function PromotionsProductSection() {
                 <span className="font-bold text-slate-900">{totalPages}</span> ({totalCount} deal khuyến mãi)
               </span>
 
-              <div className="flex items-center gap-1.5">
-                {/* Prev Button */}
-                <button
-                  onClick={() => handlePageChange(page - 1)}
-                  disabled={page <= 1}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-colors ${
-                    page <= 1
-                      ? "border-slate-200 text-slate-300 cursor-not-allowed bg-slate-50"
-                      : "border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 cursor-pointer"
-                  }`}
-                  aria-label="Trang trước"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {/* Page Number Buttons */}
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter((p) => {
-                    if (totalPages <= 7) return true;
-                    return p === 1 || p === totalPages || Math.abs(p - page) <= 1;
-                  })
-                  .map((p, idx, arr) => {
-                    const prevP = arr[idx - 1];
-                    const showEllipsis = prevP && p - prevP > 1;
-
-                    return (
-                      <React.Fragment key={p}>
-                        {showEllipsis && (
-                          <span className="w-8 text-center text-xs text-slate-400 select-none">
-                            ...
-                          </span>
-                        )}
-                        <button
-                          onClick={() => handlePageChange(p)}
-                          className={`w-9 h-9 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                            page === p
-                              ? "bg-red-600 text-white shadow-md shadow-red-600/30 scale-105"
-                              : "border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      </React.Fragment>
-                    );
-                  })}
-
-                {/* Next Button */}
-                <button
-                  onClick={() => handlePageChange(page + 1)}
-                  disabled={page >= totalPages}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-colors ${
-                    page >= totalPages
-                      ? "border-slate-200 text-slate-300 cursor-not-allowed bg-slate-50"
-                      : "border-slate-200 text-slate-700 hover:bg-slate-100 hover:border-slate-300 cursor-pointer"
-                  }`}
-                  aria-label="Trang sau"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                siblingCount={1}
+                showEllipsis={true}
+              />
             </div>
           )}
         </div>
