@@ -1,21 +1,19 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from typing import List
 from beanie import PydanticObjectId
-
-from app.models.contact import Contact
 from app.schemas.contact import ContactCreate, ContactResponse
+from app.services.contact_service import contact_service
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 @router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)
-async def create_contact(contact_in: ContactCreate):
+@limiter.limit("5/minute")
+async def create_contact(request: Request, contact_in: ContactCreate):
     """
-    Tạo mới một liên hệ (Gửi tin nhắn từ form Liên hệ)
+    Tạo mới một liên hệ (Gửi tin nhắn từ form Liên hệ - Giới hạn 5 req/phút chống spam)
     """
-    contact = Contact(**contact_in.model_dump())
-    await contact.insert()
-    
-    # Return response mapped from beanie Document
+    contact = await contact_service.create_contact(contact_in)
     return ContactResponse(
         id=str(contact.id),
         name=contact.name,
@@ -27,64 +25,23 @@ async def create_contact(contact_in: ContactCreate):
     )
 
 @router.post("/newsletter", status_code=status.HTTP_201_CREATED)
-async def subscribe_newsletter(payload: dict):
+@limiter.limit("10/minute")
+async def subscribe_newsletter(request: Request, payload: dict):
     """
-    Đăng ký nhận bản tin khuyến mãi từ popup hoặc footer
+    Đăng ký nhận bản tin khuyến mãi từ popup hoặc footer (Giới hạn 10 req/phút)
     """
     email = payload.get("email", "").strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="Email không hợp lệ")
 
-    existing = await Contact.find_one({"email": email, "message": "Đăng ký nhận bản tin khuyến mãi (Newsletter)"})
-    if not existing:
-        newsletter_contact = Contact(
-            name=email.split("@")[0],
-            email=email,
-            phone=None,
-            message="Đăng ký nhận bản tin khuyến mãi (Newsletter)",
-            is_resolved=False
-        )
-        await newsletter_contact.insert()
-
-    # Tự động đồng bộ vào danh sách Khách hàng (User) để quản lý tập trung
-    from app.models.user import User
-    from app.core.security import get_password_hash
-    import uuid
-    from datetime import datetime
-
-    existing_user = await User.find_one(User.email == email)
-    if not existing_user:
-        raw_username = email.split("@")[0].replace(".", "_")
-        check_u = await User.find_one(User.username == raw_username)
-        final_username = raw_username if not check_u else f"{raw_username}_{str(uuid.uuid4())[:4]}"
-
-        new_user = User(
-            username=final_username,
-            email=email,
-            full_name=email.split("@")[0].capitalize(),
-            hashed_password=get_password_hash("kady@123"),
-            tier="Đồng (Mới)",
-            role="user",
-            interested_sports=["Bản tin Khuyến mãi"],
-            ai_profile="Khách đăng ký nhận bản tin khuyến mãi qua website",
-            created_at=datetime.utcnow()
-        )
-        await new_user.insert()
-
-    return {
-        "status": "success",
-        "message": "Đăng ký nhận bản tin thành công!",
-        "voucher_code": "KADY10",
-        "discount_description": "Giảm ngay 10% cho đơn hàng đầu tiên"
-    }
+    return await contact_service.subscribe_newsletter(email)
 
 @router.get("/", response_model=List[ContactResponse])
 async def get_contacts(skip: int = 0, limit: int = 100):
     """
-    Lấy danh sách các liên hệ (Dành cho Admin)
+    Lấy danh sách các liên hệ (Dành cho Quản trị viên)
     """
-    contacts = await Contact.find_all().sort("-created_at").skip(skip).limit(limit).to_list()
-    
+    contacts = await contact_service.get_contacts(skip=skip, limit=limit)
     return [
         ContactResponse(
             id=str(c.id),
@@ -102,13 +59,10 @@ async def resolve_contact(contact_id: PydanticObjectId):
     """
     Đánh dấu liên hệ đã được xử lý
     """
-    contact = await Contact.get(contact_id)
+    contact = await contact_service.resolve_contact(contact_id)
     if not contact:
         raise HTTPException(status_code=404, detail="Không tìm thấy liên hệ")
         
-    contact.is_resolved = True
-    await contact.save()
-    
     return ContactResponse(
         id=str(contact.id),
         name=contact.name,
@@ -122,10 +76,8 @@ async def resolve_contact(contact_id: PydanticObjectId):
 @router.delete("/{contact_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contact(contact_id: PydanticObjectId):
     """
-    Xóa một liên hệ
+    Xóa một liên hệ khỏi hệ thống
     """
-    contact = await Contact.get(contact_id)
-    if not contact:
+    success = await contact_service.delete_contact(contact_id)
+    if not success:
         raise HTTPException(status_code=404, detail="Không tìm thấy liên hệ")
-        
-    await contact.delete()

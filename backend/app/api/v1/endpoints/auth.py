@@ -1,133 +1,66 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
-from app.schemas.user import UserCreate, UserResponse, Token, SocialLoginRequest
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, Token, SocialLoginRequest
 from app.services.auth_service import auth_service
 from app.api.deps import get_current_active_user
 from app.models.user import User
-import uuid
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
-async def register(user_in: UserCreate):
-    # Kiểm tra user đã tồn tại chưa
+@limiter.limit("5/minute")
+async def register(request: Request, user_in: UserCreate):
+    """Đăng ký tài khoản người dùng mới (Giới hạn 5 req/phút chống bot spam)"""
     user = await auth_service.get_user_by_username(user_in.username)
     if user:
         raise HTTPException(
             status_code=400,
-            detail="The user with this username already exists in the system.",
+            detail="Tên người dùng đã tồn tại trên hệ thống.",
         )
     user = await auth_service.get_user_by_email(user_in.email)
     if user:
         raise HTTPException(
             status_code=400,
-            detail="The user with this email already exists in the system.",
+            detail="Địa chỉ email đã được đăng ký trên hệ thống.",
         )
         
-    # Tạo user mới
     user_db = await auth_service.register_user(user_in)
-    
-    # Tạo response (Beanie trả id dạng ObjectId, cần đổi sang str)
-    return UserResponse(
-        id=str(user_db.id),
-        username=user_db.username,
-        email=user_db.email,
-        full_name=user_db.full_name,
-        is_active=user_db.is_active,
-        role=user_db.role,
-        created_at=user_db.created_at
-    )
+    return auth_service.to_user_response(user_db)
 
 @router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("10/minute")
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    """Đăng nhập bằng tài khoản và mật khẩu (Giới hạn 10 req/phút chống dò mật khẩu brute-force)"""
     user = await auth_service.authenticate_user(form_data)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Tên đăng nhập hoặc mật khẩu không chính xác.",
             headers={"WWW-Authenticate": "Bearer"},
         )
         
     access_token = auth_service.create_token(user.username)
     return {"access_token": access_token, "token_type": "bearer"}
 
-from app.schemas.user import UserCreate, UserResponse, UserUpdate, Token, SocialLoginRequest
-
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
-    return UserResponse(
-        id=str(current_user.id),
-        username=current_user.username,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        phone=current_user.phone,
-        address=current_user.address,
-        tier=current_user.tier or "Đồng",
-        interested_sports=current_user.interested_sports or [],
-        is_active=current_user.is_active,
-        role=current_user.role,
-        created_at=current_user.created_at
-    )
+    """Lấy thông tin cá nhân của người dùng hiện tại"""
+    return auth_service.to_user_response(current_user)
 
 @router.put("/me", response_model=UserResponse)
 async def update_users_me(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_active_user)
 ):
-    if user_update.full_name is not None:
-        current_user.full_name = user_update.full_name
-    if user_update.phone is not None:
-        current_user.phone = user_update.phone
-    if user_update.address is not None:
-        current_user.address = user_update.address
-    if user_update.interested_sports is not None:
-        current_user.interested_sports = user_update.interested_sports
-    if user_update.shoe_size is not None:
-        current_user.shoe_size = user_update.shoe_size
-    if user_update.preferred_colors is not None:
-        current_user.preferred_colors = user_update.preferred_colors
-    
-    await current_user.save()
-    return UserResponse(
-        id=str(current_user.id),
-        username=current_user.username,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        phone=current_user.phone,
-        address=current_user.address,
-        tier=current_user.tier or "Đồng",
-        interested_sports=current_user.interested_sports or [],
-        is_active=current_user.is_active,
-        role=current_user.role,
-        created_at=current_user.created_at
-    )
+    """Cập nhật thông tin hồ sơ và sở thích thể thao của người dùng hiện tại"""
+    updated_user = await auth_service.update_user_profile(current_user, user_update)
+    return auth_service.to_user_response(updated_user)
 
 @router.post("/social-login", response_model=Token)
-async def social_login(req: SocialLoginRequest):
-    # This is a mocked social login that skips real Firebase Token validation for demo purposes.
-    # In a real app, you would use firebase_admin.auth.verify_id_token(req.token) here.
-    
-    # Check if user with this email exists
-    user = await auth_service.get_user_by_email(req.email)
-    
-    if not user:
-        # If user doesn't exist, create a new one automatically
-        # Generate a random password since they use social login
-        random_password = str(uuid.uuid4())
-        # Use email prefix as username if possible, or a random one
-        base_username = req.email.split('@')[0]
-        
-        # Check if username exists, if so append random str
-        existing_user = await auth_service.get_user_by_username(base_username)
-        username = base_username if not existing_user else f"{base_username}_{str(uuid.uuid4())[:8]}"
-        
-        user_in = UserCreate(
-            username=username,
-            email=req.email,
-            password=random_password,
-            full_name=req.full_name or base_username
-        )
-        user = await auth_service.register_user(user_in)
-        
+@limiter.limit("10/minute")
+async def social_login(request: Request, req: SocialLoginRequest):
+    """Đăng nhập bằng tài khoản mạng xã hội (Google / Facebook / Firebase)"""
+    user = await auth_service.handle_social_login(req.email, req.full_name)
     access_token = auth_service.create_token(user.username)
     return {"access_token": access_token, "token_type": "bearer"}

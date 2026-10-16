@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Body
+from fastapi import APIRouter, Depends, Query, Body, Request
 from typing import List, Optional, Dict, Any
 from app.models.user import User
 from app.models.interaction import Interaction
@@ -7,6 +7,7 @@ from app.schemas.product import ProductResponse
 from app.api.deps import get_current_user_optional
 from app.services.recommendation_service import recommendation_service
 from app.services.product_service import ProductService
+from app.core.limiter import limiter
 
 router = APIRouter()
 
@@ -39,8 +40,9 @@ async def get_ai_model_info():
     return recommendation_service.get_model_info()
 
 @router.post("/retrain")
-async def retrain_ai_model():
-    """Kích hoạt huấn luyện lại mô hình NCF từ cơ sở dữ liệu"""
+@limiter.limit("2/minute")
+async def retrain_ai_model(request: Request):
+    """Kích hoạt huấn luyện lại mô hình NCF từ cơ sở dữ liệu (Giới hạn 2 req/phút)"""
     res = await recommendation_service.train_model()
     return res
 

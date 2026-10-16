@@ -133,4 +133,21 @@ class OrderService:
         await order.save()
         return order
 
+    @staticmethod
+    async def cancel_order(order_id: PydanticObjectId, user_id: str, is_admin: bool = False) -> Order:
+        order = await Order.get(order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
+        
+        if order.user_id != user_id and not is_admin:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền thao tác trên đơn hàng này")
+        
+        if order.status.lower() not in ["pending", "chờ duyệt"]:
+            raise HTTPException(status_code=400, detail="Chỉ có thể hủy đơn hàng khi đang ở trạng thái Chờ duyệt")
+            
+        order.status = "rejected"
+        order.rejection_reason = "Khách hàng yêu cầu hủy đơn"
+        await order.save()
+        return order
+
 order_service = OrderService()
