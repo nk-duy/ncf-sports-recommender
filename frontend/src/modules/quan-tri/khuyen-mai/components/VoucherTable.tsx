@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
-import { Edit2, Trash2, Plus, Search, Filter, Copy, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit2, Trash2, Plus, Search, Filter, Copy, CheckCircle2 } from "lucide-react";
 import { notifications } from "@mantine/notifications";
+import Pagination from "@/shared/components/Pagination";
 
 export default function VoucherTable({ vouchers, onEdit, onDelete, onCreate, onStatusToggle }: { 
   vouchers: any[], 
@@ -113,21 +114,21 @@ export default function VoucherTable({ vouchers, onEdit, onDelete, onCreate, onS
       {/* Header Actions */}
       <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex flex-col sm:flex-row w-full md:w-auto items-center gap-3">
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-72">
             <input
               type="text"
               placeholder="Tìm kiếm mã voucher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full h-10 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition"
             />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           </div>
           
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto h-10 px-4 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer hover:bg-gray-50 transition"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="active">Đang chạy</option>
@@ -135,9 +136,12 @@ export default function VoucherTable({ vouchers, onEdit, onDelete, onCreate, onS
           </select>
         </div>
         
-        <button onClick={onCreate} className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-          <Plus size={18} />
-          Tạo Voucher
+        <button 
+          onClick={onCreate} 
+          className="w-full md:w-auto h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-2xs hover:shadow-xs transition inline-flex items-center justify-center gap-2"
+        >
+          <Plus size={16} />
+          <span>Tạo Voucher</span>
         </button>
       </div>
 
@@ -277,51 +281,25 @@ export default function VoucherTable({ vouchers, onEdit, onDelete, onCreate, onS
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-          <p className="text-sm text-gray-600">
-            Hiển thị <span className="font-bold text-gray-900">{(currentPage - 1) * pageSize + 1}</span> - <span className="font-bold text-gray-900">{Math.min(currentPage * pageSize, filteredVouchers.length)}</span> trên tổng số <span className="font-bold text-gray-900">{filteredVouchers.length}</span> mã
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded-lg text-sm font-bold transition ${
-                        currentPage === page 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'text-gray-600 hover:bg-gray-100 bg-white border border-transparent hover:border-gray-200'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                } else if (page === currentPage - 2 || page === currentPage + 2) {
-                  return <span key={page} className="text-gray-400">...</span>;
-                }
-                return null;
-              })}
-            </div>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+        <p className="text-sm text-gray-500">
+          Hiển thị{" "}
+          <span className="font-semibold text-gray-900">
+            {filteredVouchers.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}
+          </span>{" "}
+          -{" "}
+          <span className="font-semibold text-gray-900">
+            {Math.min(currentPage * pageSize, filteredVouchers.length)}
+          </span>{" "}
+          trên tổng số{" "}
+          <span className="font-semibold text-gray-900">{filteredVouchers.length}</span> mã
+        </p>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
     </div>
   );
 }

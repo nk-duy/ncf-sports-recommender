@@ -1,30 +1,36 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, ChevronRight, ChevronDown, Layers, ArrowUp, ArrowDown, Edit2, Eye, EyeOff, Check, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { notifications } from '@mantine/notifications';
 import { MegaMenuSport } from '../types';
 import { defaultMenu } from '../data/defaultMenu';
+
+import CategoryStats from './CategoryStats';
+import CategoryToolbar from './CategoryToolbar';
+import CategorySportCard from './CategorySportCard';
+import CategoryPreviewModal from './CategoryPreviewModal';
 
 export default function MegaMenuManager() {
   const [menu, setMenu] = useState<MegaMenuSport[]>([]);
   const [expandedSports, setExpandedSports] = useState<number[]>([]);
   const [mounted, setMounted] = useState(false);
-  
-  // Input states
-  const [newSport, setNewSport] = useState('');
-  const [newProductType, setNewProductType] = useState<{sportIdx: number, val: string}>({sportIdx: -1, val: ''});
-  const [newCategory, setNewCategory] = useState<{sportIdx: number, prodIdx: number, val: string}>({sportIdx: -1, prodIdx: -1, val: ''});
+  const [saving, setSaving] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  // Edit states
-  const [editingSport, setEditingSport] = useState<{idx: number, val: string} | null>(null);
-  const [editingProductType, setEditingProductType] = useState<{sIdx: number, pIdx: number, val: string} | null>(null);
-  const [editingCategory, setEditingCategory] = useState<{sIdx: number, pIdx: number, cIdx: number, val: string} | null>(null);
+  // Search & New Sport inputs
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newSport, setNewSport] = useState('');
+
+  // Products data for counting
+  const [totalProductsCount, setTotalProductsCount] = useState(0);
+  const [productCountsBySport, setProductCountsBySport] = useState<Record<string, number>>({});
+  const [productCountsByCategory, setProductCountsByCategory] = useState<Record<string, number>>({});
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
   useEffect(() => {
     setMounted(true);
     fetchMenu();
+    fetchProductCounts();
   }, []);
 
   const fetchMenu = async () => {
@@ -34,415 +40,367 @@ export default function MegaMenuManager() {
         const data = await res.json();
         if (data && data.length > 0) {
           setMenu(data);
+          // Mặc định mở rộng 2 môn đầu tiên
+          setExpandedSports([0, 1]);
           return;
         }
       }
     } catch (e) {
-      console.error("Error fetching menu:", e);
+      console.error('Error fetching menu:', e);
     }
-    // Fallback if no data or error
+
+    // Fallback nếu không có data hoặc lỗi
     const loaded = localStorage.getItem('admin_mega_menu');
     if (loaded) {
       try {
         setMenu(JSON.parse(loaded));
-      } catch (e) {
+        setExpandedSports([0, 1]);
+      } catch {
         setMenu(defaultMenu);
+        setExpandedSports([0, 1]);
       }
     } else {
       setMenu(defaultMenu);
+      setExpandedSports([0, 1]);
     }
   };
 
-  if (!mounted) return null;
+  const fetchProductCounts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/products?limit=1000&include_hidden=true`);
+      if (res.ok) {
+        const products = await res.json();
+        setTotalProductsCount(products.length);
+
+        const sportMap: Record<string, number> = {};
+        const catMap: Record<string, number> = {};
+
+        products.forEach((p: any) => {
+          if (p.sport_type) {
+            sportMap[p.sport_type] = (sportMap[p.sport_type] || 0) + 1;
+          }
+          if (Array.isArray(p.category)) {
+            p.category.forEach((cat: string) => {
+              if (cat) catMap[cat] = (catMap[cat] || 0) + 1;
+            });
+          }
+        });
+
+        setProductCountsBySport(sportMap);
+        setProductCountsByCategory(catMap);
+      }
+    } catch (err) {
+      console.error('Error fetching product counts:', err);
+    }
+  };
 
   const saveMenu = async () => {
-    // Save to localStorage as a backup
+    setSaving(true);
     localStorage.setItem('admin_mega_menu', JSON.stringify(menu));
-    
+
     try {
       const res = await fetch(`${API_URL}/menu`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(menu)
+        body: JSON.stringify(menu),
       });
+
       if (res.ok) {
-        notifications.show({ title: 'Thành công', message: 'Đã lưu cấu hình danh mục vào cơ sở dữ liệu!', color: 'green' });
+        notifications.show({
+          title: 'Thành công',
+          message: 'Đã lưu cấu hình danh mục vào hệ thống!',
+          color: 'green',
+        });
       } else {
-        notifications.show({ title: 'Lỗi', message: 'Không thể lưu vào CSDL, vui lòng thử lại!', color: 'red' });
+        notifications.show({
+          title: 'Lỗi',
+          message: 'Không thể lưu vào CSDL, vui lòng thử lại!',
+          color: 'red',
+        });
       }
     } catch (e) {
       console.error(e);
-      notifications.show({ title: 'Lỗi', message: 'Lỗi kết nối máy chủ!', color: 'red' });
+      notifications.show({
+        title: 'Lỗi',
+        message: 'Lỗi kết nối máy chủ!',
+        color: 'red',
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const toggleSport = (idx: number) => {
-    if (expandedSports.includes(idx)) {
-      setExpandedSports(expandedSports.filter(i => i !== idx));
-    } else {
-      setExpandedSports([...expandedSports, idx]);
+  const handleResetDefault = () => {
+    if (
+      window.confirm(
+        'Bạn có chắc muốn khôi phục lại toàn bộ cấu trúc cây menu mẫu chuẩn? Mọi thay đổi chưa lưu sẽ bị ghi đè.'
+      )
+    ) {
+      setMenu(defaultMenu);
+      setExpandedSports([0, 1, 2]);
+      notifications.show({
+        title: 'Đã khôi phục',
+        message: 'Đã đưa về cây danh mục mẫu chuẩn. Hãy bấm "Lưu thay đổi" để áp dụng!',
+        color: 'blue',
+      });
     }
   };
 
-  const addSport = () => {
+  // Expand / Collapse controls
+  const handleToggleExpand = (idx: number) => {
+    setExpandedSports(prev =>
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const handleExpandAll = () => {
+    setExpandedSports(menu.map((_, i) => i));
+  };
+
+  const handleCollapseAll = () => {
+    setExpandedSports([]);
+  };
+
+  // --- CRUD SPORT LEVEL ---
+  const handleAddSport = () => {
     if (!newSport.trim()) return;
-    setMenu([...menu, { sport_type: newSport.trim(), product_types: [] }]);
+    const newEntry: MegaMenuSport = {
+      sport_type: newSport.trim(),
+      product_types: [],
+    };
+    const updated = [...menu, newEntry];
+    setMenu(updated);
+    setExpandedSports(prev => [...prev, updated.length - 1]);
     setNewSport('');
+    notifications.show({
+      title: 'Đã thêm',
+      message: `Đã thêm môn "${newEntry.sport_type}". Hãy thêm các loại sản phẩm bên trong!`,
+      color: 'green',
+    });
   };
 
-  const addProductType = (sportIdx: number) => {
-    if (!newProductType.val.trim() || newProductType.sportIdx !== sportIdx) return;
-    const updated = [...menu];
-    updated[sportIdx].product_types.push({ product_type: newProductType.val.trim(), categories: [] });
-    setMenu(updated);
-    setNewProductType({sportIdx: -1, val: ''});
-  };
-
-  const addCategory = (sportIdx: number, prodIdx: number) => {
-    if (!newCategory.val.trim() || newCategory.sportIdx !== sportIdx || newCategory.prodIdx !== prodIdx) return;
-    const updated = [...menu];
-    updated[sportIdx].product_types[prodIdx].categories.push({ category: newCategory.val.trim() });
-    setMenu(updated);
-    setNewCategory({sportIdx: -1, prodIdx: -1, val: ''});
-  };
-
-  const removeSport = (idx: number) => {
+  const handleRemoveSport = (idx: number) => {
     const updated = [...menu];
     updated.splice(idx, 1);
     setMenu(updated);
+    setExpandedSports(prev => prev.filter(i => i !== idx).map(i => (i > idx ? i - 1 : i)));
   };
 
-  const removeProductType = (sportIdx: number, prodIdx: number) => {
-    const updated = [...menu];
-    updated[sportIdx].product_types.splice(prodIdx, 1);
-    setMenu(updated);
-  };
-
-  const removeCategory = (sportIdx: number, prodIdx: number, catIdx: number) => {
-    const updated = [...menu];
-    updated[sportIdx].product_types[prodIdx].categories.splice(catIdx, 1);
-    setMenu(updated);
-  };
-
-  // --- NEW FEATURES ---
-
-  const moveSport = (idx: number, direction: 'up' | 'down') => {
+  const handleMoveSport = (idx: number, direction: 'up' | 'down') => {
     const newMenu = [...menu];
     if (direction === 'up' && idx > 0) {
-      [newMenu[idx-1], newMenu[idx]] = [newMenu[idx], newMenu[idx-1]];
+      [newMenu[idx - 1], newMenu[idx]] = [newMenu[idx], newMenu[idx - 1]];
     } else if (direction === 'down' && idx < newMenu.length - 1) {
-      [newMenu[idx+1], newMenu[idx]] = [newMenu[idx], newMenu[idx+1]];
+      [newMenu[idx + 1], newMenu[idx]] = [newMenu[idx], newMenu[idx + 1]];
     }
     setMenu(newMenu);
   };
 
-  const moveProductType = (sIdx: number, pIdx: number, direction: 'up' | 'down') => {
+  const handleUpdateSportName = (idx: number, newName: string) => {
+    const newMenu = [...menu];
+    newMenu[idx].sport_type = newName;
+    setMenu(newMenu);
+  };
+
+  // --- CRUD PRODUCT TYPE LEVEL ---
+  const handleAddProductType = (sIdx: number, pTypeName: string) => {
+    const updated = [...menu];
+    updated[sIdx].product_types.push({
+      product_type: pTypeName,
+      categories: [],
+    });
+    setMenu(updated);
+  };
+
+  const handleRemoveProductType = (sIdx: number, pIdx: number) => {
+    const updated = [...menu];
+    updated[sIdx].product_types.splice(pIdx, 1);
+    setMenu(updated);
+  };
+
+  const handleMoveProductType = (sIdx: number, pIdx: number, direction: 'up' | 'down') => {
     const newMenu = [...menu];
     const pTypes = newMenu[sIdx].product_types;
     if (direction === 'up' && pIdx > 0) {
-      [pTypes[pIdx-1], pTypes[pIdx]] = [pTypes[pIdx], pTypes[pIdx-1]];
+      [pTypes[pIdx - 1], pTypes[pIdx]] = [pTypes[pIdx], pTypes[pIdx - 1]];
     } else if (direction === 'down' && pIdx < pTypes.length - 1) {
-      [pTypes[pIdx+1], pTypes[pIdx]] = [pTypes[pIdx], pTypes[pIdx+1]];
+      [pTypes[pIdx + 1], pTypes[pIdx]] = [pTypes[pIdx], pTypes[pIdx + 1]];
     }
     setMenu(newMenu);
   };
 
-  const moveCategory = (sIdx: number, pIdx: number, cIdx: number, direction: 'up' | 'down') => {
+  const handleUpdateProductTypeName = (sIdx: number, pIdx: number, newName: string) => {
+    const newMenu = [...menu];
+    newMenu[sIdx].product_types[pIdx].product_type = newName;
+    setMenu(newMenu);
+  };
+
+  // --- CRUD CATEGORY LEVEL ---
+  const handleAddCategory = (sIdx: number, pIdx: number, catName: string) => {
+    const updated = [...menu];
+    updated[sIdx].product_types[pIdx].categories.push({ category: catName });
+    setMenu(updated);
+  };
+
+  const handleRemoveCategory = (sIdx: number, pIdx: number, cIdx: number) => {
+    const updated = [...menu];
+    updated[sIdx].product_types[pIdx].categories.splice(cIdx, 1);
+    setMenu(updated);
+  };
+
+  const handleMoveCategory = (
+    sIdx: number,
+    pIdx: number,
+    cIdx: number,
+    direction: 'up' | 'down'
+  ) => {
     const newMenu = [...menu];
     const cats = newMenu[sIdx].product_types[pIdx].categories;
     if (direction === 'up' && cIdx > 0) {
-      [cats[cIdx-1], cats[cIdx]] = [cats[cIdx], cats[cIdx-1]];
+      [cats[cIdx - 1], cats[cIdx]] = [cats[cIdx], cats[cIdx - 1]];
     } else if (direction === 'down' && cIdx < cats.length - 1) {
-      [cats[cIdx+1], cats[cIdx]] = [cats[cIdx], cats[cIdx+1]];
+      [cats[cIdx + 1], cats[cIdx]] = [cats[cIdx], cats[cIdx + 1]];
     }
     setMenu(newMenu);
   };
 
-  const toggleVisibility = (type: 'sport'|'product'|'category', sIdx: number, pIdx?: number, cIdx?: number) => {
+  const handleUpdateCategoryName = (
+    sIdx: number,
+    pIdx: number,
+    cIdx: number,
+    newName: string
+  ) => {
+    const newMenu = [...menu];
+    newMenu[sIdx].product_types[pIdx].categories[cIdx].category = newName;
+    setMenu(newMenu);
+  };
+
+  // --- VISIBILITY TOGGLE ---
+  const handleToggleVisibility = (
+    type: 'sport' | 'product' | 'category',
+    sIdx: number,
+    pIdx?: number,
+    cIdx?: number
+  ) => {
     const newMenu = [...menu];
     if (type === 'sport') {
       newMenu[sIdx].is_hidden = !newMenu[sIdx].is_hidden;
     } else if (type === 'product' && pIdx !== undefined) {
       newMenu[sIdx].product_types[pIdx].is_hidden = !newMenu[sIdx].product_types[pIdx].is_hidden;
     } else if (type === 'category' && pIdx !== undefined && cIdx !== undefined) {
-      newMenu[sIdx].product_types[pIdx].categories[cIdx].is_hidden = !newMenu[sIdx].product_types[pIdx].categories[cIdx].is_hidden;
+      newMenu[sIdx].product_types[pIdx].categories[cIdx].is_hidden =
+        !newMenu[sIdx].product_types[pIdx].categories[cIdx].is_hidden;
     }
     setMenu(newMenu);
   };
 
-  const saveEditSport = () => {
-    if (!editingSport || !editingSport.val.trim()) return;
-    const newMenu = [...menu];
-    newMenu[editingSport.idx].sport_type = editingSport.val.trim();
-    setMenu(newMenu);
-    setEditingSport(null);
-  };
+  // Search filtering logic
+  const filteredIndices = useMemo(() => {
+    if (!searchQuery.trim()) return menu.map((_, i) => i);
 
-  const saveEditProductType = () => {
-    if (!editingProductType || !editingProductType.val.trim()) return;
-    const newMenu = [...menu];
-    newMenu[editingProductType.sIdx].product_types[editingProductType.pIdx].product_type = editingProductType.val.trim();
-    setMenu(newMenu);
-    setEditingProductType(null);
-  };
+    const q = searchQuery.toLowerCase().trim();
+    const matches: number[] = [];
 
-  const saveEditCategory = () => {
-    if (!editingCategory || !editingCategory.val.trim()) return;
-    const newMenu = [...menu];
-    newMenu[editingCategory.sIdx].product_types[editingCategory.pIdx].categories[editingCategory.cIdx].category = editingCategory.val.trim();
-    setMenu(newMenu);
-    setEditingCategory(null);
-  };
+    menu.forEach((sport, sIdx) => {
+      const matchSport = sport.sport_type.toLowerCase().includes(q);
+      const matchType = sport.product_types?.some(p =>
+        p.product_type.toLowerCase().includes(q)
+      );
+      const matchCat = sport.product_types?.some(p =>
+        p.categories?.some(c => c.category.toLowerCase().includes(q))
+      );
+
+      if (matchSport || matchType || matchCat) {
+        matches.push(sIdx);
+      }
+    });
+
+    return matches;
+  }, [menu, searchQuery]);
+
+  // When search query is entered, auto-expand matched items
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      setExpandedSports(filteredIndices);
+    }
+  }, [searchQuery, filteredIndices]);
+
+  if (!mounted) return null;
 
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý Danh mục</h1>
-          <p className="text-sm text-gray-500 mt-1">Quản lý cấu trúc cây danh mục hiển thị trên Menu khách hàng</p>
-        </div>
-        <button onClick={saveMenu} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition">
-          <Save size={18} />
-          <span>Lưu thay đổi</span>
-        </button>
+    <div className="space-y-6 max-w-6xl pb-16">
+      {/* 1. Thanh công cụ & Điều khiển Toolbar */}
+      <CategoryToolbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        newSport={newSport}
+        onNewSportChange={setNewSport}
+        onAddSport={handleAddSport}
+        onSaveMenu={saveMenu}
+        onOpenPreview={() => setIsPreviewOpen(true)}
+        onResetDefault={handleResetDefault}
+        onExpandAll={handleExpandAll}
+        onCollapseAll={handleCollapseAll}
+        saving={saving}
+        isAllExpanded={expandedSports.length === menu.length && menu.length > 0}
+      />
+
+      {/* 2. Thẻ KPI Thống kê danh mục */}
+      <CategoryStats menu={menu} totalProductsCount={totalProductsCount} />
+
+      {/* 3. Danh sách Thẻ Môn Thể Thao & Phân cấp danh mục */}
+      <div className="space-y-4">
+        {filteredIndices.map(sIdx => {
+          const sport = menu[sIdx];
+          if (!sport) return null;
+
+          return (
+            <CategorySportCard
+              key={`${sport.sport_type}-${sIdx}`}
+              sport={sport}
+              sIdx={sIdx}
+              totalSports={menu.length}
+              isExpanded={expandedSports.includes(sIdx)}
+              onToggleExpand={handleToggleExpand}
+              onMoveSport={handleMoveSport}
+              onToggleVisibility={handleToggleVisibility}
+              onRemoveSport={handleRemoveSport}
+              onUpdateSportName={handleUpdateSportName}
+              onMoveProductType={handleMoveProductType}
+              onRemoveProductType={handleRemoveProductType}
+              onUpdateProductTypeName={handleUpdateProductTypeName}
+              onAddProductType={handleAddProductType}
+              onMoveCategory={handleMoveCategory}
+              onRemoveCategory={handleRemoveCategory}
+              onUpdateCategoryName={handleUpdateCategoryName}
+              onAddCategory={handleAddCategory}
+              productCountsBySport={productCountsBySport}
+              productCountsByCategory={productCountsByCategory}
+            />
+          );
+        })}
+
+        {filteredIndices.length === 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center space-y-3">
+            <p className="text-gray-500 font-medium text-sm">
+              Không tìm thấy môn thể thao hay danh mục nào khớp với từ khóa &ldquo;{searchQuery}&rdquo;.
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="text-xs font-bold text-blue-600 hover:underline"
+            >
+              Xóa từ khóa tìm kiếm
+            </button>
+          </div>
+        )}
       </div>
-      
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <div className="flex gap-2 mb-6 border-b border-gray-100 pb-6">
-          <input 
-            type="text" 
-            placeholder="Thêm Môn thể thao / Nhóm danh mục lớn (VD: Chạy bộ, Thể thao nữ...)"
-            value={newSport}
-            onChange={(e) => setNewSport(e.target.value)}
-            className="flex-1 px-4 py-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            onKeyDown={(e) => { if (e.key === 'Enter') addSport(); }}
-          />
-          <button 
-            onClick={addSport}
-            className="px-4 py-2.5 bg-gray-900 text-white rounded-lg flex items-center justify-center hover:bg-gray-800 transition"
-          >
-            <Plus size={20} />
-            <span className="ml-2 font-medium">Thêm nhóm</span>
-          </button>
-        </div>
 
-        <div className="space-y-4">
-          {menu.map((sport, sIdx) => {
-            const isExpanded = expandedSports.includes(sIdx);
-            const isEditing = editingSport?.idx === sIdx;
-
-            return (
-              <div key={sIdx} className={`border rounded-lg overflow-hidden transition ${sport.is_hidden ? 'border-gray-100 opacity-60' : 'border-gray-200'}`}>
-                <div 
-                  className={`px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-100 transition ${sport.is_hidden ? 'bg-gray-50 text-gray-400' : 'bg-gray-50 text-gray-900'}`}
-                  onClick={() => !isEditing && toggleSport(sIdx)}
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    {isExpanded ? <ChevronDown size={20} className="text-blue-600" /> : <ChevronRight size={20} className="text-gray-400" />}
-                    <Layers size={18} className={isExpanded ? "text-blue-600" : "text-gray-500"} />
-                    
-                    {isEditing ? (
-                      <div className="flex items-center gap-2 flex-1 mr-4" onClick={e => e.stopPropagation()}>
-                        <input 
-                          autoFocus
-                          type="text" 
-                          className="px-2 py-1 border rounded w-full max-w-xs text-gray-900" 
-                          value={editingSport.val} 
-                          onChange={e => setEditingSport({...editingSport, val: e.target.value})}
-                          onKeyDown={e => { if (e.key === 'Enter') saveEditSport(); if (e.key === 'Escape') setEditingSport(null); }}
-                        />
-                        <button onClick={saveEditSport} className="p-1 bg-green-100 text-green-700 rounded"><Check size={16}/></button>
-                        <button onClick={() => setEditingSport(null)} className="p-1 bg-gray-200 text-gray-700 rounded"><X size={16}/></button>
-                      </div>
-                    ) : (
-                      <span className={`font-bold ${sport.is_hidden ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-                        {sport.sport_type}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => moveSport(sIdx, 'up')} disabled={sIdx === 0} className={`p-1.5 rounded transition ${sIdx === 0 ? 'text-gray-200' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}>
-                      <ArrowUp size={16} />
-                    </button>
-                    <button onClick={() => moveSport(sIdx, 'down')} disabled={sIdx === menu.length - 1} className={`p-1.5 rounded transition ${sIdx === menu.length - 1 ? 'text-gray-200' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'}`}>
-                      <ArrowDown size={16} />
-                    </button>
-                    <div className="w-px h-4 bg-gray-300 mx-1"></div>
-                    <button onClick={() => toggleVisibility('sport', sIdx)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded transition" title={sport.is_hidden ? 'Hiện' : 'Ẩn'}>
-                      {sport.is_hidden ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                    {!isEditing && (
-                      <button onClick={() => setEditingSport({idx: sIdx, val: sport.sport_type})} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition">
-                        <Edit2 size={16} />
-                      </button>
-                    )}
-                    <button onClick={() => removeSport(sIdx)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                {isExpanded && (
-                  <div className="p-4 border-t border-gray-200 bg-white">
-                    <div className="pl-8 space-y-6">
-                      
-                      {sport.product_types.map((prod, pIdx) => {
-                        const isEditingProd = editingProductType?.sIdx === sIdx && editingProductType?.pIdx === pIdx;
-                        return (
-                          <div key={pIdx} className={`space-y-3 ${prod.is_hidden ? 'opacity-60' : ''}`}>
-                            <div className="flex items-center justify-between group">
-                              <div className="flex items-center gap-2 flex-1">
-                                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                                
-                                {isEditingProd ? (
-                                  <div className="flex items-center gap-2">
-                                    <input 
-                                      autoFocus
-                                      type="text" 
-                                      className="px-2 py-1 border rounded w-48 text-sm text-gray-900" 
-                                      value={editingProductType.val} 
-                                      onChange={e => setEditingProductType({...editingProductType, val: e.target.value})}
-                                      onKeyDown={e => { if (e.key === 'Enter') saveEditProductType(); if (e.key === 'Escape') setEditingProductType(null); }}
-                                    />
-                                    <button onClick={saveEditProductType} className="p-1 bg-green-100 text-green-700 rounded"><Check size={14}/></button>
-                                    <button onClick={() => setEditingProductType(null)} className="p-1 bg-gray-200 text-gray-700 rounded"><X size={14}/></button>
-                                  </div>
-                                ) : (
-                                  <span className={`font-semibold ${prod.is_hidden ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                                    {prod.product_type}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                                <button onClick={() => moveProductType(sIdx, pIdx, 'up')} disabled={pIdx === 0} className={`p-1 rounded transition ${pIdx === 0 ? 'text-gray-200' : 'text-gray-400 hover:text-blue-600'}`}>
-                                  <ArrowUp size={14} />
-                                </button>
-                                <button onClick={() => moveProductType(sIdx, pIdx, 'down')} disabled={pIdx === sport.product_types.length - 1} className={`p-1 rounded transition ${pIdx === sport.product_types.length - 1 ? 'text-gray-200' : 'text-gray-400 hover:text-blue-600'}`}>
-                                  <ArrowDown size={14} />
-                                </button>
-                                <div className="w-px h-3 bg-gray-300 mx-1"></div>
-                                <button onClick={() => toggleVisibility('product', sIdx, pIdx)} className="p-1 text-gray-400 hover:text-gray-700">
-                                  {prod.is_hidden ? <EyeOff size={14} /> : <Eye size={14} />}
-                                </button>
-                                {!isEditingProd && (
-                                  <button onClick={() => setEditingProductType({sIdx, pIdx, val: prod.product_type})} className="p-1 text-gray-400 hover:text-blue-600">
-                                    <Edit2 size={14} />
-                                  </button>
-                                )}
-                                <button onClick={() => removeProductType(sIdx, pIdx)} className="p-1 text-gray-400 hover:text-red-500">
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </div>
-                            
-                            <div className="pl-6 flex flex-wrap gap-2 items-center">
-                              {prod.categories.map((cat, cIdx) => {
-                                const isEditingCat = editingCategory?.sIdx === sIdx && editingCategory?.pIdx === pIdx && editingCategory?.cIdx === cIdx;
-                                return (
-                                  <div key={cIdx} className={`group flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg text-sm transition-all ${cat.is_hidden ? 'opacity-50 grayscale' : ''}`}>
-                                    {isEditingCat ? (
-                                      <div className="flex items-center gap-1">
-                                        <input 
-                                          autoFocus
-                                          type="text" 
-                                          className="px-1.5 py-0.5 border rounded w-28 text-xs text-gray-900 bg-white" 
-                                          value={editingCategory.val} 
-                                          onChange={e => setEditingCategory({...editingCategory, val: e.target.value})}
-                                          onKeyDown={e => { if (e.key === 'Enter') saveEditCategory(); if (e.key === 'Escape') setEditingCategory(null); }}
-                                        />
-                                        <button onClick={saveEditCategory} className="text-green-600 hover:text-green-700"><Check size={14}/></button>
-                                        <button onClick={() => setEditingCategory(null)} className="text-gray-500 hover:text-gray-700"><X size={14}/></button>
-                                      </div>
-                                    ) : (
-                                      <span className={`${cat.is_hidden ? 'line-through text-gray-400' : 'text-blue-800'}`}>
-                                        {cat.category}
-                                      </span>
-                                    )}
-                                    
-                                    {!isEditingCat && (
-                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden -mr-1">
-                                        <button onClick={() => moveCategory(sIdx, pIdx, cIdx, 'up')} disabled={cIdx === 0} className={`${cIdx === 0 ? 'text-gray-300' : 'text-gray-400 hover:text-blue-600'}`}>
-                                          <ArrowUp size={12} />
-                                        </button>
-                                        <button onClick={() => moveCategory(sIdx, pIdx, cIdx, 'down')} disabled={cIdx === prod.categories.length - 1} className={`${cIdx === prod.categories.length - 1 ? 'text-gray-300' : 'text-gray-400 hover:text-blue-600'}`}>
-                                          <ArrowDown size={12} />
-                                        </button>
-                                        <button onClick={() => toggleVisibility('category', sIdx, pIdx, cIdx)} className="text-gray-400 hover:text-gray-700 ml-0.5">
-                                          {cat.is_hidden ? <EyeOff size={12} /> : <Eye size={12} />}
-                                        </button>
-                                        <button onClick={() => setEditingCategory({sIdx, pIdx, cIdx, val: cat.category})} className="text-gray-400 hover:text-blue-600 ml-0.5">
-                                          <Edit2 size={12} />
-                                        </button>
-                                        <button onClick={() => removeCategory(sIdx, pIdx, cIdx)} className="text-blue-300 hover:text-red-500 ml-0.5">
-                                          <Trash2 size={12} />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                              
-                              {/* Input to add category */}
-                              <div className="flex items-center gap-1 mt-1 mb-1">
-                                <input 
-                                  type="text"
-                                  placeholder="Thêm danh mục con..."
-                                  value={newCategory.sportIdx === sIdx && newCategory.prodIdx === pIdx ? newCategory.val : ''}
-                                  onChange={(e) => setNewCategory({sportIdx: sIdx, prodIdx: pIdx, val: e.target.value})}
-                                  onKeyDown={(e) => { if (e.key === 'Enter') addCategory(sIdx, pIdx); }}
-                                  className="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-sm w-36 focus:border-blue-500 focus:outline-none bg-gray-50"
-                                />
-                                {(newCategory.sportIdx === sIdx && newCategory.prodIdx === pIdx && newCategory.val) && (
-                                  <button 
-                                    onClick={() => addCategory(sIdx, pIdx)}
-                                    className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                                  >
-                                    <Plus size={14} />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Input to add product type */}
-                      <div className="flex items-center gap-2 pt-2">
-                        <div className="w-2 h-2 rounded-full border-2 border-gray-300"></div>
-                        <input 
-                          type="text"
-                          placeholder="Thêm loại sản phẩm (VD: Giày dép, Quần áo...)"
-                          value={newProductType.sportIdx === sIdx ? newProductType.val : ''}
-                          onChange={(e) => setNewProductType({sportIdx: sIdx, val: e.target.value})}
-                          onKeyDown={(e) => { if (e.key === 'Enter') addProductType(sIdx); }}
-                          className="px-3 py-1.5 border border-dashed border-gray-300 rounded-lg text-sm w-64 focus:border-blue-500 focus:outline-none bg-gray-50"
-                        />
-                        {(newProductType.sportIdx === sIdx && newProductType.val) && (
-                          <button 
-                            onClick={() => addProductType(sIdx)}
-                            className="px-3 py-1.5 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-900 transition"
-                          >
-                            Thêm
-                          </button>
-                        )}
-                      </div>
-
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-          
-          {menu.length === 0 && (
-            <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-              Chưa có danh mục nào. Hãy bắt đầu thêm Môn thể thao / Nhóm danh mục lớn đầu tiên!
-            </div>
-          )}
-        </div>
-      </div>
+      {/* 4. Modal Xem trước MegaMenu Trực quan */}
+      <CategoryPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        menu={menu}
+      />
     </div>
   );
 }

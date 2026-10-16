@@ -1,6 +1,5 @@
-'use client';
 import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, BadgePercent } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, BadgePercent, Download, Tag, TrendingDown, CheckCircle2 } from 'lucide-react';
 
 export default function AdminPromoProductsPage() {
   const [promoProducts, setPromoProducts] = useState<any[]>([]);
@@ -17,6 +16,31 @@ export default function AdminPromoProductsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addSearchQuery, setAddSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string>('');
+
+  const handleExportExcel = () => {
+    if (!promoProducts.length) {
+      alert("Không có sản phẩm khuyến mãi nào để xuất.");
+      return;
+    }
+    const headers = ["Sản phẩm", "Mã ASIN", "Giá gốc", "Phần trăm giảm", "Giá sau giảm", "Trạng thái"];
+    const rows = promoProducts.map(p => [
+      `"${(p.title || "").replace(/"/g, '""')}"`,
+      p.asin || "",
+      p.price || 0,
+      `${p.discount_percent || 0}%`,
+      Math.round((p.price || 0) * (1 - (p.discount_percent || 0) / 100)),
+      p.is_active ? "Đang áp dụng" : "Tạm dừng"
+    ]);
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `sp_khuyen_mai_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   useEffect(() => {
     fetchPromoProducts();
@@ -155,17 +179,25 @@ export default function AdminPromoProductsPage() {
           <p className="text-sm text-gray-500 mt-1">Quản lý các sản phẩm đang được giảm giá</p>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input 
               type="text" 
               placeholder="Tìm tên hoặc mã ASIN..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 w-full md:w-64"
+              className="w-full sm:w-64 h-10 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition"
             />
           </div>
+
+          <button
+            onClick={handleExportExcel}
+            className="h-10 px-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm rounded-xl shadow-2xs inline-flex items-center gap-2 transition"
+          >
+            <Download size={16} className="text-emerald-600" />
+            <span>Xuất Excel</span>
+          </button>
 
           <button 
             onClick={() => {
@@ -174,18 +206,50 @@ export default function AdminPromoProductsPage() {
               setAddSearchQuery('');
               setIsAddModalOpen(true);
             }} 
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition whitespace-nowrap"
+            className="h-10 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm rounded-xl shadow-2xs hover:shadow-xs transition inline-flex items-center gap-2 whitespace-nowrap"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             <span>Thêm SP Khuyến mãi</span>
           </button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
-        <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex flex-col gap-2">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tổng SP Khuyến mãi</span>
-          <span className="text-2xl font-black text-blue-600">{promoProducts.length}</span>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng SP Khuyến mãi</span>
+            <span className="text-2xl font-black text-gray-900">{promoProducts.length}</span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <Tag size={20} />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mức giảm trung bình</span>
+            <span className="text-2xl font-black text-emerald-600">
+              {promoProducts.length > 0 
+                ? `${Math.round(promoProducts.reduce((acc, p) => acc + (p.discount_percent || 0), 0) / promoProducts.length)}%` 
+                : '0%'}
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <TrendingDown size={20} />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Đang áp dụng</span>
+            <span className="text-2xl font-black text-purple-600">
+              {promoProducts.filter(p => p.is_active).length}
+            </span>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+            <CheckCircle2 size={20} />
+          </div>
         </div>
       </div>
 
