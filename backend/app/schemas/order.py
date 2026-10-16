@@ -16,5 +16,7 @@ class OrderCreate(BaseModel):
     payment_method: str
     items: List[OrderItemCreate]
     total_amount: float
+    shipping_fee: float = 0.0
+    subtotal: float = 0.0
     voucher_code: str | None = None
     discount_amount: float = 0.0

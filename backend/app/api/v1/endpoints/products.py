@@ -6,10 +6,11 @@ from app.services.product_service import product_service
 router = APIRouter()
 
 @router.get("/", response_model=List[ProductResponse])
+@router.get("", response_model=List[ProductResponse], include_in_schema=False)
 async def get_products(
     response: Response,
     skip: int = Query(0, ge=0, description="Số lượng bản ghi bỏ qua"),
-    limit: int = Query(20, ge=1, le=100, description="Số lượng bản ghi tối đa lấy về"),
+    limit: int = Query(20, ge=1, le=2000, description="Số lượng bản ghi tối đa lấy về"),
     category: Optional[str] = Query(None, description="Lọc theo danh mục"),
     product_type: Optional[str] = Query(None, description="Lọc theo Loại sản phẩm"),
     sport_type: Optional[str] = Query(None, description="Lọc theo Môn thể thao"),
@@ -58,6 +59,7 @@ async def get_product(product_id: str):
     return product
 
 @router.post("/", response_model=ProductResponse)
+@router.post("", response_model=ProductResponse, include_in_schema=False)
 async def create_product(product_data: ProductCreate):
     """Thêm sản phẩm mới"""
     new_product = await product_service.create_product(product_data)
@@ -73,10 +75,22 @@ async def update_product(product_id: str, product_data: ProductUpdate):
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
     return updated_product
 
-@router.delete("/{product_id}")
-async def delete_product(product_id: str):
-    """Xóa sản phẩm"""
-    success = await product_service.delete_product(product_id)
-    if not success:
+@router.get("/{product_id}/check-dependencies")
+async def check_dependencies(product_id: str):
+    """Kiểm tra sản phẩm có đơn hàng, đánh giá hoặc tương tác AI không trước khi xóa vĩnh viễn"""
+    product = await product_service.get_product_by_id(product_id)
+    if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
-    return {"status": "success", "message": "Đã xóa sản phẩm"}
+    dep_check = await product_service.check_product_dependencies(product_id)
+    return dep_check
+
+@router.delete("/{product_id}")
+async def delete_product(product_id: str, force: bool = False):
+    """Xóa sản phẩm (có kiểm tra ràng buộc toàn vẹn dữ liệu)"""
+    success, reason = await product_service.delete_product(product_id, force=force)
+    if not success:
+        if reason == "Không tìm thấy sản phẩm":
+            raise HTTPException(status_code=404, detail=reason)
+        # Bị chặn bởi ràng buộc dữ liệu
+        raise HTTPException(status_code=400, detail=reason)
+    return {"status": "success", "message": "Đã xóa vĩnh viễn sản phẩm"}

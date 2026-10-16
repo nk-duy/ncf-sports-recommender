@@ -5,6 +5,7 @@ from typing import List
 router = APIRouter()
 
 @router.get("/", response_model=List[MegaMenuSport])
+@router.get("", response_model=List[MegaMenuSport], include_in_schema=False)
 async def get_menu():
     menu_doc = await MegaMenu.find_one({"config_id": "default"})
     if menu_doc:
@@ -12,6 +13,7 @@ async def get_menu():
     return []
 
 @router.post("/")
+@router.post("", include_in_schema=False)
 async def update_menu(menu_data: List[MegaMenuSport]):
     menu_doc = await MegaMenu.find_one({"config_id": "default"})
     if menu_doc:

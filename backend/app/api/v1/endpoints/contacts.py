@@ -46,6 +46,31 @@ async def subscribe_newsletter(payload: dict):
         )
         await newsletter_contact.insert()
 
+    # Tự động đồng bộ vào danh sách Khách hàng (User) để quản lý tập trung
+    from app.models.user import User
+    from app.core.security import get_password_hash
+    import uuid
+    from datetime import datetime
+
+    existing_user = await User.find_one(User.email == email)
+    if not existing_user:
+        raw_username = email.split("@")[0].replace(".", "_")
+        check_u = await User.find_one(User.username == raw_username)
+        final_username = raw_username if not check_u else f"{raw_username}_{str(uuid.uuid4())[:4]}"
+
+        new_user = User(
+            username=final_username,
+            email=email,
+            full_name=email.split("@")[0].capitalize(),
+            hashed_password=get_password_hash("kady@123"),
+            tier="Đồng (Mới)",
+            role="user",
+            interested_sports=["Bản tin Khuyến mãi"],
+            ai_profile="Khách đăng ký nhận bản tin khuyến mãi qua website",
+            created_at=datetime.utcnow()
+        )
+        await new_user.insert()
+
     return {
         "status": "success",
         "message": "Đăng ký nhận bản tin thành công!",

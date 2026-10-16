@@ -18,9 +18,14 @@ class Order(Document):
     payment_method: str
     items: List[OrderItem]
     total_amount: float
+    shipping_fee: float = 0.0
+    subtotal: float = 0.0
     voucher_code: str | None = None
     discount_amount: float = 0.0
     status: str = "pending"
+    rejection_reason: str | None = None
+    tracking_code: str | None = None
+    carrier: str | None = None
     user_id: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
