@@ -138,6 +138,15 @@ async def seed_customers():
         user.preferred_colors = template["preferred_colors"]
         
         await user.save()
+
+        # Đồng bộ tên và số điện thoại vào các đơn hàng đã có của user
+        await Order.find(Order.user_id == str(user.id)).update_many({
+            "$set": {
+                "customer_name": user.full_name,
+                "customer_phone": user.phone,
+                "customer_address": user.address
+            }
+        })
         
         # Ensure they have some orders
         user_orders_count = await Order.find({"user_id": str(user.id)}).count()

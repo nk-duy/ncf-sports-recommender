@@ -11,16 +11,34 @@ import RejectOrderModal from './RejectOrderModal';
 import { printOrderInvoice } from '../utils/printInvoiceHelper';
 import Pagination from '@/shared/components/Pagination';
 
-// Helper kiểm tra tìm kiếm thông minh: hỗ trợ cả mã đầy đủ, mã rút gọn #ORD-..., số điện thoại, tên khách
+// Tiện ích chuẩn hóa tiếng Việt không dấu để tìm kiếm không dấu lẫn có dấu
+const removeVietnameseTones = (str: string): string => {
+  return (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+};
+
+// Helper kiểm tra tìm kiếm thông minh: hỗ trợ cả mã đầy đủ, mã rút gọn #ORD-..., số điện thoại, tên khách (có dấu & không dấu)
 const matchOrderSearch = (order: any, searchTerm: string): boolean => {
   if (!searchTerm || !searchTerm.trim()) return true;
   const rawTerm = searchTerm.trim().toLowerCase();
+  const unaccentedTerm = removeVietnameseTones(rawTerm);
+  
   // Bỏ các tiền tố #, ord-, ord, dh-, dh để lấy phần mã hex cốt lõi
   const cleanTerm = rawTerm.replace(/^[#\s]+/, '').replace(/^(ord|dh)[-_\s]*/i, '').trim();
 
-  const matchName = order.customer_name?.toLowerCase().includes(rawTerm);
-  const matchPhone = order.customer_phone?.includes(rawTerm);
-  const matchTracking = order.tracking_code?.toLowerCase().includes(rawTerm);
+  const customerName = (order.customer_name || '').toLowerCase();
+  const unaccentedName = removeVietnameseTones(customerName);
+  const matchName = customerName.includes(rawTerm) || unaccentedName.includes(unaccentedTerm);
+
+  const phone = (order.customer_phone || '').replace(/[\s.-]/g, '');
+  const cleanPhoneTerm = rawTerm.replace(/[\s.-]/g, '');
+  const matchPhone = (order.customer_phone || '').includes(rawTerm) || (cleanPhoneTerm.length >= 3 && phone.includes(cleanPhoneTerm));
+
+  const matchTracking = (order.tracking_code || '').toLowerCase().includes(rawTerm);
   
   const orderId = (order._id || '').toLowerCase();
   // Khớp theo _id gốc (nguyên chuỗi hoặc đuôi hex sạch)
