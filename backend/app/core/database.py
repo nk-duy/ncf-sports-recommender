@@ -13,11 +13,22 @@ from app.models.contact import Contact
 from app.models.menu import MegaMenu
 from app.models.attribute import ProductAttributes
 
+_client = None
+_db = None
+
+def get_db():
+    return _db
+
+def get_client():
+    return _client
+
 async def init_db():
     """Initialize MongoDB connection and Beanie ODM"""
-    client = AsyncIOMotorClient(settings.MONGODB_URI)
-    db = client[settings.MONGODB_DB_NAME]
+    global _client, _db
+    _client = AsyncIOMotorClient(settings.MONGODB_URI)
+    _db = _client[settings.MONGODB_DB_NAME]
     
     # Initialize Beanie with all document models here
-    await init_beanie(database=db, document_models=[Product, User, Interaction, Order, Voucher, Review, Banner, Store, Contact, MegaMenu, ProductAttributes])
+    await init_beanie(database=_db, document_models=[Product, User, Interaction, Order, Voucher, Review, Banner, Store, Contact, MegaMenu, ProductAttributes])
+
 

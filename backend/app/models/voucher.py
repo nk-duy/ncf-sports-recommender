@@ -18,3 +18,7 @@ class Voucher(Document):
 
     class Settings:
         name = "vouchers"
+        indexes = [
+            "code",
+            [("is_active", 1), ("valid_until", 1)]
+        ]

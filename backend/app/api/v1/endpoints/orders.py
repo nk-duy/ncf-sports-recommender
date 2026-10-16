@@ -25,6 +25,8 @@ async def create_order(
         user_id = str(current_user.id) if current_user else None
         new_order = await order_service.create_order(order_data, user_id=user_id)
         return {"status": "success", "order_id": str(new_order.id)}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
