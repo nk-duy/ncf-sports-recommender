@@ -34,7 +34,9 @@ export default function OrderDetailModal({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gray-50/80">
           <div>
             <h2 className="text-lg font-bold text-gray-900">Chi tiết Đơn hàng</h2>
-            <p className="text-sm font-mono text-gray-500 mt-0.5">#{order._id}</p>
+            <p className="text-sm font-mono text-gray-500 mt-0.5">
+              <span className="font-bold text-blue-600">#ORD-{(order._id || '').slice(-6).toUpperCase()}</span> • <span className="text-gray-400">ID: {order._id}</span>
+            </p>
           </div>
           <button
             type="button"

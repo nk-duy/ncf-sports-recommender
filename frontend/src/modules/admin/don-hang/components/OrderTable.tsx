@@ -45,16 +45,16 @@ export default function OrderTable({
           </thead>
           <tbody className="divide-y divide-gray-100 text-gray-700">
             {orders.map((order) => {
-              const shortId = (order._id || '').slice(-8);
+              const orderCode = `ORD-${(order._id || '').slice(-6).toUpperCase()}`;
 
               return (
                 <tr key={order._id} className="hover:bg-blue-50/30 transition">
                   <td className="py-3 px-4 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-mono font-bold text-gray-900">#{shortId}</span>
+                      <span className="font-mono font-bold text-gray-900">#{orderCode}</span>
                       <button
                         type="button"
-                        onClick={() => copyToClipboard(order._id, order._id)}
+                        onClick={() => copyToClipboard(orderCode, order._id)}
                         className="text-gray-400 hover:text-blue-600 transition"
                         title="Chép mã đơn"
                       >

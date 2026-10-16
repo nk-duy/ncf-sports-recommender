@@ -39,7 +39,7 @@ export default function OrderCardGrid({
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
       {orders.map((order) => {
         const isDelivered = isDeliveredStatus(order.status);
-        const shortId = (order._id || '').slice(-8);
+        const orderCode = `ORD-${(order._id || '').slice(-6).toUpperCase()}`;
 
         return (
           <div
@@ -70,11 +70,11 @@ export default function OrderCardGrid({
                 <div className="flex items-center justify-between text-[11px] text-gray-400 font-medium mb-3 pb-2.5 border-b border-gray-100">
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(order._id, order._id)}
+                    onClick={() => copyToClipboard(orderCode, order._id)}
                     className="inline-flex items-center gap-1 font-mono text-gray-500 hover:text-blue-600 transition"
                     title="Bấm để sao chép mã đơn"
                   >
-                    <span>#{shortId}</span>
+                    <span className="font-bold text-gray-800">#{orderCode}</span>
                     {copiedId === order._id ? (
                       <span className="text-[10px] text-emerald-600 font-bold">Đã chép!</span>
                     ) : (

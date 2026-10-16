@@ -11,7 +11,37 @@ import RejectOrderModal from './RejectOrderModal';
 import { printOrderInvoice } from '../utils/printInvoiceHelper';
 import Pagination from '@/shared/components/Pagination';
 
+// Helper kiểm tra tìm kiếm thông minh: hỗ trợ cả mã đầy đủ, mã rút gọn #ORD-..., số điện thoại, tên khách
+const matchOrderSearch = (order: any, searchTerm: string): boolean => {
+  if (!searchTerm || !searchTerm.trim()) return true;
+  const rawTerm = searchTerm.trim().toLowerCase();
+  // Bỏ các tiền tố #, ord-, ord, dh-, dh để lấy phần mã hex cốt lõi
+  const cleanTerm = rawTerm.replace(/^[#\s]+/, '').replace(/^(ord|dh)[-_\s]*/i, '').trim();
+
+  const matchName = order.customer_name?.toLowerCase().includes(rawTerm);
+  const matchPhone = order.customer_phone?.includes(rawTerm);
+  const matchTracking = order.tracking_code?.toLowerCase().includes(rawTerm);
+  
+  const orderId = (order._id || '').toLowerCase();
+  // Khớp theo _id gốc (nguyên chuỗi hoặc đuôi hex sạch)
+  const matchId = orderId.includes(rawTerm) || (cleanTerm.length > 0 && orderId.includes(cleanTerm));
+
+  // Khớp theo các format mã hiển thị: ord-xxxxxx, #ord-xxxxxx
+  const formattedCode6 = `ord-${orderId.slice(-6)}`;
+  const formattedCode5 = `ord-${orderId.slice(-5)}`;
+  const formattedCode8 = `ord-${orderId.slice(-8)}`;
+  const matchCode = formattedCode6.includes(rawTerm) ||
+                    formattedCode5.includes(rawTerm) ||
+                    formattedCode8.includes(rawTerm) ||
+                    `#${formattedCode6}`.includes(rawTerm) ||
+                    `#${formattedCode5}`.includes(rawTerm) ||
+                    `#${formattedCode8}`.includes(rawTerm);
+
+  return Boolean(matchName || matchPhone || matchTracking || matchId || matchCode);
+};
+
 export default function AdminOrdersPage() {
+
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('all');
@@ -185,14 +215,7 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       // 1. Search filter
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matchName = order.customer_name?.toLowerCase().includes(term);
-        const matchPhone = order.customer_phone?.includes(term);
-        const matchId = order._id?.toLowerCase().includes(term);
-        const matchTracking = order.tracking_code?.toLowerCase().includes(term);
-        if (!matchName && !matchPhone && !matchId && !matchTracking) return false;
-      }
+      if (!matchOrderSearch(order, searchTerm)) return false;
 
       // 2. Date filter
       if (dateFilter !== 'all' && order.created_at) {
@@ -351,14 +374,7 @@ export default function AdminOrdersPage() {
           { id: 'rejected', label: 'Từ chối / Hủy', icon: <XCircle size={14} />, iconColor: 'text-rose-500' },
         ].map(tab => {
           const count = orders.filter(order => {
-            if (searchTerm) {
-              const term = searchTerm.toLowerCase();
-              const matchName = order.customer_name?.toLowerCase().includes(term);
-              const matchPhone = order.customer_phone?.includes(term);
-              const matchId = order._id?.toLowerCase().includes(term);
-              const matchTracking = order.tracking_code?.toLowerCase().includes(term);
-              if (!matchName && !matchPhone && !matchId && !matchTracking) return false;
-            }
+            if (!matchOrderSearch(order, searchTerm)) return false;
 
             if (dateFilter !== 'all' && order.created_at) {
               const orderDate = new Date(order.created_at);
