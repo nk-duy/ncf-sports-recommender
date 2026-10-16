@@ -98,7 +98,32 @@ class OrderService:
             return await _execute_order_creation(session=None)
 
     @staticmethod
-    async def get_orders(skip: int = 0, limit: int = 20) -> List[Order]:
+    async def get_orders(skip: int = 0, limit: int = 20, search: Optional[str] = None) -> List[Order]:
+        if search and search.strip():
+            raw = search.strip()
+            clean = raw.lstrip('#').upper()
+            if clean.startswith(('ORD-', 'ORD_', 'DH-', 'DH_')):
+                clean = clean.split('-', 1)[-1].split('_', 1)[-1]
+            elif clean.startswith('ORD'):
+                clean = clean[3:]
+
+            import re
+            query_conds = [
+                {"customer_name": {"$regex": re.escape(raw), "$options": "i"}},
+                {"customer_phone": {"$regex": re.escape(raw), "$options": "i"}},
+                {"tracking_code": {"$regex": re.escape(raw), "$options": "i"}}
+            ]
+            if clean:
+                query_conds.append({
+                    "$expr": {
+                        "$regexMatch": {
+                            "input": {"$toString": "$_id"},
+                            "regex": re.escape(clean.lower())
+                        }
+                    }
+                })
+            return await Order.find({"$or": query_conds}).sort("-created_at").skip(skip).limit(limit).to_list()
+
         orders = await Order.find_all().sort("-created_at").skip(skip).limit(limit).to_list()
         return orders
 

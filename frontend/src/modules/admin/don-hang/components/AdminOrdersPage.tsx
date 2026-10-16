@@ -11,7 +11,55 @@ import RejectOrderModal from './RejectOrderModal';
 import { printOrderInvoice } from '../utils/printInvoiceHelper';
 import Pagination from '@/shared/components/Pagination';
 
+// Tiện ích chuẩn hóa tiếng Việt không dấu để tìm kiếm không dấu lẫn có dấu
+const removeVietnameseTones = (str: string): string => {
+  return (str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+};
+
+// Helper kiểm tra tìm kiếm thông minh: hỗ trợ cả mã đầy đủ, mã rút gọn #ORD-..., số điện thoại, tên khách (có dấu & không dấu)
+const matchOrderSearch = (order: any, searchTerm: string): boolean => {
+  if (!searchTerm || !searchTerm.trim()) return true;
+  const rawTerm = searchTerm.trim().toLowerCase();
+  const unaccentedTerm = removeVietnameseTones(rawTerm);
+  
+  // Bỏ các tiền tố #, ord-, ord, dh-, dh để lấy phần mã hex cốt lõi
+  const cleanTerm = rawTerm.replace(/^[#\s]+/, '').replace(/^(ord|dh)[-_\s]*/i, '').trim();
+
+  const customerName = (order.customer_name || '').toLowerCase();
+  const unaccentedName = removeVietnameseTones(customerName);
+  const matchName = customerName.includes(rawTerm) || unaccentedName.includes(unaccentedTerm);
+
+  const phone = (order.customer_phone || '').replace(/[\s.-]/g, '');
+  const cleanPhoneTerm = rawTerm.replace(/[\s.-]/g, '');
+  const matchPhone = (order.customer_phone || '').includes(rawTerm) || (cleanPhoneTerm.length >= 3 && phone.includes(cleanPhoneTerm));
+
+  const matchTracking = (order.tracking_code || '').toLowerCase().includes(rawTerm);
+  
+  const orderId = (order._id || '').toLowerCase();
+  // Khớp theo _id gốc (nguyên chuỗi hoặc đuôi hex sạch)
+  const matchId = orderId.includes(rawTerm) || (cleanTerm.length > 0 && orderId.includes(cleanTerm));
+
+  // Khớp theo các format mã hiển thị: ord-xxxxxx, #ord-xxxxxx
+  const formattedCode6 = `ord-${orderId.slice(-6)}`;
+  const formattedCode5 = `ord-${orderId.slice(-5)}`;
+  const formattedCode8 = `ord-${orderId.slice(-8)}`;
+  const matchCode = formattedCode6.includes(rawTerm) ||
+                    formattedCode5.includes(rawTerm) ||
+                    formattedCode8.includes(rawTerm) ||
+                    `#${formattedCode6}`.includes(rawTerm) ||
+                    `#${formattedCode5}`.includes(rawTerm) ||
+                    `#${formattedCode8}`.includes(rawTerm);
+
+  return Boolean(matchName || matchPhone || matchTracking || matchId || matchCode);
+};
+
 export default function AdminOrdersPage() {
+
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('all');
@@ -185,14 +233,7 @@ export default function AdminOrdersPage() {
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       // 1. Search filter
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matchName = order.customer_name?.toLowerCase().includes(term);
-        const matchPhone = order.customer_phone?.includes(term);
-        const matchId = order._id?.toLowerCase().includes(term);
-        const matchTracking = order.tracking_code?.toLowerCase().includes(term);
-        if (!matchName && !matchPhone && !matchId && !matchTracking) return false;
-      }
+      if (!matchOrderSearch(order, searchTerm)) return false;
 
       // 2. Date filter
       if (dateFilter !== 'all' && order.created_at) {
@@ -351,14 +392,7 @@ export default function AdminOrdersPage() {
           { id: 'rejected', label: 'Từ chối / Hủy', icon: <XCircle size={14} />, iconColor: 'text-rose-500' },
         ].map(tab => {
           const count = orders.filter(order => {
-            if (searchTerm) {
-              const term = searchTerm.toLowerCase();
-              const matchName = order.customer_name?.toLowerCase().includes(term);
-              const matchPhone = order.customer_phone?.includes(term);
-              const matchId = order._id?.toLowerCase().includes(term);
-              const matchTracking = order.tracking_code?.toLowerCase().includes(term);
-              if (!matchName && !matchPhone && !matchId && !matchTracking) return false;
-            }
+            if (!matchOrderSearch(order, searchTerm)) return false;
 
             if (dateFilter !== 'all' && order.created_at) {
               const orderDate = new Date(order.created_at);

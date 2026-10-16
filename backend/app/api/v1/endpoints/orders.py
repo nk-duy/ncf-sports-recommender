@@ -36,10 +36,11 @@ async def create_order(
 @router.get("/")
 async def get_orders(
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=1000)
+    limit: int = Query(50, ge=1, le=1000),
+    search: Optional[str] = Query(None, description="Tìm theo mã đơn (ORD-...), tên khách, SĐT, mã vận đơn")
 ):
-    """Lấy danh sách tất cả đơn hàng (Quản trị viên)"""
-    return await order_service.get_orders(skip=skip, limit=limit)
+    """Lấy danh sách tất cả đơn hàng (Quản trị viên) kèm tìm kiếm"""
+    return await order_service.get_orders(skip=skip, limit=limit, search=search)
 
 @router.get("/my-orders")
 async def get_my_orders(

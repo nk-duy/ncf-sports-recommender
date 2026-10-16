@@ -94,7 +94,7 @@ export default function OrderToolbar({
           </div>
           <input
             type="text"
-            placeholder="Mã đơn, SĐT, Tên, Mã Vận đơn..."
+            placeholder="Tìm theo mã đơn (#ORD-...), tên, SĐT, vận đơn..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="h-10 pl-9 pr-3 w-full border border-gray-200 bg-gray-50/50 focus:bg-white rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition shadow-2xs"
