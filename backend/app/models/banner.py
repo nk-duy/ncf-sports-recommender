@@ -5,6 +5,8 @@ from beanie import Document
 
 class Banner(Document):
     title: str
+    subtitle: Optional[str] = None
+    badge: Optional[str] = None
     image_url: str
     link: Optional[str] = None
     position: int = 0

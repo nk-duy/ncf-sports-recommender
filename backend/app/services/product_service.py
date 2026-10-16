@@ -139,6 +139,11 @@ class ProductService:
             find_query = find_query.sort("-rating")
         elif sort_by == "sold_desc":
             find_query = find_query.sort("-sold")
+        elif sort_by == "oldest":
+            find_query = find_query.sort("+_id")
+        else:
+            # Mặc định sản phẩm mới nhất lên đầu
+            find_query = find_query.sort("-_id")
 
         products = await find_query.skip(skip).limit(limit).to_list()
         if not include_hidden:
@@ -204,6 +209,15 @@ class ProductService:
         if existing_product:
             return None
         
+        now = datetime.now(timezone.utc)
+        if not product_data.created_at:
+            product_data.created_at = now
+        if not product_data.updated_at:
+            product_data.updated_at = now
+
+        if product_data.variants and len(product_data.variants) > 0:
+            product_data.stock = sum(v.stock for v in product_data.variants)
+
         new_product = Product(**product_data.dict())
         await new_product.insert()
         return new_product
@@ -215,6 +229,10 @@ class ProductService:
             return None
         
         update_data = product_data.dict(exclude_unset=True)
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        if "variants" in update_data and update_data["variants"] is not None:
+            if len(update_data["variants"]) > 0:
+                update_data["stock"] = sum(v.get("stock", 0) if isinstance(v, dict) else v.stock for v in update_data["variants"])
         for key, value in update_data.items():
             setattr(product, key, value)
             
@@ -222,13 +240,51 @@ class ProductService:
         return product
 
     @staticmethod
-    async def delete_product(product_id: str) -> bool:
+    async def check_product_dependencies(product_id: str) -> Dict[str, Any]:
+        """Kiểm tra xem sản phẩm có ràng buộc với đơn hàng, đánh giá hay dữ liệu tương tác AI không"""
+        from app.models.order import Order
+        from app.models.review import Review
+        from app.models.interaction import Interaction
+
+        order_count = await Order.find({"items.product_id": product_id}).count()
+        review_count = await Review.find(Review.product_id == product_id).count()
+        interaction_count = await Interaction.find(Interaction.product_id == product_id).count()
+
+        can_delete = (order_count == 0 and review_count == 0 and interaction_count == 0)
+        reasons = []
+        if order_count > 0:
+            reasons.append(f"{order_count} đơn hàng đã mua")
+        if review_count > 0:
+            reasons.append(f"{review_count} đánh giá thực tế")
+        if interaction_count > 0:
+            reasons.append(f"{interaction_count} lượt tương tác trong mô hình gợi ý AI")
+
+        ai_warning = None
+        if interaction_count > 0:
+            ai_warning = f"Sản phẩm này đang có {interaction_count} lượt tương tác trong mô hình gợi ý AI. Bạn nên sử dụng tính năng Ẩn hoặc Thùng rác thay vì Xóa vĩnh viễn để bảo toàn độ chính xác của AI."
+
+        return {
+            "can_delete": can_delete,
+            "order_count": order_count,
+            "review_count": review_count,
+            "interaction_count": interaction_count,
+            "ai_warning": ai_warning,
+            "reason": f"Sản phẩm này đã có lịch sử kinh doanh ({', '.join(reasons)}). Không thể xóa vĩnh viễn để tránh làm sai lệch báo cáo doanh thu và làm lỗi ma trận trọng số của mô hình gợi ý AI." if not can_delete else None
+        }
+
+    @staticmethod
+    async def delete_product(product_id: str, force: bool = False) -> tuple[bool, Optional[str]]:
         product = await Product.find_one(Product.product_id == product_id)
         if not product:
-            return False
+            return False, "Không tìm thấy sản phẩm"
+
+        # Kiểm tra ràng buộc dữ liệu
+        dep_check = await ProductService.check_product_dependencies(product_id)
+        if not dep_check["can_delete"] and not force:
+            return False, dep_check["reason"]
         
         await product.delete()
-        return True
+        return True, None
 
     @staticmethod
     async def get_distinct_brands() -> List[str]:

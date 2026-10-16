@@ -2,6 +2,13 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
+class ProductVariant(BaseModel):
+    color: Optional[str] = ""
+    size: Optional[str] = ""
+    stock: int = 0
+    sku: Optional[str] = ""
+    price: Optional[float] = None
+
 class ProductBase(BaseModel):
     product_id: Optional[str] = None
     name: str
@@ -16,6 +23,7 @@ class ProductBase(BaseModel):
     reviews_count: Optional[int] = 0
     sizes: Optional[List[str]] = []
     colors: Optional[List[str]] = []
+    variants: Optional[List[ProductVariant]] = []
     gender: Optional[str] = "Unisex"
     stock: Optional[int] = 100
     description: Optional[str] = ""
@@ -24,6 +32,8 @@ class ProductBase(BaseModel):
     discount_end_date: Optional[datetime] = None
     is_hidden: Optional[bool] = False
     is_deleted: Optional[bool] = False
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 class ProductCreate(ProductBase):
     pass
@@ -41,6 +51,7 @@ class ProductUpdate(BaseModel):
     reviews_count: Optional[int] = None
     sizes: Optional[List[str]] = None
     colors: Optional[List[str]] = None
+    variants: Optional[List[ProductVariant]] = None
     gender: Optional[str] = None
     stock: Optional[int] = None
     description: Optional[str] = None
@@ -49,6 +60,7 @@ class ProductUpdate(BaseModel):
     discount_end_date: Optional[datetime] = None
     is_hidden: Optional[bool] = None
     is_deleted: Optional[bool] = None
+    updated_at: Optional[datetime] = None
 
 class ProductResponse(ProductBase):
     pass

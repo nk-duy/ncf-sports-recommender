@@ -51,6 +51,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = auth_service.create_token(user.username)
     return {"access_token": access_token, "token_type": "bearer"}
 
+from app.schemas.user import UserCreate, UserResponse, UserUpdate, Token, SocialLoginRequest
+
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return UserResponse(
@@ -58,6 +60,43 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
         username=current_user.username,
         email=current_user.email,
         full_name=current_user.full_name,
+        phone=current_user.phone,
+        address=current_user.address,
+        tier=current_user.tier or "Đồng",
+        interested_sports=current_user.interested_sports or [],
+        is_active=current_user.is_active,
+        role=current_user.role,
+        created_at=current_user.created_at
+    )
+
+@router.put("/me", response_model=UserResponse)
+async def update_users_me(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_active_user)
+):
+    if user_update.full_name is not None:
+        current_user.full_name = user_update.full_name
+    if user_update.phone is not None:
+        current_user.phone = user_update.phone
+    if user_update.address is not None:
+        current_user.address = user_update.address
+    if user_update.interested_sports is not None:
+        current_user.interested_sports = user_update.interested_sports
+    if user_update.shoe_size is not None:
+        current_user.shoe_size = user_update.shoe_size
+    if user_update.preferred_colors is not None:
+        current_user.preferred_colors = user_update.preferred_colors
+    
+    await current_user.save()
+    return UserResponse(
+        id=str(current_user.id),
+        username=current_user.username,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        phone=current_user.phone,
+        address=current_user.address,
+        tier=current_user.tier or "Đồng",
+        interested_sports=current_user.interested_sports or [],
         is_active=current_user.is_active,
         role=current_user.role,
         created_at=current_user.created_at
