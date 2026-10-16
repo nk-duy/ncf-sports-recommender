@@ -1,4 +1,4 @@
-import { Product } from "@/modules/san-pham/components/ProductCard";
+import { Product } from "@/modules/public/san-pham/components/ProductCard";
 
 export const PROMOTIONS_MOCK: Product[] = [
   {

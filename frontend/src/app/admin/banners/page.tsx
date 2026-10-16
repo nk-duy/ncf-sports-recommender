@@ -1,4 +1,4 @@
-import BannerManagement from "@/modules/quan-tri/banner/components/BannerManagement";
+import BannerManagement from "@/modules/admin/banner/components/BannerManagement";
 
 export const metadata = {
   title: "Quản lý Banner | KADY",

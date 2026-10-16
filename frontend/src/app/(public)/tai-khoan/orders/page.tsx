@@ -1,5 +1,5 @@
 import React from "react";
-import OrdersList from "@/modules/tai-khoan/orders/components/OrdersList";
+import OrdersList from "@/modules/user/orders/components/OrdersList";
 
 export default function OrdersPage() {
   return (

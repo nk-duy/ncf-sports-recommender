@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import WishlistToolbar from "@/modules/tai-khoan/wishlist/components/WishlistToolbar";
-import ProductCard from "@/modules/san-pham/components/ProductCard";
+import WishlistToolbar from "@/modules/user/wishlist/components/WishlistToolbar";
+import ProductCard from "@/modules/public/san-pham/components/ProductCard";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
 import { Heart } from "lucide-react";
 

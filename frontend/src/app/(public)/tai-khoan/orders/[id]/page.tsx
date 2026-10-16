@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import OrderSummary from "@/modules/thanh-toan/success/components/OrderSummary";
-import OrderMetadata from "@/modules/thanh-toan/success/components/OrderMetadata";
+import OrderSummary from "@/modules/public/thanh-toan/success/components/OrderSummary";
+import OrderMetadata from "@/modules/public/thanh-toan/success/components/OrderMetadata";
 
 export default function OrderDetailPage() {
   const params = useParams();

@@ -1,5 +1,5 @@
 import React from 'react';
-import PoliciesPageContent from '@/modules/chinh-sach/components/PoliciesPageContent';
+import PoliciesPageContent from '@/modules/public/chinh-sach/components/PoliciesPageContent';
 
 export const metadata = {
   title: 'Chính sách & Quy định | KADY',

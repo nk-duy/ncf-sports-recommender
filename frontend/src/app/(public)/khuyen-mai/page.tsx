@@ -1,11 +1,11 @@
 import React, { Suspense } from "react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
-import PromotionsBanner from "@/modules/khuyen-mai/components/PromotionsBanner";
-import PromotionsTimeline from "@/modules/khuyen-mai/components/PromotionsTimeline";
-import PromotionsVoucher from "@/modules/khuyen-mai/components/PromotionsVoucher";
-import PromotionsProductSection from "@/modules/khuyen-mai/components/PromotionsProductSection";
-import PromotionsCombo from "@/modules/khuyen-mai/components/PromotionsCombo";
-import Features from "@/modules/trang-chu/components/Features";
+import PromotionsBanner from "@/modules/public/khuyen-mai/components/PromotionsBanner";
+import PromotionsTimeline from "@/modules/public/khuyen-mai/components/PromotionsTimeline";
+import PromotionsVoucher from "@/modules/public/khuyen-mai/components/PromotionsVoucher";
+import PromotionsProductSection from "@/modules/public/khuyen-mai/components/PromotionsProductSection";
+import PromotionsCombo from "@/modules/public/khuyen-mai/components/PromotionsCombo";
+import Features from "@/modules/public/trang-chu/components/Features";
 
 export const metadata = {
   title: "Đại Tiệc Siêu Sale & Khuyến Mãi Thể Thao | KADY Sports",

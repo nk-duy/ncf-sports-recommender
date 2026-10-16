@@ -1,5 +1,5 @@
 import React from 'react';
-import AboutUs from '@/modules/gioi-thieu/components/AboutUs';
+import AboutUs from '@/modules/public/gioi-thieu/components/AboutUs';
 
 export const metadata = {
   title: 'Giới thiệu | KADY',

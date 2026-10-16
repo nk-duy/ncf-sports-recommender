@@ -15,12 +15,12 @@ import {
   FREESHIP_THRESHOLD,
   formatVND,
 } from "@/shared/lib/cart";
-import CartVoucherBox from "@/modules/thanh-toan/cart/components/CartVoucherBox";
-import CartRecommendations from "@/modules/thanh-toan/cart/components/CartRecommendations";
-import { CartItemRow } from "@/modules/gio-hang/components/CartItemRow";
-import { CartSummary } from "@/modules/gio-hang/components/CartSummary";
-import { SavedForLater } from "@/modules/gio-hang/components/SavedForLater";
-import { CartFooter } from "@/modules/gio-hang/components/CartFooter";
+import CartVoucherBox from "@/modules/public/thanh-toan/cart/components/CartVoucherBox";
+import CartRecommendations from "@/modules/public/thanh-toan/cart/components/CartRecommendations";
+import { CartItemRow } from "@/modules/public/gio-hang/components/CartItemRow";
+import { CartSummary } from "@/modules/public/gio-hang/components/CartSummary";
+import { SavedForLater } from "@/modules/public/gio-hang/components/SavedForLater";
+import { CartFooter } from "@/modules/public/gio-hang/components/CartFooter";
 
 /** Thông tin mới nhất của sản phẩm lấy từ server (tồn kho, giá, biến thể) */
 interface LiveInfo {
@@ -33,7 +33,7 @@ interface LiveInfo {
   hidden: boolean;
 }
 
-import CartConfirmModal, { ConfirmState } from "@/modules/gio-hang/components/CartConfirmModal";
+import CartConfirmModal, { ConfirmState } from "@/modules/public/gio-hang/components/CartConfirmModal";
 
 export default function CartPage() {
   const router = useRouter();

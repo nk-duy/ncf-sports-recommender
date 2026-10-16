@@ -9,11 +9,11 @@ import { useAuthStore } from "@/shared/store/authStore";
 import { calcVoucherDiscount, getShippingOption, calcEffectiveShippingFee } from "@/shared/lib/cart";
 import { notifications } from "@mantine/notifications";
 
-import CheckoutAddressForm from "@/modules/thanh-toan/components/CheckoutAddressForm";
-import CheckoutOrderItems from "@/modules/thanh-toan/components/CheckoutOrderItems";
-import CheckoutPaymentMethods from "@/modules/thanh-toan/components/CheckoutPaymentMethods";
-import CheckoutSummary from "@/modules/thanh-toan/components/CheckoutSummary";
-import QRPaymentModal from "@/modules/thanh-toan/components/QRPaymentModal";
+import CheckoutAddressForm from "@/modules/public/thanh-toan/components/CheckoutAddressForm";
+import CheckoutOrderItems from "@/modules/public/thanh-toan/components/CheckoutOrderItems";
+import CheckoutPaymentMethods from "@/modules/public/thanh-toan/components/CheckoutPaymentMethods";
+import CheckoutSummary from "@/modules/public/thanh-toan/components/CheckoutSummary";
+import QRPaymentModal from "@/modules/public/thanh-toan/components/QRPaymentModal";
 
 export default function CheckoutPage() {
   const router = useRouter();

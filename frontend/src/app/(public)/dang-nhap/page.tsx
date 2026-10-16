@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import LoginForm from '@/modules/dang-nhap/components/LoginForm';
-import RegisterForm from '@/modules/dang-nhap/components/RegisterForm';
+import LoginForm from '@/modules/public/dang-nhap/components/LoginForm';
+import RegisterForm from '@/modules/public/dang-nhap/components/RegisterForm';
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);

@@ -1,5 +1,5 @@
 'use client';
-import AdminAttributesPage from '@/modules/quan-tri/thuoc-tinh/components/AdminAttributesPage';
+import AdminAttributesPage from '@/modules/admin/thuoc-tinh/components/AdminAttributesPage';
 
 export default function Page() {
   return <AdminAttributesPage />;

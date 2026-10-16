@@ -1,9 +1,9 @@
-import CheckoutProgress from "@/modules/thanh-toan/flow/components/CheckoutProgress";
-import SuccessHeader from "@/modules/thanh-cong/components/SuccessHeader";
-import OrderDetails from "@/modules/thanh-cong/components/OrderDetails";
-import OrderMetaSidebar from "@/modules/thanh-cong/components/OrderMetaSidebar";
-import NextBasketCrossSell from "@/modules/thanh-cong/components/NextBasketCrossSell";
-import SuccessCommitments from "@/modules/thanh-cong/components/SuccessCommitments";
+import CheckoutProgress from "@/modules/public/thanh-toan/flow/components/CheckoutProgress";
+import SuccessHeader from "@/modules/public/thanh-cong/components/SuccessHeader";
+import OrderDetails from "@/modules/public/thanh-cong/components/OrderDetails";
+import OrderMetaSidebar from "@/modules/public/thanh-cong/components/OrderMetaSidebar";
+import NextBasketCrossSell from "@/modules/public/thanh-cong/components/NextBasketCrossSell";
+import SuccessCommitments from "@/modules/public/thanh-cong/components/SuccessCommitments";
 
 export default function SuccessPage() {
   return (

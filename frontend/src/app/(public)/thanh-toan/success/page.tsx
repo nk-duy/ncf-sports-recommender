@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Info, FileText, Store, Truck, Check } from "lucide-react";
 
-import OrderSuccessHero from "@/modules/thanh-toan/success/components/OrderSuccessHero";
-import PostPurchaseRecommendations from "@/modules/thanh-toan/success/components/PostPurchaseRecommendations";
-import TrustStrip from "@/modules/thanh-toan/shared/components/TrustStrip";
-import TrackingModal from "@/modules/thanh-toan/success/components/TrackingModal";
+import OrderSuccessHero from "@/modules/public/thanh-toan/success/components/OrderSuccessHero";
+import PostPurchaseRecommendations from "@/modules/public/thanh-toan/success/components/PostPurchaseRecommendations";
+import TrustStrip from "@/modules/public/thanh-toan/shared/components/TrustStrip";
+import TrackingModal from "@/modules/public/thanh-toan/success/components/TrackingModal";
 
 function CheckoutSuccessContent() {
   const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);

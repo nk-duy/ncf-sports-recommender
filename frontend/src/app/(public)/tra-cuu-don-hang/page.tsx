@@ -1,8 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import Breadcrumb from '@/shared/components/Breadcrumb';
-import OrderTrackingForm from '@/modules/tra-cuu-don-hang/components/OrderTrackingForm';
-import OrderDetailsCard from '@/modules/tra-cuu-don-hang/components/OrderDetailsCard';
+import OrderTrackingForm from '@/modules/public/tra-cuu-don-hang/components/OrderTrackingForm';
+import OrderDetailsCard from '@/modules/public/tra-cuu-don-hang/components/OrderDetailsCard';
 
 export default function OrderTrackingPage() {
   const [orderId, setOrderId] = useState('');
