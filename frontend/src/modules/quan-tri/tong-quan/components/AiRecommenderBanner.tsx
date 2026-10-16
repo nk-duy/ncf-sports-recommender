@@ -28,14 +28,11 @@ export default function AiRecommenderBanner({
       {/* Top row: Status, Title and Action Button */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1.5 max-w-2xl">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Đang hoạt động ổn định
-            </span>
-            <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-500">
-              Cập nhật: <span className="font-medium text-gray-700">{aiModelInfo?.last_trained || 'Hôm nay'}</span>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="font-semibold text-emerald-700">Đang hoạt động ổn định</span>
+            <span className="text-gray-300">•</span>
+            <span>
+              Cập nhật lần cuối: <span className="font-medium text-gray-700">{aiModelInfo?.last_trained || 'Hôm nay'}</span>
             </span>
           </div>
 
