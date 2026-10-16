@@ -38,17 +38,18 @@ export default function Footer() {
             </h3>
             <ul className="space-y-3 text-sm">
               {[
-                { label: 'Chính sách giao hàng', href: '#' },
-                { label: 'Đổi trả trong 30 ngày', href: '#' },
-                { label: 'Chính sách bảo hành', href: '#' },
-                { label: 'Điều khoản sử dụng', href: '#' },
-                { label: 'Chính sách bảo mật', href: '#' },
+                { label: 'Chính sách giao hàng', href: '/chinh-sach?tab=giao-hang' },
+                { label: 'Đổi trả trong 30 ngày', href: '/chinh-sach?tab=doi-tra' },
+                { label: 'Hướng dẫn chọn size', href: '/huong-dan-chon-size' },
+                { label: 'Chính sách bảo hành', href: '/chinh-sach?tab=bao-hanh' },
+                { label: 'Điều khoản sử dụng', href: '/chinh-sach?tab=dieu-khoan' },
+                { label: 'Chính sách bảo mật', href: '/chinh-sach?tab=bao-mat' },
               ].map((item) => (
                 <li key={item.label}>
-                  <a href={item.href} className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
+                  <Link href={item.href} className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 group">
                     <span className="w-1 h-1 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {item.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

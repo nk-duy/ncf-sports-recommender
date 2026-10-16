@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import WishlistToolbar from "@/modules/tai-khoan/wishlist/components/WishlistToolbar";
 import ProductCard from "@/modules/san-pham/components/ProductCard";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
+import { Heart } from "lucide-react";
 
 export default function WishlistPage() {
   const { items } = useWishlistStore();
@@ -38,10 +39,12 @@ export default function WishlistPage() {
       
       {items.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-          <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          <p>Bạn chưa có sản phẩm yêu thích nào.</p>
+          <Heart className="w-16 h-16 mb-4 text-gray-200" />
+          <h3 className="text-base font-bold text-gray-900 mb-1">Bạn chưa có sản phẩm yêu thích nào</h3>
+          <p className="text-sm text-gray-500 mb-6">Hãy thả tim các sản phẩm bạn quan tâm để lưu lại tại đây nhé!</p>
+          <a href="/products" className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
+            Khám phá sản phẩm
+          </a>
         </div>
       )}
     </div>

@@ -33,13 +33,13 @@ export default function ProductCard({ product, isPromo = false }: { product: Pro
   const displayId = String(product.id || product.product_id || '');
   const displayImage = product.imageUrl || product.image_url || 'https://via.placeholder.com/300x300?text=No+Image';
   const displayPrice = typeof product.price === 'number' ? product.price.toLocaleString('vi-VN') + 'đ' : product.price;
-  const numericPrice = typeof product.price === 'number' 
-    ? product.price 
+  const numericPrice = typeof product.price === 'number'
+    ? product.price
     : parseInt(String(product.price).replace(/\D/g, '')) || 0;
-  
+
   // Only show the first category to prevent long wrapping text
   const displayCategory = Array.isArray(product.category) && product.category.length > 0
-    ? product.category[0] 
+    ? product.category[0]
     : product.category;
 
   const { toggleItem, isWishlisted } = useWishlistStore();
@@ -100,18 +100,18 @@ export default function ProductCard({ product, isPromo = false }: { product: Pro
           </button>
         )}
       </div>
-      
+
       <div className={styles.content}>
         {displayCategory && (
           <div className={styles.category}>
             {displayCategory}
           </div>
         )}
-        
+
         <h3 className={styles.title}>
           {product.name}
         </h3>
-        
+
         <div className={styles.footer}>
           <div className={styles.priceWrapper}>
             <span className={styles.price}>

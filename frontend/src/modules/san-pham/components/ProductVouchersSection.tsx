@@ -40,8 +40,7 @@ export default function ProductVouchersSection() {
   useEffect(() => {
     // Fetch vouchers from API if available
     fetch('http://localhost:8000/api/v1/vouchers')
-      ? fetch('http://localhost:8000/api/v1/vouchers')
-          .then((res) => (res.ok ? res.json() : null))
+      .then((res) => (res.ok ? res.json() : null))
           .then((data) => {
             if (Array.isArray(data) && data.length > 0) {
               const mapped = data.map((v: any) => ({
@@ -57,8 +56,7 @@ export default function ProductVouchersSection() {
               setVouchers(mapped);
             }
           })
-          .catch((err) => console.error(err))
-      : null;
+          .catch((err) => console.error(err));
   }, []);
 
   const handleCopy = (code: string) => {

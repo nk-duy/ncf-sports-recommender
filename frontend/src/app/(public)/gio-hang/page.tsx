@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useCartStore, cartKey, CartItem } from "@/shared/store/cartStore";
 import { useCheckoutStore } from "@/shared/store/checkoutStore";
 import { notifications } from "@mantine/notifications";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Truck, Sparkles } from "lucide-react";
 import {
   API_BASE,
   calcOriginalPrice,
   calcVoucherDiscount,
   getShippingOption,
+  calcEffectiveShippingFee,
+  FREESHIP_THRESHOLD,
+  formatVND,
 } from "@/shared/lib/cart";
 import CartVoucherBox from "@/modules/thanh-toan/cart/components/CartVoucherBox";
 import CartRecommendations from "@/modules/thanh-toan/cart/components/CartRecommendations";
@@ -153,8 +156,7 @@ export default function CartPage() {
   const selectedItemsData = items.filter((i) => selectedKeys.includes(cartKey(i)) && !isUnavailable(i));
   const subtotal = selectedItemsData.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const totalCount = selectedItemsData.reduce((sum, i) => sum + i.quantity, 0);
-  const shippingOption = getShippingOption(shipping_id);
-  const shippingFee = selectedItemsData.length > 0 ? shippingOption.price : 0;
+  const shippingFee = selectedItemsData.length > 0 ? calcEffectiveShippingFee(subtotal, shipping_id) : 0;
   const voucherDiscount = calcVoucherDiscount(appliedVoucher, subtotal, shippingFee);
   const finalTotal = Math.max(0, subtotal + shippingFee - voucherDiscount);
 
@@ -211,6 +213,43 @@ export default function CartPage() {
 
       <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 mt-6">
         
+        {/* Freeship Progress Bar */}
+        {items.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-4 mb-4 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                <Truck size={20} />
+              </div>
+              <div>
+                {subtotal >= FREESHIP_THRESHOLD ? (
+                  <p className="text-sm font-bold text-green-600 flex items-center gap-1.5">
+                    <Sparkles size={16} className="text-green-600 shrink-0" />
+                    Tuyệt vời! Bạn đã đủ điều kiện được Miễn Phí Vận Chuyển (giảm 30.000đ).
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-700">
+                    Mua thêm <span className="font-bold text-blue-600">{formatVND(FREESHIP_THRESHOLD - subtotal)}</span> để nhận <span className="font-bold text-green-600">Freeship toàn quốc</span>!
+                  </p>
+                )}
+                <div className="w-full sm:w-80 bg-gray-100 h-2 rounded-full overflow-hidden mt-1.5">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-green-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.round((subtotal / FREESHIP_THRESHOLD) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            {subtotal < FREESHIP_THRESHOLD && (
+              <Link 
+                href="/san-pham"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline shrink-0"
+              >
+                + Mua thêm sản phẩm
+              </Link>
+            )}
+          </div>
+        )}
+
         {/* Table Header */}
         <div className="bg-white rounded shadow-sm flex items-center px-5 py-4 mb-3 text-sm text-gray-500">
           <div className="w-[45%] flex items-center gap-3">

@@ -7,7 +7,6 @@ import FlashSaleSection from "@/modules/trang-chu/components/FlashSaleSection";
 import BrandLogos from "@/modules/trang-chu/components/BrandLogos";
 import Testimonials from "@/modules/trang-chu/components/Testimonials";
 import EmailPopup from "@/modules/trang-chu/components/EmailPopup";
-import BackToTop from "@/modules/cot-loi/components/BackToTop";
 
 export default function Home() {
   return (
@@ -21,7 +20,6 @@ export default function Home() {
       <BrandLogos />
       <Testimonials />
       <EmailPopup />
-      <BackToTop />
     </>
   );
 }

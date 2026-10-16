@@ -26,6 +26,8 @@ interface RecProduct {
   sizes?: string[];
   colors?: string[];
   stock?: number;
+  is_hidden?: boolean;
+  is_deleted?: boolean;
 }
 
 export default function RecommendedProducts() {
@@ -149,6 +151,7 @@ export default function RecommendedProducts() {
 
   // Filter products by active tab
   const filteredProducts = products.filter((p) => {
+    if (p.is_hidden || p.is_deleted) return false;
     if (activeCategoryTab === "all") return true;
     if (activeCategoryTab === "equipment") {
       return (

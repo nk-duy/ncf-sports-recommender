@@ -2,7 +2,8 @@ import React from "react";
 import Link from "next/link";
 import { Home, ChevronRight } from "lucide-react";
 
-export default function CheckoutProgress({ step = 1 }: { step?: number }) {
+export default function CheckoutProgress({ step = 1, currentStep }: { step?: number; currentStep?: number }) {
+  const activeStep = currentStep ?? step;
   return (
     <section className="w-full bg-white py-3 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
       <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -18,18 +19,18 @@ export default function CheckoutProgress({ step = 1 }: { step?: number }) {
         
         {/* Stepped Checkout Indicator */}
         <div className="flex items-center gap-2 text-xs font-semibold">
-          <div className={`flex items-center gap-1.5 ${step >= 1 ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 1 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'}`}>1</span>
+          <div className={`flex items-center gap-1.5 ${activeStep >= 1 ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${activeStep >= 1 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'}`}>1</span>
             <span>Giỏ hàng</span>
           </div>
-          <div className={`w-8 h-px ${step >= 2 ? 'bg-gray-900' : 'bg-gray-300'}`}></div>
-          <div className={`flex items-center gap-1.5 ${step >= 2 ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 2 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'}`}>2</span>
+          <div className={`w-8 h-px ${activeStep >= 2 ? 'bg-gray-900' : 'bg-gray-300'}`}></div>
+          <div className={`flex items-center gap-1.5 ${activeStep >= 2 ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${activeStep >= 2 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'}`}>2</span>
             <span>Thanh toán &amp; Giao vận</span>
           </div>
-          <div className={`w-8 h-px ${step >= 3 ? 'bg-gray-900' : 'bg-gray-300'}`}></div>
-          <div className={`flex items-center gap-1.5 ${step >= 3 ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step >= 3 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'}`}>3</span>
+          <div className={`w-8 h-px ${activeStep >= 3 ? 'bg-gray-900' : 'bg-gray-300'}`}></div>
+          <div className={`flex items-center gap-1.5 ${activeStep >= 3 ? 'text-gray-900 font-bold' : 'text-gray-400'}`}>
+            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${activeStep >= 3 ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400'}`}>3</span>
             <span>Hoàn tất đơn</span>
           </div>
         </div>

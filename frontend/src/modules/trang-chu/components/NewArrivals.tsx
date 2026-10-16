@@ -56,7 +56,7 @@ export default function NewArrivals() {
           <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight uppercase">Sản Phẩm Mới Ra Mắt</h2>
         </div>
         <a href="/san-pham" className="text-sm font-bold text-emerald-600 hover:text-emerald-800 transition-colors flex items-center gap-1 group">
-          Xem tất cả 
+          Xem tất cả
           <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </a>
       </div>
@@ -66,14 +66,14 @@ export default function NewArrivals() {
           const displayCategory = p.category && p.category.length > 0 ? p.category[p.category.length - 1] : "SẢN PHẨM THỂ THAO";
           const discountPct = p.discount_percent || 0;
           const discountedPrice = discountPct > 0 ? p.price * (1 - discountPct / 100) : p.price;
-          
+
           return (
             <div key={p.product_id} className="relative">
               {/* Badge New */}
               <div className="absolute -top-3 -left-3 z-20 px-3 py-1 bg-emerald-500 text-white font-black text-[10px] uppercase flex items-center justify-center rounded-full shadow-lg border-2 border-white transform -rotate-12">
                 NEW
               </div>
-              <ProductCard 
+              <ProductCard
                 product={{
                   id: p.product_id,
                   name: p.name,
@@ -83,7 +83,7 @@ export default function NewArrivals() {
                   discountLabel: discountPct > 0 ? `-${discountPct}%` : "MỚI",
                   category: displayCategory,
                   discountPercent: discountPct > 0 ? discountPct : undefined,
-                }} 
+                }}
               />
             </div>
           );

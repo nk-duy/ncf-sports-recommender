@@ -11,14 +11,30 @@ interface ProductInfoSectionProps {
   product: any;
   onOpenSizeGuide: () => void;
   setWishlistToast: (msg: string) => void;
+  selectedSize?: string;
+  onSelectSize?: (size: string) => void;
 }
 
-export default function ProductInfoSection({ product, onOpenSizeGuide, setWishlistToast }: ProductInfoSectionProps) {
+export default function ProductInfoSection({
+  product,
+  onOpenSizeGuide,
+  setWishlistToast,
+  selectedSize: externalSelectedSize,
+  onSelectSize: externalOnSelectSize,
+}: ProductInfoSectionProps) {
   const router = useRouter();
   
   // States cho tùy chọn mua hàng
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState('');
+  const [internalSelectedSize, setInternalSelectedSize] = useState('');
+  const selectedSize = externalSelectedSize !== undefined ? externalSelectedSize : internalSelectedSize;
+  const setSelectedSize = (size: string) => {
+    if (externalOnSelectSize) {
+      externalOnSelectSize(size);
+    } else {
+      setInternalSelectedSize(size);
+    }
+  };
   const [selectedColor, setSelectedColor] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -71,6 +87,10 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
       setErrorMsg('Vui lòng chọn Màu sắc!');
       return;
     }
+    if (effectiveStock <= 0) {
+      setErrorMsg('Phân loại màu và kích cỡ này hiện đã hết hàng!');
+      return;
+    }
     setErrorMsg('');
     trackInteraction('add_to_cart');
     
@@ -82,7 +102,7 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
       quantity: quantity,
       size: selectedSize,
       color: selectedColor,
-      stock: product.stock || 100
+      stock: effectiveStock
     } as any);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -97,6 +117,10 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
       setErrorMsg('Vui lòng chọn Màu sắc!');
       return;
     }
+    if (effectiveStock <= 0) {
+      setErrorMsg('Phân loại màu và kích cỡ này hiện đã hết hàng!');
+      return;
+    }
     setErrorMsg('');
     trackInteraction('purchase');
     
@@ -108,7 +132,7 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
       quantity: quantity,
       size: selectedSize,
       color: selectedColor,
-      stock: product.stock || 100
+      stock: effectiveStock
     } as any);
     useCheckoutStore.getState().setSelectedKeys([
       cartKey({ product_id: product.product_id, size: selectedSize, color: selectedColor })
@@ -123,21 +147,50 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
   const hasColors = product.colors && product.colors.length > 0;
   const isReady = selectedSize !== '' && (!hasColors || selectedColor !== '');
   const productStock = product.stock ?? 25;
-  const inStock = productStock > 0;
 
-  // Tính toán tồn kho giả định theo từng Size (Variant Stock Status)
+  const activeVariants = (product as any).variants || [];
+
+  // Lấy số lượng tồn kho của một size (dựa trên màu đã chọn nếu có)
+  const getSizeStock = (size: string) => {
+    if (activeVariants.length === 0) {
+      if (productStock <= 0) return 0;
+      if (size === 'XXL' || size === '43') return productStock < 10 ? 0 : productStock;
+      return productStock;
+    }
+
+    if (selectedColor) {
+      const match = activeVariants.find((v: any) => v.size === size && v.color === selectedColor);
+      return match !== undefined ? (match.stock ?? 0) : 0;
+    }
+
+    const matchingSizes = activeVariants.filter((v: any) => v.size === size);
+    if (matchingSizes.length > 0) {
+      return matchingSizes.reduce((sum: number, v: any) => sum + (v.stock || 0), 0);
+    }
+    return productStock;
+  };
+
+  const isSizeOutOfStock = (size: string) => {
+    return getSizeStock(size) <= 0;
+  };
+
+  // Tồn kho cụ thể của phân loại đang được chọn (Màu + Size)
+  const currentVariant = activeVariants.find(
+    (v: any) => (hasColors ? v.color === selectedColor : true) && v.size === selectedSize
+  );
+
+  const effectiveStock = currentVariant !== undefined
+    ? (currentVariant.stock ?? 0)
+    : (selectedSize ? getSizeStock(selectedSize) : productStock);
+
+  const inStock = effectiveStock > 0;
+
+  // Tính toán tồn kho giả định theo từng Size (nếu sản phẩm chưa có sizes cấu hình)
   const availableSizes = product.sizes?.length
     ? product.sizes
     : product.category?.includes("Clothing") || product.name.toLowerCase().includes("áo") || product.name.toLowerCase().includes("quần")
     ? ['S', 'M', 'L', 'XL', 'XXL']
     : ['39', '40', '41', '42', '43'];
-
-  // Giả định trạng thái kho theo biến thể: ví dụ XXL hoặc 43 bị hết hàng nếu tổng kho nhỏ hơn 10
-  const isSizeOutOfStock = (size: string) => {
-    if (productStock <= 0) return true;
-    if (size === 'XXL' || size === '43') return productStock < 10;
-    return false;
-  };
 
   const isWishlistedProduct = isWishlisted(product.product_id);
 
@@ -208,9 +261,40 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
       )}
 
       {/* 4. Tùy chọn Size & Báo trạng thái tồn kho theo biến thể (Variant Stock) */}
+      {/* 4. Tùy chọn Màu sắc (Chọn trước để kiểm tra tồn kho theo size) */}
+      {product.colors && product.colors.length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-gray-900">
+              Màu sắc <span className="text-red-500">*</span>
+              {selectedColor && <span className="ml-2 font-normal text-blue-600 text-xs font-semibold">({selectedColor})</span>}
+            </h3>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            {product.colors.map((color: string) => (
+              <button
+                key={color}
+                onClick={() => { setSelectedColor(selectedColor === color ? '' : color); setErrorMsg(''); }}
+                className={`py-2 px-4 text-center border rounded-xl font-medium text-sm transition-all ${
+                  selectedColor === color 
+                    ? 'border-blue-600 bg-blue-50 text-blue-600 ring-2 ring-blue-600/20 shadow-2xs font-bold' 
+                    : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 5. Tùy chọn Kích cỡ & Báo trạng thái tồn kho theo biến thể */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-bold text-gray-900">Kích cỡ <span className="text-red-500">*</span></h3>
+          <h3 className="text-sm font-bold text-gray-900">
+            Kích cỡ <span className="text-red-500">*</span>
+            {selectedSize && <span className="ml-2 font-normal text-blue-600 text-xs font-semibold">({selectedSize})</span>}
+          </h3>
           <button onClick={onOpenSizeGuide} className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             Hướng dẫn chọn size
@@ -219,6 +303,7 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
         
         <div className="flex flex-wrap gap-2.5">
           {availableSizes.map((size: string) => {
+            const sizeStock = getSizeStock(size);
             const outOfStock = isSizeOutOfStock(size);
             const isSelected = selectedSize === size;
 
@@ -240,38 +325,20 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
                 }`}
               >
                 {size}
-                {outOfStock && (
-                  <span className="absolute -top-2 -right-1 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full">Hết</span>
-                )}
+                {outOfStock ? (
+                  <span className="absolute -top-2 -right-1 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full shadow-2xs">
+                    Hết
+                  </span>
+                ) : selectedColor && activeVariants.length > 0 && sizeStock <= 5 ? (
+                  <span className="absolute -top-2 -right-1 bg-amber-500 text-white text-[9px] font-bold px-1 rounded-full shadow-2xs">
+                    Còn {sizeStock}
+                  </span>
+                ) : null}
               </button>
             );
           })}
         </div>
       </div>
-
-      {/* Tùy chọn Màu sắc */}
-      {product.colors && product.colors.length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-bold text-gray-900">Màu sắc <span className="text-red-500">*</span></h3>
-          </div>
-          <div className="flex flex-wrap gap-2.5">
-            {product.colors.map((color: string) => (
-              <button
-                key={color}
-                onClick={() => { setSelectedColor(selectedColor === color ? '' : color); setErrorMsg(''); }}
-                className={`py-2 px-4 text-center border rounded-xl font-medium text-sm transition-all ${
-                  selectedColor === color 
-                    ? 'border-blue-600 bg-blue-50 text-blue-600 ring-2 ring-blue-600/20' 
-                    : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {color}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Tùy chọn Số lượng & Hiển thị Tồn kho */}
       <div className="mb-8">
@@ -279,12 +346,16 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
           <h3 className="text-sm font-bold text-gray-900">Số lượng</h3>
           <span className="text-xs">
             <span className="text-gray-500">Tồn kho: </span>
-            {productStock <= 0 ? (
+            {effectiveStock <= 0 ? (
               <span className="text-red-500 font-bold bg-red-50 px-2 py-0.5 rounded">Hết hàng</span>
-            ) : productStock <= 5 ? (
-              <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">Chỉ còn {productStock} sản phẩm!</span>
+            ) : effectiveStock <= 5 ? (
+              <span className="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded">
+                Chỉ còn {effectiveStock} sản phẩm{selectedColor || selectedSize ? ` (${[selectedColor, selectedSize].filter(Boolean).join(' - ')})` : ''}!
+              </span>
             ) : (
-              <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">Còn hàng ({productStock})</span>
+              <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded">
+                Còn hàng ({effectiveStock}{selectedColor || selectedSize ? ` - ${[selectedColor, selectedSize].filter(Boolean).join(' - ')}` : ''})
+              </span>
             )}
           </span>
         </div>
@@ -299,10 +370,10 @@ export default function ProductInfoSection({ product, onOpenSizeGuide, setWishli
           <span className="flex-1 text-center font-bold text-gray-900">{quantity}</span>
           <button 
             onClick={() => {
-              if (quantity < productStock) {
+              if (quantity < effectiveStock) {
                 setQuantity(quantity + 1);
               } else {
-                setErrorMsg(`Rất tiếc, sản phẩm này chỉ còn ${productStock} sản phẩm trong kho!`);
+                setErrorMsg(`Rất tiếc, phân loại này chỉ còn ${effectiveStock} sản phẩm trong kho!`);
               }
             }}
             className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-200 font-bold transition-colors"

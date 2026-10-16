@@ -1,6 +1,8 @@
 import React from "react";
 import Header from "@/modules/cot-loi/components/Header";
 import Footer from "@/modules/cot-loi/components/Footer";
+import FloatingSupportWidget from "@/modules/cot-loi/components/FloatingSupportWidget";
+import BackToTop from "@/modules/cot-loi/components/BackToTop";
 
 export default function PublicLayout({
   children,
@@ -12,6 +14,8 @@ export default function PublicLayout({
       <Header />
       <main className="flex-1 flex flex-col">{children}</main>
       <Footer />
+      <FloatingSupportWidget />
+      <BackToTop />
     </>
   );
 }
