@@ -62,39 +62,39 @@ export default function PromotionsCombo() {
   return (
     <section className="mb-14">
       {/* Banner Callout */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 text-white p-6 sm:p-10 shadow-2xl mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
-        {/* Glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-xs p-6 sm:p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Subtle decorative background accent */}
+        <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-red-50/70 via-amber-50/40 to-transparent pointer-events-none" />
 
         <div className="relative z-10 max-w-xl">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/20 backdrop-blur-sm text-xs font-black uppercase tracking-wider text-amber-200 mb-3 border border-white/20">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            GÓI COMBO TIẾT KIỆM ĐẾN 40%
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-xs font-bold uppercase tracking-wider mb-2.5 border border-red-100">
+            <Sparkles className="w-3.5 h-3.5 text-red-600" />
+            Gói combo tiết kiệm đến 40%
           </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight leading-tight">
-            MUA COMBO THỂ THAO - NHẬN NGAY QUÀ TẶNG KHỦNG
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-tight text-slate-900 leading-snug">
+            Mua Combo Thể Thao - Nhận Quà Tặng Kèm
           </h2>
-          <p className="text-white/90 text-xs sm:text-sm mt-2 leading-relaxed font-medium">
-            Tối ưu chi phí khi mua trọn bộ dụng cụ tập luyện. Tặng thêm bình nước thể thao hoặc túi rút cho mỗi đơn hàng combo!
+          <p className="text-slate-600 text-xs sm:text-sm mt-1.5 leading-relaxed">
+            Tối ưu chi phí khi mua trọn bộ thiết bị tập luyện. Tặng kèm bình nước thể thao hoặc túi rút cho mỗi đơn hàng combo!
           </p>
         </div>
 
         {/* Voucher Button */}
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-black/30 border-2 border-dashed border-white/40 text-center backdrop-blur-sm">
-            <span className="block text-[10px] font-bold text-amber-200 uppercase tracking-widest">
+          <div className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-center">
+            <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               Mã voucher combo
             </span>
-            <span className="block text-xl font-black font-mono tracking-wider">
+            <span className="block text-lg font-black font-mono tracking-wider text-slate-900">
               COMBOMAX
             </span>
           </div>
 
           <button
             onClick={handleCopyCode}
-            className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white hover:bg-amber-50 text-red-600 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl transition-all transform hover:scale-105 active:scale-95 cursor-pointer whitespace-nowrap"
+            className="w-full sm:w-auto px-5 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs sm:text-sm uppercase tracking-wide shadow-xs transition-colors cursor-pointer whitespace-nowrap"
           >
-            {copied ? "ĐÃ LƯU MÃ ✓" : "LƯU MÃ NGAY"}
+            {copied ? "Đã lưu mã ✓" : "Lưu mã ngay"}
           </button>
         </div>
       </div>
