@@ -16,7 +16,6 @@ import {
   ShoppingBag,
   Zap,
   Globe,
-  MapPin,
   ChevronDown
 } from "lucide-react";
 import SearchAutocomplete from "./SearchAutocomplete";
@@ -46,9 +45,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [menu, setMenu] = useState<MegaMenuSport[]>(defaultMenu);
   const [language, setLanguage] = useState<'vi' | 'en'>('vi');
-  const [locationCity, setLocationCity] = useState('TP. Hồ Chí Minh');
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [showLocMenu, setShowLocMenu] = useState(false);
 
   const getSportIcon = (sport: string) => {
     const s = sport.toLowerCase();
@@ -103,57 +100,13 @@ export default function Header() {
           {/* Search Autocomplete */}
           <SearchAutocomplete />
 
-          {/* Top Actions: Location, Language, User & Cart */}
+          {/* Top Actions: Language, User & Cart */}
           <div className="flex items-center gap-3 sm:gap-4 md:gap-5 flex-shrink-0">
-            {/* Nút Vị trí / Tỉnh thành */}
-            <div className="relative hidden lg:block">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowLocMenu(!showLocMenu);
-                  setShowLangMenu(false);
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-gray-700 hover:text-blue-600 hover:bg-gray-50 border border-gray-200 transition"
-                title="Chọn vị trí nhận hàng"
-              >
-                <MapPin size={15} className="text-rose-500 shrink-0" />
-                <span className="max-w-[110px] truncate">{locationCity}</span>
-                <ChevronDown size={12} className="text-gray-400" />
-              </button>
-
-              {showLocMenu && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <p className="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-50">
-                    Khu vực giao hàng
-                  </p>
-                  {['TP. Hồ Chí Minh', 'Hà Nội', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ'].map((city) => (
-                    <button
-                      key={city}
-                      type="button"
-                      onClick={() => {
-                        setLocationCity(city);
-                        setShowLocMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs font-medium hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-between ${
-                        locationCity === city ? 'text-blue-600 font-bold bg-blue-50/50' : 'text-gray-700'
-                      }`}
-                    >
-                      <span>{city}</span>
-                      {locationCity === city && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* Nút Chuyển đổi Ngôn ngữ */}
             <div className="relative hidden sm:block">
               <button
                 type="button"
-                onClick={() => {
-                  setShowLangMenu(!showLangMenu);
-                  setShowLocMenu(false);
-                }}
+                onClick={() => setShowLangMenu(!showLangMenu)}
                 className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-bold text-gray-700 hover:text-blue-600 hover:bg-gray-50 border border-gray-200 transition"
                 title="Chuyển đổi ngôn ngữ"
               >
