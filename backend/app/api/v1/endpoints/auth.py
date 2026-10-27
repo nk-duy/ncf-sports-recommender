@@ -36,7 +36,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Tên đăng nhập hoặc mật khẩu không chính xác.",
+            detail="Tên đăng nhập, email hoặc mật khẩu không chính xác.",
             headers={"WWW-Authenticate": "Bearer"},
         )
         

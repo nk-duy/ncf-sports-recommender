@@ -27,7 +27,17 @@ class AuthService:
 
     @staticmethod
     async def authenticate_user(form_data: OAuth2PasswordRequestForm) -> Optional[User]:
-        user = await User.find_one(User.username == form_data.username)
+        identifier = (form_data.username or "").strip()
+        if not identifier:
+            return None
+        # Cho phép đăng nhập bằng cả tên tài khoản (username) hoặc địa chỉ email
+        user = await User.find_one({
+            "$or": [
+                {"username": identifier},
+                {"email": identifier.lower()},
+                {"email": identifier}
+            ]
+        })
         if not user or not verify_password(form_data.password, user.hashed_password):
             return None
         return user

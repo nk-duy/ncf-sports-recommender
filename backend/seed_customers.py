@@ -129,32 +129,20 @@ async def seed_customers():
         if not user.full_name or "Amazon Shopper" in user.full_name or "khachhang" in user.full_name.lower():
             user.full_name = VN_NAMES[idx % len(VN_NAMES)]
             
-        user.phone = template["phone"]
+        user.phone = f"09{random.randint(10, 99)}.{random.randint(100, 999)}.{random.randint(100, 999)}"
         user.address = template["address"]
-        user.tier = template["tier"]
         user.interested_sports = template["interested_sports"]
         user.ai_profile = template["ai_profile"]
         user.ai_score = template["ai_score"]
         user.shoe_size = template["shoe_size"]
         user.preferred_colors = template["preferred_colors"]
         
-        await user.save()
-
-        # Đồng bộ tên và số điện thoại vào các đơn hàng đã có của user
-        await Order.find(Order.user_id == str(user.id)).update_many({
-            "$set": {
-                "customer_name": user.full_name,
-                "customer_phone": user.phone,
-                "customer_address": user.address
-            }
-        })
-        
         # Ensure they have some orders
         user_orders_count = await Order.find({"user_id": str(user.id)}).count()
-        if user_orders_count < 2:
+        if user_orders_count < 2 and random.random() > 0.15:
             num_orders = random.randint(2, 6)
             all_prods = await Product.find({"is_deleted": {"$ne": True}}).limit(20).to_list()
-            for _ in range(num_orders):
+            for o_idx in range(num_orders):
                 chosen_prods = random.sample(all_prods, min(random.randint(1, 3), len(all_prods))) if all_prods else []
                 order_items = []
                 for p in chosen_prods:
@@ -167,6 +155,11 @@ async def seed_customers():
                         color=random.choice(p.colors) if p.colors else "Đen"
                     ))
                 subtotal = sum(it.price * it.quantity for it in order_items) if order_items else random.randint(500000, 2000000)
+                
+                # Spread order dates realistically
+                days_ago = random.randint(2, 45) + o_idx * 15
+                order_time = datetime.utcnow() - timedelta(days=days_ago)
+                
                 order = Order(
                     customer_name=user.full_name or "Khách hàng",
                     customer_phone=user.phone or "",
@@ -177,9 +170,33 @@ async def seed_customers():
                     shipping_fee=0.0 if subtotal >= 500000 else 30000.0,
                     total_amount=subtotal,
                     status="completed",
-                    user_id=str(user.id)
+                    user_id=str(user.id),
+                    created_at=order_time
                 )
                 await order.insert()
+                
+        # Calculate real tier based on actual spent
+        all_user_orders = await Order.find({"user_id": str(user.id)}).to_list()
+        total_spent = sum(o.total_amount for o in all_user_orders)
+        if total_spent >= 15_000_000:
+            user.tier = "Kim Cương"
+        elif total_spent >= 8_000_000:
+            user.tier = "Vàng"
+        elif total_spent >= 3_000_000:
+            user.tier = "Bạc"
+        else:
+            user.tier = "Đồng"
+            
+        await user.save()
+
+        # Đồng bộ tên và số điện thoại vào các đơn hàng đã có của user
+        await Order.find(Order.user_id == str(user.id)).update_many({
+            "$set": {
+                "customer_name": user.full_name,
+                "customer_phone": user.phone,
+                "customer_address": user.address
+            }
+        })
                 
     print("Seeded successfully!")
 

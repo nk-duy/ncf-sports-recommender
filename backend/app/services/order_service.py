@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 from beanie import PydanticObjectId
 from fastapi import HTTPException
@@ -77,25 +78,37 @@ class OrderService:
                 subtotal=calculated_subtotal,
                 voucher_code=order_data.voucher_code,
                 discount_amount=order_data.discount_amount,
+                shipping_method=order_data.shipping_method,
+                payment_status=getattr(order_data, 'payment_status', None) or "unpaid",
                 user_id=user_id
             )
             await new_order.insert(session=session)
             return new_order
 
         # Execute inside MongoDB ACID Transaction if client is available
+        result_order = None
         if client:
             try:
                 async with await client.start_session() as session:
                     async with session.start_transaction():
-                        return await _execute_order_creation(session=session)
+                        result_order = await _execute_order_creation(session=session)
             except HTTPException:
                 raise
             except Exception as e:
                 # If transactions fail due to standalone config, gracefully fallback to direct execution
                 print(f"[OrderService] Transaction failed or unsupported, fallback: {e}")
-                return await _execute_order_creation(session=None)
+                result_order = await _execute_order_creation(session=None)
         else:
-            return await _execute_order_creation(session=None)
+            result_order = await _execute_order_creation(session=None)
+
+        # Invalidate dashboard stats cache
+        try:
+            from app.services.admin_service import AdminService
+            await AdminService.invalidate_dashboard_cache()
+        except Exception:
+            pass
+
+        return result_order
 
     @staticmethod
     async def get_orders(skip: int = 0, limit: int = 20, search: Optional[str] = None) -> List[Order]:
@@ -133,8 +146,58 @@ class OrderService:
         return orders
 
     @staticmethod
-    async def get_order_by_id(order_id: PydanticObjectId) -> Optional[Order]:
-        return await Order.get(order_id)
+    async def get_order_by_id(order_id: str) -> Optional[Order]:
+        raw = str(order_id).strip()
+        async def _enrich_order(o: Order) -> Order:
+            for item in o.items:
+                if not getattr(item, 'image_url', None):
+                    p = await Product.find_one(Product.product_id == item.product_id)
+                    if p and p.image_url:
+                        item.image_url = p.image_url
+            return o
+
+        # 1. Try direct ObjectId lookup
+        try:
+            order = await Order.get(PydanticObjectId(raw))
+            if order:
+                return await _enrich_order(order)
+        except Exception:
+            pass
+
+        # 2. Try clean short code lookup (ORD-..., #ORD-..., or suffix)
+        clean = raw.lstrip('#').upper()
+        if clean.startswith(('ORD-', 'ORD_', 'DH-', 'DH_')):
+            clean = clean.split('-', 1)[-1].split('_', 1)[-1]
+        elif clean.startswith('ORD'):
+            clean = clean[3:]
+
+        if clean:
+            import re
+            # Suffix match
+            order = await Order.find_one({
+                "$expr": {
+                    "$regexMatch": {
+                        "input": {"$toString": "$_id"},
+                        "regex": re.escape(clean.lower()) + "$"
+                    }
+                }
+            })
+            if order:
+                return await _enrich_order(order)
+
+            # Substring match
+            order = await Order.find_one({
+                "$expr": {
+                    "$regexMatch": {
+                        "input": {"$toString": "$_id"},
+                        "regex": re.escape(clean.lower())
+                    }
+                }
+            })
+            if order:
+                return await _enrich_order(order)
+
+        return None
 
     @staticmethod
     async def update_order_status(
@@ -155,7 +218,42 @@ class OrderService:
             order.tracking_code = tracking_code
         if carrier is not None:
             order.carrier = carrier
+
+        # Tự động chuyển sang 'paid' khi đơn giao thành công
+        if status.lower() in ["delivered", "đã giao", "hoàn thành"]:
+            order.payment_status = "paid"
+            if not order.paid_at:
+                order.paid_at = datetime.utcnow()
+
         await order.save()
+        try:
+            from app.services.admin_service import AdminService
+            await AdminService.invalidate_dashboard_cache()
+        except Exception:
+            pass
+        return order
+
+    @staticmethod
+    async def update_payment_status(
+        order_id: PydanticObjectId,
+        payment_status: str
+    ) -> Optional[Order]:
+        order = await Order.get(order_id)
+        if not order:
+            return None
+        
+        order.payment_status = payment_status
+        if payment_status == "paid":
+            order.paid_at = datetime.utcnow()
+        elif payment_status == "unpaid":
+            order.paid_at = None
+        
+        await order.save()
+        try:
+            from app.services.admin_service import AdminService
+            await AdminService.invalidate_dashboard_cache()
+        except Exception:
+            pass
         return order
 
     @staticmethod

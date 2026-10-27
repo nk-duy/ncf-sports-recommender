@@ -10,6 +10,7 @@ class OrderItem(BaseModel):
     price: float
     size: str = ""
     color: str = ""
+    image_url: str = ""
 
 class Order(Document):
     customer_name: str
@@ -26,6 +27,9 @@ class Order(Document):
     rejection_reason: str | None = None
     tracking_code: str | None = None
     carrier: str | None = None
+    shipping_method: str | None = None
+    payment_status: str = "unpaid"  # "unpaid", "paid", "refunded"
+    paid_at: datetime | None = None
     user_id: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

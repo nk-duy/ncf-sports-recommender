@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, Depends, Request
-from app.schemas.order import OrderCreate
+from app.schemas.order import OrderCreate, OrderPaymentStatusUpdate
 from beanie import PydanticObjectId
 from typing import List, Optional
 from pydantic import BaseModel
@@ -52,8 +52,8 @@ async def get_my_orders(
     return await order_service.get_my_orders(user_id=str(current_user.id), skip=skip, limit=limit)
 
 @router.get("/{order_id}")
-async def get_order(order_id: PydanticObjectId):
-    """Lấy chi tiết đơn hàng theo ID"""
+async def get_order(order_id: str):
+    """Lấy chi tiết đơn hàng theo ID (hỗ trợ cả ObjectId và mã ORD-...)"""
     order = await order_service.get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
@@ -95,3 +95,18 @@ async def update_order_status(order_id: PydanticObjectId, status_update: OrderSt
         "tracking_code": order.tracking_code,
         "carrier": order.carrier
     }
+
+@router.put("/{order_id}/payment-status")
+async def update_payment_status(order_id: PydanticObjectId, payment_update: OrderPaymentStatusUpdate):
+    """Cập nhật trạng thái thanh toán (unpaid, paid, refunded) - Dành cho Quản trị viên"""
+    order = await order_service.update_payment_status(order_id, payment_update.payment_status)
+    if not order:
+        raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại")
+    
+    return {
+        "status": "success",
+        "order_id": str(order.id),
+        "payment_status": order.payment_status,
+        "paid_at": order.paid_at
+    }
+

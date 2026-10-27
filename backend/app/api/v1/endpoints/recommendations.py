@@ -13,12 +13,19 @@ router = APIRouter()
 
 @router.get("/", response_model=List[ProductResponse])
 async def get_recommendations(
-    top_k: int = Query(5, ge=1, le=20, description="Số lượng gợi ý"),
+    top_k: int = Query(8, ge=1, le=100, description="Số lượng gợi ý"),
+    current_product_id: Optional[str] = Query(None, description="ID sản phẩm hiện tại đang xem"),
+    sport_type: Optional[str] = Query(None, description="Môn thể thao của sản phẩm đang xem"),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """Lấy danh sách sản phẩm gợi ý cá nhân hóa dựa trên NCF Model"""
     user_id_str = str(current_user.id) if current_user else ""
-    products = await recommendation_service.get_recommendations_for_user(user_id_str, top_k)
+    products = await recommendation_service.get_recommendations_for_user(
+        user_id=user_id_str,
+        top_k=top_k,
+        current_product_id=current_product_id,
+        sport_type=sport_type
+    )
     for p in products:
         ProductService._enforce_discount(p)
     return products
@@ -39,46 +46,50 @@ async def get_ai_model_info():
     """Lấy thông tin trạng thái mô hình AI (NCF Model)"""
     return recommendation_service.get_model_info()
 
+@router.get("/training-status")
+async def get_ai_training_status():
+    """Lấy tiến độ huấn luyện NCF thời gian thực cho Admin Dashboard (Progress, Epoch, Loss)"""
+    return recommendation_service.get_training_status()
+
 @router.post("/retrain")
-@limiter.limit("2/minute")
+@limiter.limit("5/minute")
 async def retrain_ai_model(request: Request):
-    """Kích hoạt huấn luyện lại mô hình NCF từ cơ sở dữ liệu (Giới hạn 2 req/phút)"""
-    res = await recommendation_service.train_model()
+    """Kích hoạt huấn luyện lại mô hình NCF ngầm (Non-blocking) với Negative Sampling & Leave-One-Out Evaluation"""
+    res = await recommendation_service.start_background_training()
     return res
+
+@router.post("/log-impression")
+async def log_recommendation_impression(
+    payload: Dict[str, Any] = Body(..., description="Payload ghi nhận lượt hiển thị gợi ý"),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Ghi nhận lượt hiển thị của danh sách sản phẩm gợi ý (Impressions Tracking)"""
+    product_ids = payload.get("recommended_product_ids", [])
+    source = payload.get("source", "homepage")
+    user_id = str(current_user.id) if current_user else payload.get("user_id")
+    impression_id = await recommendation_service.log_impression(
+        recommended_product_ids=product_ids,
+        source=source,
+        user_id=user_id
+    )
+    return {"impression_id": impression_id, "status": "success"}
+
+@router.post("/track-click")
+async def track_recommendation_click(
+    payload: Dict[str, Any] = Body(..., description="Payload ghi nhận lượt click vào sản phẩm gợi ý"),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Ghi nhận khi khách hàng nhấp chuột vào một sản phẩm nằm trong danh sách gợi ý"""
+    impression_id = payload.get("impression_id", "")
+    product_id = payload.get("product_id", "")
+    user_id = str(current_user.id) if current_user else payload.get("user_id")
+    return await recommendation_service.track_click(
+        impression_id=impression_id,
+        product_id=product_id,
+        user_id=user_id
+    )
 
 @router.get("/metrics")
 async def get_ai_metrics():
-    """Thống kê hiệu quả chuyển đổi và tương tác của Mô hình Gợi ý NCF AI"""
-    total_interactions = await Interaction.find_all().count()
-    views = await Interaction.find(Interaction.interaction_type == "view").count()
-    clicks = await Interaction.find(Interaction.interaction_type == "click").count()
-    add_to_cart = await Interaction.find(Interaction.interaction_type == "add_to_cart").count()
-    purchases = await Interaction.find(Interaction.interaction_type == "purchase").count()
-
-    # Calculate or estimate realistic metrics
-    ctr = round((clicks / views * 100), 1) if views > 0 else 24.8
-    if ctr > 100 or ctr == 0:
-        ctr = 24.8
-        
-    conversion_rate = round((purchases / views * 100), 1) if views > 0 else 14.5
-    if conversion_rate > 100 or conversion_rate == 0:
-        conversion_rate = 14.5
-
-    # Estimate AI Revenue impact from orders
-    all_orders = await Order.find_all().to_list()
-    total_rev = sum(o.total_amount for o in all_orders)
-    ai_revenue = round(total_rev * 0.32) # ~32% from recommendation engine
-    
-    return {
-        "total_interactions": total_interactions or 109,
-        "views": views,
-        "clicks": clicks,
-        "add_to_cart": add_to_cart,
-        "purchases": purchases,
-        "ctr": ctr,
-        "conversion_rate": conversion_rate,
-        "ai_revenue_share": 32.4,
-        "ai_revenue": ai_revenue,
-        "hit_rate_at_10": "87.3%",
-        "ndcg_at_10": "0.742"
-    }
+    """Thống kê chỉ số thực tế trực tuyến (Online CTR) và chỉ số học thuật (Offline HR@10, NDCG@10) của NCF"""
+    return await recommendation_service.get_online_metrics()

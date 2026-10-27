@@ -7,6 +7,15 @@ from app.models.user import User
 from app.models.order import Order
 from app.core.security import get_password_hash
 
+def calculate_tier(spent: float) -> str:
+    if spent >= 15_000_000:
+        return "Kim Cương"
+    elif spent >= 8_000_000:
+        return "Vàng"
+    elif spent >= 3_000_000:
+        return "Bạc"
+    return "Đồng"
+
 class CustomerService:
     @staticmethod
     async def get_customers_with_stats(
@@ -20,16 +29,13 @@ class CustomerService:
     ) -> Dict[str, Any]:
         query: Dict[str, Any] = {"role": "user"}
         now = datetime.utcnow()
+        thirty_days_ago = now - timedelta(days=30)
         
-        # 1. Search Filter
+        # 1. Search Filter (Hỗ trợ tìm kiếm Tiếng Việt không dấu / mờ)
         if search and search.strip():
-            s = search.strip()
-            regex_pattern = re.compile(re.escape(s), re.IGNORECASE)
-            query["$or"] = [
-                {"full_name": regex_pattern},
-                {"email": regex_pattern},
-                {"phone": regex_pattern}
-            ]
+            from app.core.search_utils import build_search_or_query
+            search_cond = build_search_or_query(["full_name", "email", "phone"], search.strip())
+            query.update(search_cond)
             
         # 2. Tier Filter
         tier_map = {
@@ -64,21 +70,12 @@ class CustomerService:
         if resolved_region:
             query["address"] = {"$regex": resolved_region, "$options": "i"}
 
-        # 5. Tab Filter
-        thirty_days_ago = now - timedelta(days=30)
-        if tab == "vip":
-            query["tier"] = {"$in": ["Kim Cương", "Vàng", "Platinum", "VIP"]}
-        elif tab == "new":
-            query["created_at"] = {"$gte": thirty_days_ago}
-        elif tab == "potential":
-            query["tier"] = {"$in": ["Vàng", "Bạc"]}
-        elif tab == "churn_risk":
-            query["tier"] = "Đồng"
+        # Fetch all orders once to avoid N+1 queries
+        all_orders = await Order.all().to_list()
+        orders_by_user: Dict[str, List[Order]] = {}
+        for o in all_orders:
+            orders_by_user.setdefault(o.user_id, []).append(o)
 
-        total_customers = await User.find(query).count()
-        skip = (page - 1) * limit
-        users = await User.find(query).sort("-created_at").skip(skip).limit(limit).to_list()
-        
         # Global stats across all users
         all_users = await User.find({"role": "user"}).to_list()
         global_total = len(all_users)
@@ -86,40 +83,57 @@ class CustomerService:
         global_vip = 0
         global_new = 0
         global_potential = 0
-        global_churn = 0
         global_revenue = 0
+        churn_user_ids = []
 
         for u in all_users:
-            if u.tier in ["Kim Cương", "Vàng", "Platinum", "VIP"]:
+            u_orders = orders_by_user.get(str(u.id), [])
+            user_spent = sum(o.total_amount for o in u_orders)
+            global_revenue += user_spent
+            u_tier = u.tier or calculate_tier(user_spent)
+
+            if u_tier in ["Kim Cương", "Platinum", "VIP"]:
                 global_vip += 1
-            if u.tier in ["Vàng", "Bạc"]:
+            if u_tier in ["Vàng", "Bạc"]:
                 global_potential += 1
             if u.created_at and u.created_at >= thirty_days_ago:
                 global_new += 1
-                
-            user_orders = await Order.find(Order.user_id == str(u.id)).to_list()
-            user_spent = sum(o.total_amount for o in user_orders)
-            global_revenue += user_spent
-            
-            if user_orders:
-                last_order = sorted(user_orders, key=lambda x: x.created_at, reverse=True)[0]
-                if (now - last_order.created_at).days <= 30:
+
+            if u_orders:
+                last_order = sorted(u_orders, key=lambda x: x.created_at, reverse=True)[0]
+                days_since_last = (now - last_order.created_at).days
+                if days_since_last <= 30:
                     global_active += 1
-                elif (now - last_order.created_at).days >= 60 and u.tier == "Đồng":
-                    global_churn += 1
+                elif days_since_last >= 60:
+                    churn_user_ids.append(u.id)
             else:
-                if u.tier == "Đồng":
-                    global_churn += 1
-                    
+                days_registered = (now - u.created_at).days if u.created_at else 999
+                if days_registered >= 30:
+                    churn_user_ids.append(u.id)
+
+        # 5. Tab Filter
+        if tab == "vip":
+            query["tier"] = {"$in": ["Kim Cương", "Platinum", "VIP"]}
+        elif tab == "new":
+            query["created_at"] = {"$gte": thirty_days_ago}
+        elif tab == "potential":
+            query["tier"] = {"$in": ["Vàng", "Bạc"]}
+        elif tab == "churn_risk":
+            query["_id"] = {"$in": churn_user_ids}
+
+        total_customers = await User.find(query).count()
+        skip = (page - 1) * limit
+        users = await User.find(query).sort("-created_at").skip(skip).limit(limit).to_list()
+
         clv = global_revenue / global_total if global_total > 0 else 0
-        
+
         # Format customer rows
         customers_data = []
         for u in users:
-            user_orders = await Order.find(Order.user_id == str(u.id)).to_list()
+            user_orders = orders_by_user.get(str(u.id), [])
             orders_count = len(user_orders)
             spent = sum(o.total_amount for o in user_orders)
-            
+
             last_purchase = "Chưa mua"
             if user_orders:
                 last_order = sorted(user_orders, key=lambda x: x.created_at, reverse=True)[0]
@@ -130,7 +144,7 @@ class CustomerService:
                     last_purchase = "Hôm qua"
                 else:
                     last_purchase = f"{days_ago} ngày trước"
-                    
+
             initials = ""
             name_parts = u.full_name.split() if u.full_name else []
             if len(name_parts) >= 2:
@@ -139,9 +153,9 @@ class CustomerService:
                 initials = name_parts[0][0]
             else:
                 initials = u.email[0].upper()
-                
-            c_tier = u.tier or "Đồng"
-            
+
+            c_tier = u.tier or calculate_tier(spent)
+
             customers_data.append({
                 "id": str(u.id),
                 "name": u.full_name or "Khách hàng",
@@ -178,7 +192,7 @@ class CustomerService:
                 "vip": global_vip,
                 "new": global_new,
                 "potential": global_potential,
-                "churn_risk": global_churn,
+                "churn_risk": len(churn_user_ids),
                 "clv": clv
             }
         }
