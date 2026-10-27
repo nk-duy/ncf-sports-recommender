@@ -8,6 +8,7 @@ class OrderItemCreate(BaseModel):
     price: float
     size: str = ""
     color: str = ""
+    image_url: str = ""
 
 class OrderCreate(BaseModel):
     customer_name: str
@@ -20,3 +21,8 @@ class OrderCreate(BaseModel):
     subtotal: float = 0.0
     voucher_code: str | None = None
     discount_amount: float = 0.0
+    shipping_method: str | None = None
+    payment_status: str | None = "unpaid"
+
+class OrderPaymentStatusUpdate(BaseModel):
+    payment_status: str  # "paid", "unpaid", "refunded"

@@ -37,7 +37,7 @@ class Product(Document):
     updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow, description="Thời gian cập nhật")
 
     class Settings:
-        name = "products" # Tên collection trong MongoDB
+        name = "products"
         indexes = [
             "product_id",
             [("sport_type", 1), ("product_type", 1), ("price", 1)],

@@ -8,10 +8,10 @@ from app.models.order import Order
 from app.models.voucher import Voucher
 from app.models.review import Review
 from app.models.banner import Banner
-from app.models.store import Store
 from app.models.contact import Contact
 from app.models.menu import MegaMenu
 from app.models.attribute import ProductAttributes
+from app.models.recommendation_impression import RecommendationImpression
 
 _client = None
 _db = None
@@ -29,6 +29,21 @@ async def init_db():
     _db = _client[settings.MONGODB_DB_NAME]
     
     # Initialize Beanie with all document models here
-    await init_beanie(database=_db, document_models=[Product, User, Interaction, Order, Voucher, Review, Banner, Store, Contact, MegaMenu, ProductAttributes])
+    await init_beanie(
+        database=_db,
+        document_models=[
+            Product,
+            User,
+            Interaction,
+            Order,
+            Voucher,
+            Review,
+            Banner,
+            Contact,
+            MegaMenu,
+            ProductAttributes,
+            RecommendationImpression
+        ]
+    )
 
 

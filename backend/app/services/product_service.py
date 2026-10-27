@@ -41,23 +41,46 @@ class ProductService:
             query["is_deleted"] = {"$ne": True}
         
         if category:
-            cat_list = [c.strip() for c in category.split(',')]
+            cat_list = [c.strip() for c in category.split(',') if c.strip()]
             query["category"] = {"$in": cat_list}
             
         if product_type:
-            query["product_type"] = product_type
+            types = [t.strip() for t in product_type.split(',') if t.strip()]
+            if len(types) == 1:
+                query["product_type"] = types[0]
+            elif len(types) > 1:
+                query["product_type"] = {"$in": types}
             
         if sport_type:
-            if sport_type.lower() in ["đa dụng", "gym", "gym & fitness", "gym & đa dụng", "fitness"]:
-                query["sport_type"] = {"$in": ["Đa dụng", "Gym & Fitness", "Gym & Đa Dụng", "Gym"]}
-            else:
-                query["sport_type"] = sport_type
+            sports = [s.strip() for s in sport_type.split(',') if s.strip()]
+            expanded_sports = []
+            for s in sports:
+                if s.lower() in ["đa dụng", "gym", "gym & fitness", "gym & đa dụng", "fitness"]:
+                    expanded_sports.extend(["Đa dụng", "Gym & Fitness", "Gym & Đa Dụng", "Gym"])
+                else:
+                    expanded_sports.append(s)
+            expanded_sports = list(set(expanded_sports))
+            if len(expanded_sports) == 1:
+                query["sport_type"] = expanded_sports[0]
+            elif len(expanded_sports) > 1:
+                query["sport_type"] = {"$in": expanded_sports}
             
-        if search:
-            query["name"] = {"$regex": search, "$options": "i"}
+        if search and search.strip():
+            from app.core.search_utils import build_search_or_query
+            search_fields = ["name", "brand", "sport_type", "category", "description"]
+            search_condition = build_search_or_query(search_fields, search.strip())
+            if "$or" in query:
+                existing_or = query.pop("$or")
+                query["$and"] = query.get("$and", []) + [{"$or": existing_or}, search_condition]
+            else:
+                query.update(search_condition)
             
         if brand:
-            query["brand"] = brand
+            brand_list = [b.strip() for b in brand.split(',') if b.strip()]
+            if len(brand_list) == 1:
+                query["brand"] = brand_list[0]
+            elif len(brand_list) > 1:
+                query["brand"] = {"$in": brand_list}
             
         if min_price is not None or max_price is not None:
             query["price"] = {}
@@ -67,7 +90,7 @@ class ProductService:
                 query["price"]["$lte"] = max_price
                 
         if sizes:
-            size_list = [s.strip() for s in sizes.split(',')]
+            size_list = [s.strip() for s in sizes.split(',') if s.strip()]
             query["sizes"] = {"$in": size_list}
             
         if colors:
@@ -76,7 +99,7 @@ class ProductService:
                 "red": "Đỏ", "grey": "Xám", "gray": "Xám", "navy": "Xanh Navy",
                 "yellow": "Vàng", "green": "Xanh Lá", "orange": "Cam", "pink": "Hồng"
             }
-            raw_colors = [c.strip() for c in colors.split(',')]
+            raw_colors = [c.strip() for c in colors.split(',') if c.strip()]
             expanded = []
             for c in raw_colors:
                 expanded.append(c)
@@ -89,7 +112,11 @@ class ProductService:
             query["colors"] = {"$in": list(set(expanded))}
             
         if gender:
-            query["gender"] = gender
+            gender_list = [g.strip() for g in gender.split(',') if g.strip()]
+            if len(gender_list) == 1:
+                query["gender"] = gender_list[0]
+            elif len(gender_list) > 1:
+                query["gender"] = {"$in": gender_list}
             
         if is_promotion:
             query["discount_percent"] = {"$gt": 0}

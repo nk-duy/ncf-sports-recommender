@@ -5,8 +5,8 @@ import sys
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 
-# Add current dir to path to import app
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add backend dir to path to import app
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.models.user import User
 from app.core.security import get_password_hash
