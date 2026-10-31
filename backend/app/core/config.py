@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # MongoDB Config
-    MONGODB_URI: str = "mongodb://localhost:27017"
+    MONGODB_URI: str = "mongodb://127.0.0.1:27017"
     MONGODB_DB_NAME: str = "ncf_recommender_db"
     
     model_config = SettingsConfigDict(

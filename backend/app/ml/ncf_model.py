@@ -5,6 +5,9 @@ class NCF(nn.Module):
     def __init__(self, num_users, num_items, embedding_dim=32, hidden_layers=[64, 32, 16, 8]):
         super(NCF, self).__init__()
         
+        self.num_users = int(num_users)
+        self.num_items = int(num_items)
+        
         self.embedding_user_mf = nn.Embedding(num_embeddings=num_users, embedding_dim=embedding_dim)
         self.embedding_item_mf = nn.Embedding(num_embeddings=num_items, embedding_dim=embedding_dim)
         

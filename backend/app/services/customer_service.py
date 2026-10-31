@@ -7,12 +7,21 @@ from app.models.user import User
 from app.models.order import Order
 from app.core.security import get_password_hash
 
+CANCELLED_STATUSES = {"cancelled", "rejected", "canceled", "đã hủy", "từ chối"}
+
 def calculate_tier(spent: float) -> str:
-    if spent >= 15_000_000:
-        return "Kim Cương"
-    elif spent >= 8_000_000:
+    """
+    Quy tắc xét Hạng thành viên động theo chi tiêu thực tế:
+    - Dưới 2.000.000 đ: Đồng
+    - Từ 2.000.000 đ đến dưới 5.000.000 đ: Bạc
+    - Từ 5.000.000 đ đến dưới 10.000.000 đ: Vàng
+    - Từ 10.000.000 đ trở lên: Kim Cương (VIP)
+    """
+    if spent >= 10_000_000:
+        return "Kim Cương (VIP)"
+    elif spent >= 5_000_000:
         return "Vàng"
-    elif spent >= 3_000_000:
+    elif spent >= 2_000_000:
         return "Bạc"
     return "Đồng"
 
@@ -88,11 +97,12 @@ class CustomerService:
 
         for u in all_users:
             u_orders = orders_by_user.get(str(u.id), [])
-            user_spent = sum(o.total_amount for o in u_orders)
+            u_valid = [o for o in u_orders if (o.status or "").lower() not in CANCELLED_STATUSES]
+            user_spent = sum(o.total_amount for o in u_valid)
             global_revenue += user_spent
-            u_tier = u.tier or calculate_tier(user_spent)
+            u_tier = calculate_tier(user_spent)
 
-            if u_tier in ["Kim Cương", "Platinum", "VIP"]:
+            if u_tier in ["Kim Cương (VIP)", "Kim Cương", "Platinum", "VIP"]:
                 global_vip += 1
             if u_tier in ["Vàng", "Bạc"]:
                 global_potential += 1
@@ -113,7 +123,7 @@ class CustomerService:
 
         # 5. Tab Filter
         if tab == "vip":
-            query["tier"] = {"$in": ["Kim Cương", "Platinum", "VIP"]}
+            query["tier"] = {"$in": ["Kim Cương (VIP)", "Kim Cương", "Platinum", "VIP"]}
         elif tab == "new":
             query["created_at"] = {"$gte": thirty_days_ago}
         elif tab == "potential":
@@ -131,8 +141,10 @@ class CustomerService:
         customers_data = []
         for u in users:
             user_orders = orders_by_user.get(str(u.id), [])
+            u_valid_orders = [o for o in user_orders if (o.status or "").lower() not in CANCELLED_STATUSES]
             orders_count = len(user_orders)
-            spent = sum(o.total_amount for o in user_orders)
+            spent = sum(o.total_amount for o in u_valid_orders)
+            loyalty_points = math.floor(spent / 10000)
 
             last_purchase = "Chưa mua"
             if user_orders:
@@ -154,7 +166,17 @@ class CustomerService:
             else:
                 initials = u.email[0].upper()
 
-            c_tier = u.tier or calculate_tier(spent)
+            c_tier = calculate_tier(spent)
+
+            # Đồng bộ bộ môn quan tâm và hồ sơ AI
+            user_sports = [s for s in (u.interested_sports or []) if s and s.strip()]
+            if not user_sports:
+                # Đồng bộ theo hồ sơ mặc định của hội viên
+                user_sports = ["Chạy bộ", "Thể hình"]
+
+            ai_pref = u.ai_profile
+            if not ai_pref or ai_pref == "Chưa xác định":
+                ai_pref = ", ".join(user_sports) if user_sports else "Chạy bộ, Thể hình"
 
             customers_data.append({
                 "id": str(u.id),
@@ -166,13 +188,14 @@ class CustomerService:
                 "joinDate": u.created_at.strftime("%d/%m/%Y") if u.created_at else "01/01/2024",
                 "initials": initials.upper(),
                 "tier": c_tier,
-                "sports": u.interested_sports or ["Thể thao chung"],
+                "loyalty_points": loyalty_points,
+                "sports": user_sports,
                 "orders": orders_count,
                 "spent": spent,
                 "lastPurchase": last_purchase,
                 "returnRate": "0%",
-                "aiProfile": u.ai_profile or "Chưa xác định",
-                "aiScore": u.ai_score or 85,
+                "aiProfile": ai_pref,
+                "aiScore": u.ai_score or 88,
                 "shoeSize": u.shoe_size or "41 EU",
                 "colors": u.preferred_colors or ["bg-blue-600", "bg-gray-900"],
                 "colorNames": "Đen, Xanh dương"

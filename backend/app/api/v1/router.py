@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import products, health, auth, interactions, orders, admin, recommendations, vouchers, reviews, uploads, banners, contacts, menu, customers, attributes
+from app.api.v1.endpoints import products, health, auth, interactions, orders, admin, recommendations, vouchers, reviews, uploads, banners, menu, customers, attributes, notifications, users, contact
 
 api_router = APIRouter()
 api_router.include_router(health.router, prefix="/health", tags=["Health"])
@@ -13,7 +13,10 @@ api_router.include_router(vouchers.router, prefix="/vouchers", tags=["Vouchers"]
 api_router.include_router(reviews.router, prefix="/reviews", tags=["Reviews"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["Uploads"])
 api_router.include_router(banners.router, prefix="/banners", tags=["Banners"])
-api_router.include_router(contacts.router, prefix="/contacts", tags=["Contacts"])
 api_router.include_router(menu.router, prefix="/menu", tags=["Menu"])
 api_router.include_router(customers.router, prefix="/customers", tags=["Customers"])
 api_router.include_router(attributes.router, prefix="/attributes", tags=["Attributes"])
+api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+api_router.include_router(users.router, prefix="/users", tags=["Users"])
+api_router.include_router(contact.router, prefix="/contact", tags=["Contact"])
+

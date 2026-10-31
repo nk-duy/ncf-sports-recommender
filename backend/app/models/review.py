@@ -17,6 +17,13 @@ class Review(Document):
     color_bought: Optional[str] = Field(None, description="Màu đã mua")
     verified_purchase: bool = Field(False, description="Đã xác thực mua hàng")
     images: List[str] = Field(default_factory=list, description="Hình ảnh đính kèm của người dùng")
+    is_hidden: bool = Field(False, description="Ẩn đánh giá vi phạm bởi Quản trị viên")
 
     class Settings:
         name = "reviews"
+        indexes = [
+            "product_id",
+            "user_id",
+            "rating",
+            "is_hidden"
+        ]

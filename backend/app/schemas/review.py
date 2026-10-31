@@ -19,7 +19,19 @@ class ReviewResponse(ReviewBase):
     user_name: Optional[str] = None
     avatar_url: Optional[str] = None
     verified_purchase: bool = False
+    is_hidden: bool = False
     timestamp: datetime
+
+class AdminReviewItem(ReviewResponse):
+    product_name: Optional[str] = None
+    product_image: Optional[str] = None
+    brand: Optional[str] = None
+
+class AdminReviewListResponse(BaseModel):
+    total: int
+    items: List[AdminReviewItem]
+    page: int
+    pages: int
 
 class FeaturedReviewResponse(BaseModel):
     id: str

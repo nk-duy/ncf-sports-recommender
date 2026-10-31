@@ -21,21 +21,23 @@ async def create_admin():
         hashed_pw = get_password_hash("admin")
         admin = User(
             username="admin",
-            email="admin@example.com",
+            email="admin@kady.vn",
             hashed_password=hashed_pw,
-            full_name="Adminstrator",
+            full_name="Nguyễn Khánh Duy (Admin)",
             role="admin",
             is_active=True
         )
         await admin.insert()
-        print("Created admin user: username=admin, password=admin")
+        print("Created admin user: username=admin, full_name='Nguyễn Khánh Duy (Admin)', email='admin@kady.vn'")
     else:
-        # Update to make sure it's admin role and password is admin
+        # Update to make sure it's admin role, name and email
         hashed_pw = get_password_hash("admin")
         admin_user.hashed_password = hashed_pw
+        admin_user.full_name = "Nguyễn Khánh Duy (Admin)"
+        admin_user.email = "admin@kady.vn"
         admin_user.role = "admin"
         await admin_user.save()
-        print("Admin user already existed, updated role to admin and password to 'admin'")
+        print("Updated existing admin user: full_name='Nguyễn Khánh Duy (Admin)', email='admin@kady.vn'")
 
 if __name__ == "__main__":
     asyncio.run(create_admin())

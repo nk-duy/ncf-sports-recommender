@@ -1,9 +1,13 @@
-from fastapi import APIRouter
-from app.models.menu import MegaMenu, MegaMenuSport
 from typing import List
+from fastapi import APIRouter, Depends
+
+from app.models.menu import MegaMenu, MegaMenuSport
+from app.models.user import User
 from app.core.cache import cache_response, fast_cache
+from app.api.deps import get_current_admin_user
 
 router = APIRouter()
+
 
 @router.get("/", response_model=List[MegaMenuSport])
 @router.get("", response_model=List[MegaMenuSport], include_in_schema=False)
@@ -15,10 +19,14 @@ async def get_menu():
         return menu_doc.menu_data
     return []
 
+
 @router.post("/")
 @router.post("", include_in_schema=False)
-async def update_menu(menu_data: List[MegaMenuSport]):
-    """Cập nhật cấu hình MegaMenu và tự động xóa bộ đệm cache"""
+async def update_menu(
+    menu_data: List[MegaMenuSport],
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Cập nhật cấu hình MegaMenu và tự động xóa bộ đệm cache (Quản trị viên)"""
     menu_doc = await MegaMenu.find_one({"config_id": "default"})
     if menu_doc:
         menu_doc.menu_data = menu_data

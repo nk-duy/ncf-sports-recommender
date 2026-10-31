@@ -1,7 +1,6 @@
 from typing import List, Optional, Dict, Any
 from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
-from app.schemas.product import ProductCreate, ProductUpdate
 from datetime import datetime, timezone
 
 class ProductService:
@@ -42,7 +41,17 @@ class ProductService:
         
         if category:
             cat_list = [c.strip() for c in category.split(',') if c.strip()]
-            query["category"] = {"$in": cat_list}
+            if cat_list:
+                cat_condition = {
+                    "$or": [
+                        {"sub_category": {"$in": cat_list}},
+                        {"category": {"$in": cat_list}}
+                    ]
+                }
+                if "$or" in query:
+                    query["$and"] = query.get("$and", []) + [{"$or": query.pop("$or")}, cat_condition]
+                else:
+                    query.update(cat_condition)
             
         if product_type:
             types = [t.strip() for t in product_type.split(',') if t.strip()]
@@ -221,7 +230,18 @@ class ProductService:
 
     @staticmethod
     async def get_product_by_id(product_id: str) -> Optional[Product]:
-        product = await Product.find_one(Product.product_id == product_id)
+        raw = str(product_id).strip()
+        if not raw:
+            return None
+        product = await Product.find_one(Product.product_id == raw)
+        if not product:
+            from bson import ObjectId
+            from beanie import PydanticObjectId
+            if ObjectId.is_valid(raw):
+                try:
+                    product = await Product.get(PydanticObjectId(raw))
+                except Exception:
+                    pass
         if product:
             ProductService._enforce_discount(product)
         return product
@@ -243,7 +263,7 @@ class ProductService:
             product_data.updated_at = now
 
         if product_data.variants and len(product_data.variants) > 0:
-            product_data.stock = sum(v.stock for v in product_data.variants)
+            product_data.stock = sum((v.stock if (v and v.stock is not None) else 0) for v in product_data.variants)
 
         new_product = Product(**product_data.dict())
         await new_product.insert()
@@ -251,15 +271,14 @@ class ProductService:
 
     @staticmethod
     async def update_product(product_id: str, product_data: ProductUpdate) -> Optional[Product]:
-        product = await Product.find_one(Product.product_id == product_id)
+        product = await ProductService.get_product_by_id(product_id)
         if not product:
             return None
         
         update_data = product_data.dict(exclude_unset=True)
         update_data["updated_at"] = datetime.now(timezone.utc)
         if "variants" in update_data and update_data["variants"] is not None:
-            if len(update_data["variants"]) > 0:
-                update_data["stock"] = sum(v.get("stock", 0) if isinstance(v, dict) else v.stock for v in update_data["variants"])
+            update_data["stock"] = sum((v.get("stock", 0) if isinstance(v, dict) else (v.stock or 0)) for v in update_data["variants"] if v)
         for key, value in update_data.items():
             setattr(product, key, value)
             
