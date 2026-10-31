@@ -17,8 +17,9 @@ class Product(Document):
     image_url: str = Field(..., description="Đường dẫn ảnh")
     images: Optional[List[str]] = Field(default=[], description="Các ảnh bổ sung")
     product_type: Optional[str] = Field(default=None, description="Loại sản phẩm (Quần áo, Giày dép, Phụ kiện, Thiết bị)")
-    sport_type: Optional[str] = Field(default=None, description="Môn thể thao (Bóng chuyền, Cầu lông, Đá bóng, Chạy bộ, Pickleball, Dã ngoại)")
+    sport_type: Optional[str] = Field(default=None, description="Môn thể thao (Bóng chuyền, Cầu lông, Đá bóng, Chạy bộ, Pickleball, Dã ngoại, Gym & Fitness, Phụ kiện chung)")
     category: Optional[List[str]] = Field(default=[], description="Danh mục tổng hợp")
+    sub_category: Optional[str] = Field(default=None, description="Danh mục con (sub_category)")
     brand: Optional[str] = Field(default=None, description="Thương hiệu")
     rating: Optional[float] = Field(default=0.0, description="Điểm đánh giá trung bình")
     reviews_count: Optional[int] = Field(default=0, description="Số lượng đánh giá")
@@ -35,6 +36,7 @@ class Product(Document):
     is_deleted: Optional[bool] = Field(default=False, description="Đã chuyển vào thùng rác")
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow, description="Thời gian tạo")
     updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow, description="Thời gian cập nhật")
+    ai_explanation: Optional[dict] = Field(default=None, description="Thông tin giải thích thuật toán AI (XAI)")
 
     class Settings:
         name = "products"

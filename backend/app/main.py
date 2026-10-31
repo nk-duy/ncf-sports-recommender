@@ -1,8 +1,9 @@
+import os
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
 
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -11,14 +12,20 @@ from app.core.database import init_db
 from app.core.limiter import limiter, rate_limit_exceeded_handler
 from app.api.v1.router import api_router
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("kady_sports")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: connect to database
     await init_db()
-    print("Successfully connected to MongoDB.")
+    logger.info("Successfully connected to MongoDB.")
     yield
     # Shutdown: cleanup resources if needed
-    print("Shutting down and cleaning up resources.")
+    logger.info("Shutting down and cleaning up resources.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

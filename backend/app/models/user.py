@@ -13,9 +13,13 @@ class User(Document):
     tier: str = "Đồng"
     interested_sports: list[str] = Field(default_factory=list)
     shoe_size: Optional[str] = None
+    apparel_size: Optional[str] = None
     preferred_colors: list[str] = Field(default_factory=list)
     ai_profile: Optional[str] = None
     ai_score: int = 0
+    wishlist: list[str] = Field(default_factory=list)
+    is_2fa_enabled: bool = False
+    email_notifications: bool = True
     role: str = "user"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True

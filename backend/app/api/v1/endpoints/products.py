@@ -1,7 +1,9 @@
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, HTTPException, Query, Response, Depends
 from typing import List, Optional
 from app.schemas.product import ProductResponse, ProductCreate, ProductUpdate
 from app.services.product_service import product_service
+from app.api.deps import get_current_admin_user
+from app.models.user import User
 
 router = APIRouter()
 
@@ -60,24 +62,34 @@ async def get_product(product_id: str):
 
 @router.post("/", response_model=ProductResponse)
 @router.post("", response_model=ProductResponse, include_in_schema=False)
-async def create_product(product_data: ProductCreate):
-    """Thêm sản phẩm mới"""
+async def create_product(
+    product_data: ProductCreate,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Thêm sản phẩm mới (Dành cho Quản trị viên)"""
     new_product = await product_service.create_product(product_data)
     if not new_product:
         raise HTTPException(status_code=400, detail="Mã sản phẩm đã tồn tại")
     return new_product
 
 @router.put("/{product_id}", response_model=ProductResponse)
-async def update_product(product_id: str, product_data: ProductUpdate):
-    """Cập nhật sản phẩm"""
+async def update_product(
+    product_id: str,
+    product_data: ProductUpdate,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Cập nhật sản phẩm (Dành cho Quản trị viên)"""
     updated_product = await product_service.update_product(product_id, product_data)
     if not updated_product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
     return updated_product
 
 @router.get("/{product_id}/check-dependencies")
-async def check_dependencies(product_id: str):
-    """Kiểm tra sản phẩm có đơn hàng, đánh giá hoặc tương tác AI không trước khi xóa vĩnh viễn"""
+async def check_dependencies(
+    product_id: str,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Kiểm tra sản phẩm có đơn hàng, đánh giá hoặc tương tác AI không trước khi xóa vĩnh viễn (Quản trị viên)"""
     product = await product_service.get_product_by_id(product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm")
@@ -85,8 +97,12 @@ async def check_dependencies(product_id: str):
     return dep_check
 
 @router.delete("/{product_id}")
-async def delete_product(product_id: str, force: bool = False):
-    """Xóa sản phẩm (có kiểm tra ràng buộc toàn vẹn dữ liệu)"""
+async def delete_product(
+    product_id: str,
+    force: bool = False,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Xóa sản phẩm (có kiểm tra ràng buộc toàn vẹn dữ liệu) (Dành cho Quản trị viên)"""
     success, reason = await product_service.delete_product(product_id, force=force)
     if not success:
         if reason == "Không tìm thấy sản phẩm":

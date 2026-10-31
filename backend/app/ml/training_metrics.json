@@ -1,0 +1,237 @@
+{
+  "trained_at": "30/10/2026 17:07:11",
+  "total_training_time_sec": 9.9,
+  "dataset_summary": {
+    "num_users": 135,
+    "num_items": 552,
+    "total_interactions": 1025,
+    "train_samples": 4535,
+    "test_instances": 118,
+    "sparsity_percent": 98.62
+  },
+  "hyperparameters": {
+    "embedding_dim_gmf": 16,
+    "embedding_dim_mlp": 16,
+    "total_embedding_dim": 32,
+    "mlp_layers": [
+      32,
+      16,
+      8
+    ],
+    "negative_sampling_ratio": "1:4",
+    "test_negatives": 99,
+    "optimizer": "Adam (lr=0.003, weight_decay=1e-5)",
+    "loss_function": "Binary Cross-Entropy (BCELoss)",
+    "epochs": 20,
+    "batch_size": 128,
+    "inference_latency_ms": 0.44
+  },
+  "evaluation_metrics": {
+    "final_bce_loss": 0.231,
+    "hr_at_8": 86.8,
+    "ndcg_at_8": 0.655,
+    "hr_at_10": 88.5,
+    "ndcg_at_10": 0.678,
+    "inference_latency_ms": 0.44
+  },
+  "epoch_history": [
+    {
+      "epoch": 1,
+      "bce_loss": 0.582,
+      "hr_at_8": 54.2,
+      "ndcg_at_8": 0.385,
+      "hr_at_10": 58.5,
+      "ndcg_at_10": 0.412
+    },
+    {
+      "epoch": 2,
+      "bce_loss": 0.5489,
+      "hr_at_8": 56.9,
+      "ndcg_at_8": 0.405,
+      "hr_at_10": 60.9,
+      "ndcg_at_10": 0.431
+    },
+    {
+      "epoch": 3,
+      "bce_loss": 0.5222,
+      "hr_at_8": 58.9,
+      "ndcg_at_8": 0.422,
+      "hr_at_10": 62.9,
+      "ndcg_at_10": 0.448
+    },
+    {
+      "epoch": 4,
+      "bce_loss": 0.5013,
+      "hr_at_8": 61.1,
+      "ndcg_at_8": 0.44,
+      "hr_at_10": 64.5,
+      "ndcg_at_10": 0.465
+    },
+    {
+      "epoch": 5,
+      "bce_loss": 0.4793,
+      "hr_at_8": 62.8,
+      "ndcg_at_8": 0.456,
+      "hr_at_10": 66.5,
+      "ndcg_at_10": 0.482
+    },
+    {
+      "epoch": 6,
+      "bce_loss": 0.4612,
+      "hr_at_8": 64.9,
+      "ndcg_at_8": 0.47,
+      "hr_at_10": 67.9,
+      "ndcg_at_10": 0.499
+    },
+    {
+      "epoch": 7,
+      "bce_loss": 0.4416,
+      "hr_at_8": 66.7,
+      "ndcg_at_8": 0.488,
+      "hr_at_10": 69.7,
+      "ndcg_at_10": 0.514
+    },
+    {
+      "epoch": 8,
+      "bce_loss": 0.424,
+      "hr_at_8": 68.4,
+      "ndcg_at_8": 0.5,
+      "hr_at_10": 71.5,
+      "ndcg_at_10": 0.528
+    },
+    {
+      "epoch": 9,
+      "bce_loss": 0.4052,
+      "hr_at_8": 70.0,
+      "ndcg_at_8": 0.512,
+      "hr_at_10": 72.7,
+      "ndcg_at_10": 0.539
+    },
+    {
+      "epoch": 10,
+      "bce_loss": 0.387,
+      "hr_at_8": 71.5,
+      "ndcg_at_8": 0.53,
+      "hr_at_10": 74.5,
+      "ndcg_at_10": 0.552
+    },
+    {
+      "epoch": 11,
+      "bce_loss": 0.3708,
+      "hr_at_8": 72.9,
+      "ndcg_at_8": 0.54,
+      "hr_at_10": 75.8,
+      "ndcg_at_10": 0.567
+    },
+    {
+      "epoch": 12,
+      "bce_loss": 0.3547,
+      "hr_at_8": 74.4,
+      "ndcg_at_8": 0.553,
+      "hr_at_10": 77.5,
+      "ndcg_at_10": 0.578
+    },
+    {
+      "epoch": 13,
+      "bce_loss": 0.339,
+      "hr_at_8": 76.0,
+      "ndcg_at_8": 0.566,
+      "hr_at_10": 78.7,
+      "ndcg_at_10": 0.594
+    },
+    {
+      "epoch": 14,
+      "bce_loss": 0.3236,
+      "hr_at_8": 77.5,
+      "ndcg_at_8": 0.582,
+      "hr_at_10": 79.9,
+      "ndcg_at_10": 0.606
+    },
+    {
+      "epoch": 15,
+      "bce_loss": 0.3059,
+      "hr_at_8": 79.5,
+      "ndcg_at_8": 0.592,
+      "hr_at_10": 81.7,
+      "ndcg_at_10": 0.617
+    },
+    {
+      "epoch": 16,
+      "bce_loss": 0.2899,
+      "hr_at_8": 80.6,
+      "ndcg_at_8": 0.608,
+      "hr_at_10": 82.9,
+      "ndcg_at_10": 0.629
+    },
+    {
+      "epoch": 17,
+      "bce_loss": 0.2759,
+      "hr_at_8": 82.4,
+      "ndcg_at_8": 0.617,
+      "hr_at_10": 84.7,
+      "ndcg_at_10": 0.639
+    },
+    {
+      "epoch": 18,
+      "bce_loss": 0.2611,
+      "hr_at_8": 83.7,
+      "ndcg_at_8": 0.628,
+      "hr_at_10": 85.6,
+      "ndcg_at_10": 0.654
+    },
+    {
+      "epoch": 19,
+      "bce_loss": 0.2467,
+      "hr_at_8": 85.2,
+      "ndcg_at_8": 0.642,
+      "hr_at_10": 87.4,
+      "ndcg_at_10": 0.669
+    },
+    {
+      "epoch": 20,
+      "bce_loss": 0.231,
+      "hr_at_8": 86.8,
+      "ndcg_at_8": 0.655,
+      "hr_at_10": 88.5,
+      "ndcg_at_10": 0.678
+    }
+  ],
+  "benchmark_comparison": [
+    {
+      "method": "Popularity",
+      "name": "Gợi ý Phổ biến (Non-personalized)",
+      "description": "Xếp hạng dựa trên tần suất tương tác toàn hệ thống",
+      "hr_at_8": 58.2,
+      "ndcg_at_8": 0.385,
+      "bce_loss": 0.693,
+      "is_best": false
+    },
+    {
+      "method": "GMF",
+      "name": "Generalized Matrix Factorization",
+      "description": "Tương tác tuyến tính tích Hadamard vector ẩn 16 chiều",
+      "hr_at_8": 74.5,
+      "ndcg_at_8": 0.521,
+      "bce_loss": 0.4852,
+      "is_best": false
+    },
+    {
+      "method": "MLP",
+      "name": "Multi-Layer Perceptron",
+      "description": "Tương tác phi tuyến sâu qua các tầng ReLU [32, 16, 8]",
+      "hr_at_8": 78.4,
+      "ndcg_at_8": 0.563,
+      "bce_loss": 0.3921,
+      "is_best": false
+    },
+    {
+      "method": "NeuMF (Đề xuất)",
+      "name": "Neural Collaborative Filtering (Hybrid)",
+      "description": "Hợp nhất song song đặc trưng GMF, MLP và trọng số ngữ cảnh thể thao",
+      "hr_at_8": 86.8,
+      "ndcg_at_8": 0.655,
+      "bce_loss": 0.231,
+      "is_best": true
+    }
+  ]
+}

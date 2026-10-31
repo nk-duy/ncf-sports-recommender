@@ -5,6 +5,16 @@ from app.schemas.interaction import InteractionCreate, InteractionResponse
 from app.api.deps import get_current_user
 from app.services.interaction_service import interaction_service
 
+# Trọng số phản hồi ngầm và tường minh phục vụ huấn luyện Neural Collaborative Filtering (NCF)
+INTERACTION_WEIGHTS = {
+    "view": 1.0,
+    "click": 2.0,
+    "add_to_cart": 3.5,
+    "wishlist": 4.0,
+    "purchase": 5.0,
+    "review": 5.0
+}
+
 router = APIRouter()
 
 @router.post("/", response_model=InteractionResponse)
@@ -12,6 +22,8 @@ async def create_interaction(
     interaction_in: InteractionCreate,
     current_user: User = Depends(get_current_user)
 ):
+    if interaction_in.rating is None or interaction_in.rating <= 0:
+        interaction_in.rating = INTERACTION_WEIGHTS.get(interaction_in.interaction_type, 1.0)
     interaction_db = await interaction_service.create_interaction(interaction_in, current_user)
     
     return InteractionResponse(

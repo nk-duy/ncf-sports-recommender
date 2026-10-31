@@ -1,6 +1,8 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.models.banner import Banner
+from app.models.user import User
+from app.api.deps import get_current_admin_user
 from app.services.banner_service import banner_service
 from pydantic import BaseModel
 
@@ -34,27 +36,40 @@ async def get_banners(active_only: bool = False):
     return await banner_service.get_banners(active_only=active_only)
 
 @router.post("/", response_model=Banner)
-async def create_banner(banner_in: BannerCreate):
-    """Tạo banner quảng cáo hoặc chiến dịch mới"""
+async def create_banner(
+    banner_in: BannerCreate,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Tạo banner quảng cáo hoặc chiến dịch mới (Dành cho Quản trị viên)"""
     return await banner_service.create_banner(banner_in.dict())
 
 @router.put("/reorder")
-async def reorder_banners(items: List[BannerReorderItem]):
-    """Cập nhật thứ tự hiển thị banner trên trang chủ"""
+async def reorder_banners(
+    items: List[BannerReorderItem],
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Cập nhật thứ tự hiển thị banner trên trang chủ (Dành cho Quản trị viên)"""
     await banner_service.reorder_banners([item.dict() for item in items])
     return {"status": "success", "message": "Đã cập nhật thứ tự banner"}
 
 @router.put("/{banner_id}", response_model=Banner)
-async def update_banner(banner_id: str, banner_in: BannerUpdate):
-    """Cập nhật nội dung hoặc trạng thái của banner"""
+async def update_banner(
+    banner_id: str,
+    banner_in: BannerUpdate,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Cập nhật nội dung hoặc trạng thái của banner (Dành cho Quản trị viên)"""
     banner = await banner_service.update_banner(banner_id, banner_in.dict(exclude_unset=True))
     if not banner:
         raise HTTPException(status_code=404, detail="Banner không tồn tại hoặc ID không hợp lệ")
     return banner
 
 @router.delete("/{banner_id}")
-async def delete_banner(banner_id: str):
-    """Xóa banner khỏi hệ thống"""
+async def delete_banner(
+    banner_id: str,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Xóa banner khỏi hệ thống (Dành cho Quản trị viên)"""
     success = await banner_service.delete_banner(banner_id)
     if not success:
         raise HTTPException(status_code=404, detail="Banner không tồn tại hoặc ID không hợp lệ")
