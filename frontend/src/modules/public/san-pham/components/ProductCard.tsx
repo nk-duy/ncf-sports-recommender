@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import styles from "./ProductCard.module.css";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
+import { useAiXRayStore } from "@/shared/store/aiXRayStore";
 import { notifications } from "@mantine/notifications";
+import { AIExplanation } from "@/shared/types/aiExplanation";
+import AiXRayInspector from "@/shared/components/AiXRayInspector";
 
 // Định nghĩa kiểu dữ liệu (TypeScript) cho 1 sản phẩm
 export interface Product {
@@ -25,28 +28,38 @@ export interface Product {
   secondaryLabel?: string;
   sold?: number;
   total?: number;
+  ai_explanation?: AIExplanation;
 }
 
-import { Plus } from "lucide-react";
+const emptySubscribe = () => () => {};
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80";
 
-export default function ProductCard({ product, isPromo = false }: { product: Product, isPromo?: boolean }) {
-  const displayId = String(product.id || product.product_id || '');
-  const displayImage = product.imageUrl || product.image_url || 'https://via.placeholder.com/300x300?text=No+Image';
-  const displayPrice = typeof product.price === 'number' ? product.price.toLocaleString('vi-VN') + 'đ' : product.price;
-  const numericPrice = typeof product.price === 'number'
-    ? product.price
-    : parseInt(String(product.price).replace(/\D/g, '')) || 0;
+export default function ProductCard({ product }: { product: Product; isPromo?: boolean }) {
+  const displayId = String(product.id || product.product_id || "");
+  const displayImage = product.imageUrl || product.image_url || FALLBACK_IMG;
+  const displayPrice = typeof product.price === "number" ? product.price.toLocaleString("vi-VN") + "đ" : product.price;
+  const numericPrice =
+    typeof product.price === "number"
+      ? product.price
+      : parseInt(String(product.price).replace(/\D/g, "")) || 0;
 
   // Only show the first category to prevent long wrapping text
-  const displayCategory = Array.isArray(product.category) && product.category.length > 0
-    ? product.category[0]
-    : product.category;
+  const displayCategory =
+    Array.isArray(product.category) && product.category.length > 0
+      ? product.category[0]
+      : product.category;
+
+  const discountVal = product.discount_percent ?? product.discountPercent ?? 0;
 
   const { toggleItem, isWishlisted } = useWishlistStore();
-  const [mounted, setMounted] = useState(false);
+  const { isXRayActive } = useAiXRayStore();
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [heartAnim, setHeartAnim] = useState(false);
 
-  useEffect(() => setMounted(true), []);
   const wishlisted = mounted && isWishlisted(displayId);
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -58,16 +71,16 @@ export default function ProductCard({ product, isPromo = false }: { product: Pro
       name: product.name,
       price: numericPrice,
       image_url: displayImage,
-      category: String(displayCategory || ''),
+      category: String(displayCategory || ""),
       original_price: product.originalPrice,
-      discount_percent: (product as any).discount_percent || (product as any).discountPercent,
+      discount_percent: discountVal || undefined,
       discount_label: product.discountLabel,
     });
     setHeartAnim(true);
     setTimeout(() => setHeartAnim(false), 600);
     notifications.show({
-      message: added ? `Đã thêm vào danh sách yêu thích` : `Đã xóa khỏi yêu thích`,
-      color: added ? 'red' : 'gray',
+      message: added ? "Đã thêm vào danh sách yêu thích" : "Đã xóa khỏi yêu thích",
+      color: added ? "red" : "gray",
       autoClose: 2000,
     });
   };
@@ -79,52 +92,73 @@ export default function ProductCard({ product, isPromo = false }: { product: Pro
           alt={product.name}
           className={styles.image}
           src={displayImage}
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = FALLBACK_IMG;
+          }}
         />
-        {product.discountLabel && (
-          <span className={styles.badgePrimary}>
-            {product.discountLabel}
+        {product.ai_explanation?.match_percent ? (
+          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-md tabular-nums">
+            <Sparkles size={10} className="text-yellow-300" />
+            {product.ai_explanation.match_percent}% Phù hợp
           </span>
-        )}
+        ) : product.discountLabel ? (
+          <span className={styles.badgePrimary}>{product.discountLabel}</span>
+        ) : null}
         {/* Wishlist heart button */}
         {mounted && displayId && (
           <button
             onClick={handleWishlist}
-            aria-label={wishlisted ? 'Xóa khỏi yêu thích' : 'Thêm vào yêu thích'}
+            aria-label={wishlisted ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
             className={`absolute top-2 left-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-md
-              ${wishlisted
-                ? 'bg-red-500 text-white scale-110'
-                : 'bg-white/90 text-gray-400 hover:text-red-500 hover:bg-white'
-              } ${heartAnim ? 'scale-125' : ''}`}
+              ${
+                wishlisted
+                  ? "bg-rose-50 border border-rose-200 scale-110 shadow-rose-200/50"
+                  : "bg-white/90 text-gray-400 hover:text-rose-500 hover:bg-white"
+              } ${heartAnim ? "scale-125" : ""}`}
           >
-            <Heart size={15} className={wishlisted ? 'fill-white' : ''} />
+            <Heart
+              size={16}
+              className={wishlisted ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500"}
+            />
           </button>
         )}
       </div>
 
       <div className={styles.content}>
-        {displayCategory && (
-          <div className={styles.category}>
-            {displayCategory}
+        {displayCategory && <div className={styles.category}>{displayCategory}</div>}
+
+        <h3 className={styles.title}>{product.name}</h3>
+
+        {/* AI Explanation Reason */}
+        {product.ai_explanation?.reason && (
+          <div className="mb-2">
+            <span
+              className="inline-flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded max-w-full truncate font-medium border border-blue-100/60"
+              title={product.ai_explanation.reason}
+            >
+              <Sparkles size={10} className="shrink-0 text-blue-500" />
+              <span className="truncate">{product.ai_explanation.reason}</span>
+            </span>
           </div>
         )}
 
-        <h3 className={styles.title}>
-          {product.name}
-        </h3>
+        {/* AI X-Ray Inspector Box */}
+        {isXRayActive && product.ai_explanation && (
+          <div className="mb-2.5">
+            <AiXRayInspector explanation={product.ai_explanation} />
+          </div>
+        )}
 
         <div className={styles.footer}>
           <div className={styles.priceWrapper}>
-            <span className={styles.price}>
-              {displayPrice}
-            </span>
+            <span className={`${styles.price} tabular-nums`}>{displayPrice}</span>
             {product.originalPrice && (
               <div className="flex items-center gap-1.5 ml-1">
-                <span className={styles.originalPrice}>
-                  {product.originalPrice}
-                </span>
-                {((product as any).discount_percent || (product as any).discountPercent) > 0 && (
-                  <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1 py-0.5 rounded">
-                    -{((product as any).discount_percent || (product as any).discountPercent)}%
+                <span className={`${styles.originalPrice} tabular-nums`}>{product.originalPrice}</span>
+                {discountVal > 0 && (
+                  <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1 py-0.5 rounded tabular-nums">
+                    -{discountVal}%
                   </span>
                 )}
               </div>
@@ -135,4 +169,3 @@ export default function ProductCard({ product, isPromo = false }: { product: Pro
     </Link>
   );
 }
-

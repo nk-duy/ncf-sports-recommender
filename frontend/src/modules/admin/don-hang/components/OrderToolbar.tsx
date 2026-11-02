@@ -1,13 +1,16 @@
 'use client';
-import React from 'react';
-import { LayoutGrid, List, Calendar, Search, X, Download } from 'lucide-react';
+
+import { LayoutGrid, List, Calendar, Search, X, Download, CreditCard } from 'lucide-react';
+import type { OrderViewMode } from '../types';
 
 interface OrderToolbarProps {
   ordersCount: number;
-  viewMode: 'grid' | 'table';
-  setViewMode: (mode: 'grid' | 'table') => void;
+  viewMode: OrderViewMode;
+  setViewMode: (mode: OrderViewMode) => void;
   dateFilter: string;
   setDateFilter: (filter: string) => void;
+  paymentFilter?: string;
+  setPaymentFilter?: (filter: string) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   handleExportExcel: () => void;
@@ -20,6 +23,8 @@ export default function OrderToolbar({
   setViewMode,
   dateFilter,
   setDateFilter,
+  paymentFilter,
+  setPaymentFilter,
   searchTerm,
   setSearchTerm,
   handleExportExcel,
@@ -29,7 +34,9 @@ export default function OrderToolbar({
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Duyệt &amp; Quản lý Đơn hàng</h1>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            Duyệt &amp; Quản lý Đơn hàng
+          </h1>
           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             {ordersCount} đơn
           </span>
@@ -40,7 +47,6 @@ export default function OrderToolbar({
       </div>
 
       <div className="flex flex-wrap items-center gap-2.5">
-        {/* View Mode Toggle */}
         <div className="h-10 bg-gray-100 p-1 rounded-xl flex items-center border border-gray-200 shadow-2xs">
           <button
             type="button"
@@ -70,7 +76,6 @@ export default function OrderToolbar({
           </button>
         </div>
 
-        {/* Date Filter */}
         <div className="relative min-w-[140px]">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <Calendar size={15} />
@@ -87,7 +92,23 @@ export default function OrderToolbar({
           </select>
         </div>
 
-        {/* Search Bar */}
+        {setPaymentFilter && (
+          <div className="relative min-w-[155px]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <CreditCard size={15} />
+            </div>
+            <select
+              value={paymentFilter || 'all'}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="h-10 pl-9 pr-7 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none appearance-none cursor-pointer hover:bg-gray-50 transition shadow-2xs w-full"
+            >
+              <option value="all">Tất cả thanh toán</option>
+              <option value="paid">✓ Đã thanh toán</option>
+              <option value="unpaid">⌛ Chưa thu tiền</option>
+            </select>
+          </div>
+        )}
+
         <div className="relative flex-1 sm:w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <Search size={15} />
@@ -110,7 +131,6 @@ export default function OrderToolbar({
           )}
         </div>
 
-        {/* Export Excel Button */}
         <button
           type="button"
           onClick={handleExportExcel}

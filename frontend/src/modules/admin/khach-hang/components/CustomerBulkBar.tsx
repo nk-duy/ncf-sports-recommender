@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { CheckSquare, Gift, Download } from "lucide-react";
 
 interface CustomerBulkBarProps {

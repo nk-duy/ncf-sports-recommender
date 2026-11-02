@@ -455,7 +455,7 @@ async def train_and_evaluate():
     benchmark_comparison = [
         {
             "method": "Popularity",
-            "name": "Gợi ý Phổ biến (Non-personalized)",
+            "name": "Gợi ý theo Độ phổ biến (Popularity)",
             "description": "Xếp hạng dựa trên tần suất tương tác toàn hệ thống",
             "hr_at_8": pop_hr_8,
             "ndcg_at_8": pop_ndcg_8,

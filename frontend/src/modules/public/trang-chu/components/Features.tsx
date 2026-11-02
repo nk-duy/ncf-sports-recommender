@@ -6,7 +6,7 @@ export default function Features() {
     {
       icon: <Truck size={24} />,
       title: "Miễn phí giao hàng",
-      desc: "Đơn hàng từ 499.000đ",
+      desc: "Đơn hàng từ 500.000đ",
       colorClass: "text-blue-600",
       bgClass: "bg-blue-50"
     },
@@ -36,10 +36,10 @@ export default function Features() {
   return (
     <section className="bg-white border-b border-gray-100">
       <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-8 md:py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {features.map((feature, idx) => (
-            <div key={idx} className="flex items-center p-4 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-colors gap-4 group">
-              <div className={`w-14 h-14 rounded-full ${feature.bgClass} ${feature.colorClass} flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform`}>
+            <div key={idx} className="flex items-center p-3.5 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-colors gap-3.5 group">
+              <div className={`w-11 h-11 rounded-xl ${feature.bgClass} ${feature.colorClass} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
                 {feature.icon}
               </div>
               <div>

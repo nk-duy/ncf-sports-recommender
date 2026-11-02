@@ -16,6 +16,8 @@ interface ProductVariantMatrixProps {
   variants: ProductVariantItem[];
   onChangeVariants: (variants: ProductVariantItem[]) => void;
   productId?: string;
+  targetTotalStock?: number;
+  onUpdateTargetStock?: (total: number) => void;
 }
 
 // Map color names to hex codes for UI display
@@ -39,8 +41,18 @@ export default function ProductVariantMatrix({
   variants,
   onChangeVariants,
   productId = 'PROD',
+  targetTotalStock,
+  onUpdateTargetStock,
 }: ProductVariantMatrixProps) {
   const [bulkStock, setBulkStock] = useState<number | ''>('');
+  const [desiredTotal, setDesiredTotal] = useState<number | ''>(targetTotalStock ?? 50);
+
+  // Cập nhật desiredTotal khi targetTotalStock thay đổi từ cha
+  useEffect(() => {
+    if (targetTotalStock !== undefined && targetTotalStock > 0) {
+      setDesiredTotal(targetTotalStock);
+    }
+  }, [targetTotalStock]);
 
   // Tự động đồng bộ ma trận tổ hợp (Colors x Sizes) khi colors hoặc sizes thay đổi
   useEffect(() => {
@@ -61,7 +73,7 @@ export default function ProductVariantMatrix({
           newVariants.push({
             color,
             size,
-            stock: existing !== undefined ? existing.stock : 10,
+            stock: existing !== undefined ? existing.stock : 0,
             sku: existing?.sku || `${productId ? productId.slice(-6) : 'SKU'}-${color.slice(0, 2).toUpperCase()}-${size}`,
             price: existing?.price,
           });
@@ -73,7 +85,7 @@ export default function ProductVariantMatrix({
         newVariants.push({
           color,
           size: '',
-          stock: existing !== undefined ? existing.stock : 10,
+          stock: existing !== undefined ? existing.stock : 0,
           sku: existing?.sku || `${productId ? productId.slice(-6) : 'SKU'}-${color.slice(0, 2).toUpperCase()}`,
           price: existing?.price,
         });
@@ -84,17 +96,33 @@ export default function ProductVariantMatrix({
         newVariants.push({
           color: '',
           size,
-          stock: existing !== undefined ? existing.stock : 10,
+          stock: existing !== undefined ? existing.stock : 0,
           sku: existing?.sku || `${productId ? productId.slice(-6) : 'SKU'}-${size}`,
           price: existing?.price,
         });
       });
     }
 
+    // Nếu tất cả biến thể đều có stock = 0 và trước đó chưa có variant nào, tự động phân bổ targetTotalStock nếu có
+    const isFirstInit = variants.length === 0 && newVariants.length > 0;
+    if (isFirstInit && targetTotalStock && targetTotalStock > 0) {
+      const count = newVariants.length;
+      const base = Math.floor(targetTotalStock / count);
+      let remainder = targetTotalStock % count;
+      newVariants.forEach((nv) => {
+        nv.stock = base + (remainder > 0 ? 1 : 0);
+        if (remainder > 0) remainder--;
+      });
+    }
+
     // Chỉ gọi update nếu có sự thay đổi thực sự về số lượng hoặc cấu trúc
     const isDifferent =
       newVariants.length !== variants.length ||
-      newVariants.some((nv, idx) => nv.color !== variants[idx]?.color || nv.size !== variants[idx]?.size);
+      newVariants.some((nv, idx) => 
+        nv.color !== variants[idx]?.color || 
+        nv.size !== variants[idx]?.size ||
+        (isFirstInit && nv.stock !== variants[idx]?.stock)
+      );
 
     if (isDifferent) {
       onChangeVariants(newVariants);
@@ -117,6 +145,27 @@ export default function ProductVariantMatrix({
     if (bulkStock === '' || isNaN(Number(bulkStock))) return;
     const val = Math.max(0, Number(bulkStock));
     const updated = variants.map(v => ({ ...v, stock: val }));
+    onChangeVariants(updated);
+  };
+
+  // Tính năng: Phân bổ đều tổng số lượng tồn kho (VD: 50 cái chia đều cho các phân loại)
+  const handleDistributeTotal = () => {
+    const target = typeof desiredTotal === 'number' ? desiredTotal : Number(desiredTotal);
+    if (isNaN(target) || target <= 0 || variants.length === 0) return;
+
+    const count = variants.length;
+    const base = Math.floor(target / count);
+    let remainder = target % count;
+
+    const updated = variants.map(v => {
+      const added = remainder > 0 ? 1 : 0;
+      if (remainder > 0) remainder--;
+      return {
+        ...v,
+        stock: base + added,
+      };
+    });
+
     onChangeVariants(updated);
   };
 
@@ -160,48 +209,48 @@ export default function ProductVariantMatrix({
         </div>
       </div>
 
-      {/* Thanh công cụ Nhập nhanh hàng loạt */}
-      <div className="bg-white p-3 rounded-xl border border-gray-200 flex flex-wrap items-center justify-between gap-3">
+      {/* Thanh công cụ: Điền nhanh số lượng đồng loạt & Presets */}
+      <div className="bg-white p-3 rounded-xl border border-blue-200/80 flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-amber-500" />
-          <span className="text-xs font-bold text-gray-700">Điền nhanh số lượng:</span>
+          <Sparkles size={15} className="text-amber-500" />
+          <span className="text-xs font-semibold text-gray-700">Điền nhanh cho mỗi phân loại:</span>
           <input
             type="number"
             min={0}
-            placeholder="VD: 10"
+            placeholder="0"
             value={bulkStock}
             onChange={e => setBulkStock(e.target.value === '' ? '' : Number(e.target.value))}
-            className="w-20 px-2.5 py-1 border border-gray-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none text-center"
+            className="w-18 px-2.5 py-1 border border-gray-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none text-center"
           />
           <button
             type="button"
             onClick={handleApplyBulk}
-            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-2xs"
+            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition shadow-2xs cursor-pointer"
           >
             Áp dụng tất cả
           </button>
         </div>
 
         {/* Preset quick buttons */}
-        <div className="flex items-center gap-1.5 text-xs">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => { onChangeVariants(variants.map(v => ({ ...v, stock: 10 }))); }}
-            className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-medium text-[11px]"
+            className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-semibold text-[11px] cursor-pointer"
           >
-            Tất cả = 10
+            Mỗi loại 10
           </button>
           <button
             type="button"
             onClick={() => { onChangeVariants(variants.map(v => ({ ...v, stock: 20 }))); }}
-            className="px-2 py-0.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-medium text-[11px]"
+            className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-semibold text-[11px] cursor-pointer"
           >
-            Tất cả = 20
+            Mỗi loại 20
           </button>
           <button
             type="button"
             onClick={() => { onChangeVariants(variants.map(v => ({ ...v, stock: 0 }))); }}
-            className="px-2 py-0.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-md font-medium text-[11px]"
+            className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded-md font-semibold text-[11px] cursor-pointer"
           >
             Đặt hết về 0
           </button>

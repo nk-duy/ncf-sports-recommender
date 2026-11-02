@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import PromotionsBanner from "@/modules/public/khuyen-mai/components/PromotionsBanner";
 import PromotionsTimeline from "@/modules/public/khuyen-mai/components/PromotionsTimeline";

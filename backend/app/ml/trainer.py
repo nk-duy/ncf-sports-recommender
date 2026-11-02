@@ -345,7 +345,7 @@ class NCFTrainer:
             benchmark_comparison = [
                 {
                     "method": "Popularity",
-                    "name": "Gợi ý Phổ biến (Non-personalized)",
+                    "name": "Gợi ý theo Độ phổ biến (Popularity)",
                     "description": "Xếp hạng dựa trên tần suất tương tác toàn hệ thống",
                     "hr_at_8": 58.2,
                     "ndcg_at_8": 0.385,

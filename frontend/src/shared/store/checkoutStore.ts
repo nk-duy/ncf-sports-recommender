@@ -1,9 +1,14 @@
 import { create } from 'zustand';
 import type { Voucher } from '@/shared/lib/cart';
 
-type TextField = 'customer_name' | 'customer_phone' | 'customer_address' | 'payment_method' | 'shipping_id';
+export type CheckoutTextField =
+  | 'customer_name'
+  | 'customer_phone'
+  | 'customer_address'
+  | 'payment_method'
+  | 'shipping_id';
 
-interface CheckoutState {
+export interface CheckoutState {
   customer_name: string;
   customer_phone: string;
   customer_address: string;
@@ -14,7 +19,7 @@ interface CheckoutState {
   selectedKeys: string[];
   /** Voucher đang áp dụng (dùng chung giữa giỏ hàng & thanh toán) */
   appliedVoucher: Voucher | null;
-  setField: (field: TextField, value: string) => void;
+  setField: (field: CheckoutTextField, value: string) => void;
   setSelectedKeys: (keys: string[]) => void;
   setAppliedVoucher: (voucher: Voucher | null) => void;
 }

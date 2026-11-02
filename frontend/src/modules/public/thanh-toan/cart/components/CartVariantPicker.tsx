@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface CartVariantPickerProps {
   sizes: string[];
@@ -15,6 +15,15 @@ export default function CartVariantPicker({ sizes, colors, size, color, onConfir
   const [draftSize, setDraftSize] = useState(size);
   const [draftColor, setDraftColor] = useState<string | undefined>(color);
 
+  // Tự động đóng popover khi người dùng lăn chuột/scroll trang để tránh cảm giác bị kéo trôi/đơ giật
+  useEffect(() => {
+    const handleScroll = () => {
+      onClose();
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [onClose]);
+
   const needColor = colors.length > 0;
   const canConfirm = !!draftSize && (!needColor || !!draftColor);
 
@@ -28,13 +37,22 @@ export default function CartVariantPicker({ sizes, colors, size, color, onConfir
   return (
     <>
       {/* Lớp nền trong suốt để bấm ra ngoài thì đóng popover */}
-      <div className="fixed inset-0 z-30" onClick={onClose} />
-      <div className="absolute left-0 top-full mt-2 z-40 w-80 bg-white border border-gray-200 rounded-xl shadow-xl p-4 animate-in fade-in zoom-in-95 duration-150">
-        {sizes.length > 0 && (
+      <div 
+        className="fixed inset-0 z-40" 
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }} 
+      />
+      <div 
+        onClick={(e) => e.stopPropagation()} 
+        className="absolute left-0 top-full mt-2 z-50 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl shadow-2xl p-4 animate-in fade-in zoom-in-95 duration-150"
+      >
+        {sizes.filter(Boolean).length > 0 && (
           <div className="mb-4">
             <div className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Kích cỡ</div>
             <div className="flex flex-wrap gap-2">
-              {sizes.map((s) => (
+              {sizes.filter(Boolean).map((s) => (
                 <button key={s} type="button" className={chip(draftSize === s)} onClick={() => setDraftSize(s)}>
                   {s}
                 </button>
@@ -42,11 +60,11 @@ export default function CartVariantPicker({ sizes, colors, size, color, onConfir
             </div>
           </div>
         )}
-        {colors.length > 0 && (
+        {colors.filter(Boolean).length > 0 && (
           <div className="mb-4">
             <div className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Màu sắc</div>
             <div className="flex flex-wrap gap-2">
-              {colors.map((c) => (
+              {colors.filter(Boolean).map((c) => (
                 <button key={c} type="button" className={chip(draftColor === c)} onClick={() => setDraftColor(c)}>
                   {c}
                 </button>

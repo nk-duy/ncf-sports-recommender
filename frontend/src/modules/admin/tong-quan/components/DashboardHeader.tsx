@@ -1,10 +1,11 @@
 'use client';
-import React from 'react';
+
 import { Calendar, Download } from 'lucide-react';
+import type { DateRangeKey } from '../types';
 
 interface DashboardHeaderProps {
-  dateRange: string;
-  setDateRange: (range: string) => void;
+  dateRange: DateRangeKey | string;
+  setDateRange: (range: DateRangeKey | string) => void;
   onExportReport: () => void;
 }
 
@@ -43,7 +44,7 @@ export default function DashboardHeader({
           type="button"
           onClick={onExportReport}
           className="flex items-center justify-center gap-2 h-10 px-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm rounded-xl shadow-2xs transition cursor-pointer"
-          title="Xuất báo cáo tổng quan ra file Excel (.csv)"
+          title="Xuất báo cáo tổng quan ra file Excel (.xls)"
         >
           <Download size={16} className="text-emerald-600" />
           <span>Xuất báo cáo</span>

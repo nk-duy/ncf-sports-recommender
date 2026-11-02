@@ -1,7 +1,8 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Star, ChevronLeft, ChevronRight, Quote, CheckCircle2, ShoppingBag } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Quote, ShoppingBag, Star } from 'lucide-react';
 
 interface FeaturedReview {
   id: string;
@@ -16,13 +17,17 @@ interface FeaturedReview {
   timestamp: string;
 }
 
+const DEFAULT_AVATAR_URL =
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80';
+
 const FALLBACK_TESTIMONIALS: FeaturedReview[] = [
   {
     id: '1',
     user_name: 'Nguyễn Minh Tuấn',
-    avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    avatar_url: DEFAULT_AVATAR_URL,
     rating: 5,
-    comment: 'Sản phẩm chất lượng cực kỳ tốt! Mình đã mua vợt ở KADY và rất hài lòng. Giao hàng nhanh, đóng gói cẩn thận, đúng hàng chính hãng.',
+    comment:
+      'Sản phẩm chất lượng cực kỳ tốt! Mình đã mua vợt ở KADY và rất hài lòng. Giao hàng nhanh, đóng gói cẩn thận, đúng hàng chính hãng.',
     product_id: '',
     product_name: 'Vợt Pickleball Pro T700',
     brand: 'Selkirk',
@@ -33,7 +38,8 @@ const FALLBACK_TESTIMONIALS: FeaturedReview[] = [
     user_name: 'Trần Thị Bảo Châu',
     avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     rating: 5,
-    comment: 'KADY có đa dạng sản phẩm, giá tốt hơn nhiều chỗ khác mà vẫn đảm bảo chính hãng. Giày chạy rất êm chân, bám sân cực kỳ tốt!',
+    comment:
+      'KADY có đa dạng sản phẩm, giá tốt hơn nhiều chỗ khác mà vẫn đảm bảo chính hãng. Giày chạy rất êm chân, bám sân cực kỳ tốt!',
     product_id: '',
     product_name: 'Giày Thể Thao Đa Năng',
     brand: 'Yonex',
@@ -59,7 +65,6 @@ export default function Testimonials() {
   const [reviews, setReviews] = useState<FeaturedReview[]>(FALLBACK_TESTIMONIALS);
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('http://localhost:8000/api/v1/reviews/featured?limit=8')
@@ -67,32 +72,33 @@ export default function Testimonials() {
         if (!res.ok) throw new Error('Network error');
         return res.json();
       })
-      .then((data) => {
+      .then((data: FeaturedReview[]) => {
         if (Array.isArray(data) && data.length > 0) {
           setReviews(data);
         }
       })
       .catch((err) => {
         console.warn('Cannot fetch featured reviews, using fallback:', err);
-      })
-      .finally(() => setLoading(false));
+      });
   }, []);
 
-  const go = (dir: 1 | -1) => {
-    if (animating || reviews.length <= 1) return;
-    setAnimating(true);
-    setTimeout(() => {
-      setCurrent((prev) => (prev + dir + reviews.length) % reviews.length);
-      setAnimating(false);
-    }, 250);
-  };
+  const go = useCallback(
+    (dir: 1 | -1) => {
+      if (animating || reviews.length <= 1) return;
+      setAnimating(true);
+      setTimeout(() => {
+        setCurrent((prev) => (prev + dir + reviews.length) % reviews.length);
+        setAnimating(false);
+      }, 250);
+    },
+    [animating, reviews.length]
+  );
 
-  // Auto rotate
   useEffect(() => {
     if (reviews.length <= 1) return;
     const t = setInterval(() => go(1), 6000);
     return () => clearInterval(t);
-  }, [reviews.length]);
+  }, [reviews.length, go]);
 
   const t = reviews[current] || reviews[0];
 
@@ -127,7 +133,6 @@ export default function Testimonials() {
               animating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
             }`}
           >
-            {/* Quote badge */}
             <div className="absolute -top-5 left-8 sm:left-12 w-11 h-11 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
               <Quote size={20} className="text-white fill-white" />
             </div>
@@ -135,9 +140,13 @@ export default function Testimonials() {
             <div className="flex flex-col sm:flex-row gap-6 items-start pt-2">
               <div className="shrink-0 flex flex-col items-center">
                 <img
-                  src={t.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'}
+                  src={t.avatar_url || DEFAULT_AVATAR_URL}
                   alt={t.user_name}
                   className="w-16 h-16 rounded-2xl object-cover ring-4 ring-blue-50 shadow-md"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = DEFAULT_AVATAR_URL;
+                  }}
                 />
                 <Stars count={t.rating} />
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 mt-2 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -179,7 +188,6 @@ export default function Testimonials() {
             </div>
           </div>
 
-          {/* Controls */}
           {reviews.length > 1 && (
             <div className="flex items-center justify-center gap-4 mt-6">
               <button

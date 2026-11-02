@@ -2,10 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { 
-  Flame, Sparkles, Star, ArrowRight, TrendingUp, Check, 
-  ShoppingBag, Heart, Zap
-} from "lucide-react";
+import { ArrowRight, Flame, Sparkles, Star } from "lucide-react";
 import ProductCard from "@/modules/public/san-pham/components/ProductCard";
 
 interface ProductAPI {
@@ -70,9 +67,10 @@ export default function TrendingProducts() {
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchTabProducts = async () => {
-      if (productsCache[activeTab].length > 0) return;
+    if (productsCache[activeTab].length > 0) return;
 
+    let active = true;
+    const fetchTabProducts = async () => {
       setLoading(true);
       try {
         let endpoint = "http://localhost:8000/api/v1/products?limit=10";
@@ -85,9 +83,8 @@ export default function TrendingProducts() {
         }
 
         const res = await fetch(endpoint);
-        if (res.ok) {
+        if (res.ok && active) {
           let data: ProductAPI[] = await res.json();
-          // Fallback sort if server returned default
           if (activeTab === "toprated") {
             data = data.sort((a, b) => (b.rating || 0) - (a.rating || 0));
           } else if (activeTab === "newest") {
@@ -102,14 +99,16 @@ export default function TrendingProducts() {
       } catch (err) {
         console.error("Lỗi tải sản phẩm xu hướng:", err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchTabProducts();
+    return () => {
+      active = false;
+    };
   }, [activeTab, productsCache]);
 
-  const currentTabConfig = TABS.find((t) => t.id === activeTab) || TABS[0];
   const displayedProducts = productsCache[activeTab] || [];
 
   const formatPrice = (price: number) => {
@@ -118,24 +117,17 @@ export default function TrendingProducts() {
 
   return (
     <section className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-14 bg-slate-50 border-t border-slate-200/80">
-      {/* Header with Title and Tabs */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border ${currentTabConfig.badgeBg}`}>
-              {currentTabConfig.tag}
-            </span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-900">
-            BỘ SƯU TẬP XU HƯỚNG
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+            Sản phẩm bán chạy & Xu hướng
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-xl">
-            Khám phá các sản phẩm thể thao được săn đón nhất tuần qua từ trang phục thi đấu, giày chạy bộ đến dụng cụ cao cấp.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Những sản phẩm thể thao được mua nhiều nhất tại cửa hàng.
           </p>
         </div>
 
-        {/* Tab Controls */}
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-slate-200 shadow-sm self-start lg:self-auto overflow-x-auto">
+        <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-slate-200 shadow-sm self-start sm:self-auto overflow-x-auto">
           {TABS.map((tab) => {
             const isSelected = activeTab === tab.id;
             const TabIcon = tab.icon;
@@ -143,13 +135,13 @@ export default function TrendingProducts() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 scale-[1.02]"
+                    ? "bg-slate-900 text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                 }`}
               >
-                <TabIcon className={`w-4 h-4 ${isSelected ? "text-amber-400" : "text-slate-400"}`} />
+                <TabIcon className={`w-3.5 h-3.5 ${isSelected ? "text-amber-400" : "text-slate-400"}`} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -157,7 +149,6 @@ export default function TrendingProducts() {
         </div>
       </div>
 
-      {/* Product Grid: 8 items */}
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -176,12 +167,12 @@ export default function TrendingProducts() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {displayedProducts.map((p, index) => {
-            const displayCategory = p.category && p.category.length > 0 ? p.category[0] : (p.sport_type || "Thể Thao");
+            const displayCategory =
+              p.category && p.category.length > 0 ? p.category[0] : p.sport_type || "Thể Thao";
             const discountPct = p.discount_percent || 0;
             const discountedPrice = discountPct > 0 ? p.price * (1 - discountPct / 100) : p.price;
 
-            // Badges according to tab
-            let secondaryBadge = undefined;
+            let secondaryBadge: string | undefined;
             if (activeTab === "bestseller") {
               secondaryBadge = `#${index + 1} BÁN CHẠY`;
             } else if (activeTab === "newest") {
@@ -211,7 +202,6 @@ export default function TrendingProducts() {
         </div>
       )}
 
-      {/* Bottom CTA Link */}
       <div className="mt-10 pt-6 border-t border-slate-200 flex items-center justify-between">
         <span className="text-xs text-slate-500 font-medium hidden sm:inline-block">
           Cập nhật liên tục theo doanh số và lượt đánh giá từ khách hàng

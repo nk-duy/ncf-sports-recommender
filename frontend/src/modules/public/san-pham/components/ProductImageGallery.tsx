@@ -8,31 +8,42 @@ interface ProductImageGalleryProps {
   productName: string;
 }
 
+const DEFAULT_FALLBACK_IMG = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=800&q=80";
+
 export default function ProductImageGallery({
   mainImage,
   images = [],
   productName,
 }: ProductImageGalleryProps) {
-  // Chuẩn hóa danh sách ảnh (ít nhất 3-4 ảnh để làm thumbnail)
+  // Chuẩn hóa danh sách ảnh: Đảm bảo đúng 4 ô ảnh chi tiết
   const allImages = React.useMemo(() => {
-    const list = [mainImage, ...(images || [])].filter(Boolean);
-    // Nếu chỉ có 1 ảnh, tạo biến thể ảnh minh họa các góc nhìn
-    if (list.length === 1) {
-      return [
-        mainImage,
-        mainImage + '?angle=2',
-        mainImage + '?angle=3',
-        mainImage + '?angle=4',
-      ];
+    const list = (images && images.length > 0) ? [...images] : [];
+    
+    // Nếu mảng images đã có đủ 4 phần tử
+    if (list.length >= 4) {
+      return list.slice(0, 4);
     }
-    return Array.from(new Set(list));
+    
+    // Nếu chưa đủ 4 phần tử, lặp lại dựa trên mainImage với hậu tố view=1..4
+    const base = mainImage || DEFAULT_FALLBACK_IMG;
+    const sep = base.includes('?') ? '&' : '?';
+    const result = [...list];
+    for (let i = result.length + 1; i <= 4; i++) {
+      result.push(`${base}${sep}view=${i}`);
+    }
+    return result;
   }, [mainImage, images]);
 
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 0, y: 0, show: false });
 
-  const currentImage = allImages[selectedIdx] || mainImage;
+  const currentImage = allImages[selectedIdx] || mainImage || DEFAULT_FALLBACK_IMG;
+
+  const handleImgError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src = DEFAULT_FALLBACK_IMG;
+  };
 
   // Xử lý zoom khi rê chuột qua ảnh chính
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -47,20 +58,29 @@ export default function ProductImageGallery({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4">
-      {/* Khung ảnh chính với hiệu ứng Hover Zoom */}
+    <div className="w-full flex flex-col items-center">
+      {/* Khung ảnh chính vuông vức chuẩn E-Commerce */}
       <div
-        className="relative w-full aspect-square bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 flex items-center justify-center cursor-zoom-in group shadow-inner"
+        className="relative w-full aspect-square max-h-[400px] bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center cursor-zoom-in group shadow-xs hover:shadow-md transition-all mx-auto"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={() => setIsLightboxOpen(true)}
       >
+        {/* Badge góc trái trên: Chính hãng 100% */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1">
+          <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-[10px] tracking-wider uppercase px-2 py-0.5 rounded shadow-sm">
+            Chính hãng 100%
+          </span>
+        </div>
+
         <img
           src={currentImage}
           alt={`${productName} - Ảnh ${selectedIdx + 1}`}
-          className={`w-full h-full object-contain p-4 transition-transform duration-300 ${
-            zoomPos.show ? 'scale-110' : 'scale-100'
+          className={`w-full h-full object-contain p-2.5 transition-transform duration-300 ease-out select-none hover:scale-105 ${
+            zoomPos.show ? 'scale-110 drop-shadow-md' : 'scale-100'
           }`}
+          loading="eager"
+          onError={handleImgError}
         />
 
         {/* Nút phóng to Lightbox ở góc */}
@@ -69,36 +89,40 @@ export default function ProductImageGallery({
             e.stopPropagation();
             setIsLightboxOpen(true);
           }}
-          className="absolute top-3 right-3 bg-white/90 backdrop-blur-md hover:bg-white text-gray-700 p-2.5 rounded-full shadow-md transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10"
-          title="Phóng to ảnh"
+          className="absolute top-2.5 right-2.5 bg-white/90 backdrop-blur-md hover:bg-white text-slate-700 p-2 rounded-full shadow-md transition-all hover:scale-110 opacity-0 group-hover:opacity-100 z-10 border border-slate-100 cursor-pointer"
+          title="Phóng to ảnh (Toàn màn hình)"
+          type="button"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
           </svg>
         </button>
 
-        {/* Badge chuyển góc nhìn */}
-        <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs px-2.5 py-1 rounded-full pointer-events-none font-medium">
+        {/* Badge chuyển góc nhìn / tổng số ảnh */}
+        <div className="absolute bottom-2.5 left-2.5 bg-slate-900/75 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-full pointer-events-none font-medium shadow-xs tracking-wider">
           {selectedIdx + 1} / {allImages.length}
         </div>
       </div>
 
-      {/* Danh sách Thumbnails */}
-      <div className="grid grid-cols-4 gap-3">
+      {/* Danh sách 4 ảnh nhỏ (thumbnails) */}
+      <div className="flex justify-center gap-2.5 mt-3 w-full">
         {allImages.map((img, idx) => (
           <button
             key={idx}
+            type="button"
             onClick={() => setSelectedIdx(idx)}
-            className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all p-1 bg-gray-50 hover:opacity-90 ${
+            className={`relative w-16 h-16 rounded-lg overflow-hidden border transition-all p-0.5 bg-white flex-shrink-0 cursor-pointer ${
               selectedIdx === idx
-                ? 'border-blue-600 ring-2 ring-blue-600/20 scale-95 shadow-sm'
-                : 'border-gray-200 opacity-70 hover:border-gray-300'
+                ? 'ring-2 ring-blue-600 border-transparent shadow-sm scale-100'
+                : 'border-slate-200/90 opacity-80 hover:opacity-100 hover:border-slate-300'
             }`}
           >
             <img
               src={img}
               alt={`Thumbnail ${idx + 1}`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover rounded-md select-none"
+              loading="lazy"
+              onError={handleImgError}
             />
           </button>
         ))}
@@ -133,6 +157,7 @@ export default function ProductImageGallery({
               src={currentImage}
               alt={productName}
               className="max-h-[75vh] w-auto object-contain rounded-lg shadow-2xl"
+              onError={handleImgError}
             />
             <p className="text-white/80 text-sm mt-4 font-medium">
               {productName} ({selectedIdx + 1}/{allImages.length})

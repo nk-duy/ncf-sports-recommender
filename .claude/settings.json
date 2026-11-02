@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/partial-claude-settings.json",
+  "project": {
+    "name": "ncf-sports-recommender",
+    "description": "KADY Sports Store & Neural Collaborative Filtering Recommendation System",
+    "version": "1.0.0"
+  },
+  "environment": {
+    "preferred_shell": "powershell",
+    "python_path": "backend/venv/Scripts/python.exe",
+    "backend_url": "http://localhost:8000",
+    "frontend_url": "http://localhost:3000"
+  },
+  "permissions": {
+    "allow_file_read": [
+      "frontend/**/*",
+      "backend/**/*",
+      "docs/**/*",
+      ".claude/**/*",
+      "CLAUDE.md",
+      "AGENTS.md"
+    ],
+    "deny_file_write": [
+      "backend/venv/**/*",
+      "frontend/node_modules/**/*",
+      "frontend/.next/**/*",
+      ".git/**/*"
+    ]
+  },
+  "commands": {
+    "analyze": ".claude/commands/analyze.md",
+    "plan": ".claude/commands/plan.md",
+    "review": ".claude/commands/review.md",
+    "document": ".claude/commands/document.md"
+  },
+  "hooks": {
+    "pre_implementation": [
+      "python .claude/hooks/verify-links.py"
+    ]
+  }
+}

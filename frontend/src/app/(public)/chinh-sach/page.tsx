@@ -1,4 +1,3 @@
-import React from 'react';
 import PoliciesPageContent from '@/modules/public/chinh-sach/components/PoliciesPageContent';
 
 export const metadata = {

@@ -8,6 +8,7 @@ import ProductColorSelector, { ColorOption } from "./form/ProductColorSelector";
 import ProductSizeSelector from "./form/ProductSizeSelector";
 import ProductImageUploader from "./form/ProductImageUploader";
 import ProductVariantMatrix, { ProductVariantItem } from "./form/ProductVariantMatrix";
+import { getAuthHeaders } from "@/shared/lib/authHeader";
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     name: "",
     price: 0,
     image_url: "",
-    stock: 100,
+    stock: 0,
     rating: 0,
     reviews_count: 0,
     category: [] as string[],
@@ -55,6 +56,9 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     images: [] as string[],
   });
 
+  const [selectedGenders, setSelectedGenders] = useState<string[]>(['Unisex']);
+  const [displayPrice, setDisplayPrice] = useState<string>('0');
+  const [isPriceFocused, setIsPriceFocused] = useState<boolean>(false);
   const [availableBrands, setAvailableBrands] = useState<string[]>(DEFAULT_BRANDS);
   const [availableColors, setAvailableColors] = useState<ColorOption[]>(DEFAULT_COLORS);
   const [availableShoeSizes, setAvailableShoeSizes] = useState<string[]>([]);
@@ -114,16 +118,26 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
 
   useEffect(() => {
     if (editingProduct) {
+      const rawGender = editingProduct.gender || "Unisex";
+      const parsedGenders = typeof rawGender === 'string'
+        ? rawGender.split(',').map(s => s.trim()).filter(Boolean)
+        : (Array.isArray(rawGender) ? rawGender : ['Unisex']);
+
+      setSelectedGenders(parsedGenders.length > 0 ? parsedGenders : ['Unisex']);
+
+      const initPrice = editingProduct.price || 0;
+      setDisplayPrice(initPrice > 0 ? initPrice.toLocaleString('vi-VN') : '0');
+
       setFormData({
         product_id: editingProduct.product_id || "",
         name: editingProduct.name || "",
-        price: editingProduct.price || 0,
+        price: initPrice,
         image_url: editingProduct.image_url || "",
         stock: editingProduct.stock !== undefined ? editingProduct.stock : 100,
         rating: editingProduct.rating !== undefined ? editingProduct.rating : 0,
         reviews_count: editingProduct.reviews_count !== undefined ? editingProduct.reviews_count : 0,
         brand: editingProduct.brand || "",
-        gender: editingProduct.gender || "Unisex",
+        gender: parsedGenders.join(', ') || "Unisex",
         product_type: editingProduct.product_type || "",
         sport_type: editingProduct.sport_type || "",
         category: Array.isArray(editingProduct.category) ? editingProduct.category : (editingProduct.category ? [editingProduct.category] : []),
@@ -140,15 +154,18 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
       else if (editingProduct.product_type === 'Thiết bị') setActiveSizeCategory('spec');
       else setActiveSizeCategory('clothing');
     } else {
+      setSelectedGenders(['Unisex']);
+      setDisplayPrice('0');
+      const randomSku = `KADY-${Math.floor(100000 + Math.random() * 900000)}`;
       setFormData({
-        product_id: "",
+        product_id: randomSku,
         name: "",
         price: 0,
         image_url: "",
-        stock: 100,
+        stock: 0,
         rating: 0,
         reviews_count: 0,
-        brand: availableBrands[0] || "Nike",
+        brand: "",
         gender: "Unisex",
         product_type: "Quần áo",
         sport_type: "Đá bóng",
@@ -182,6 +199,21 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     }));
   };
 
+  const toggleGender = (g: string) => {
+    setSelectedGenders(prev => {
+      let next: string[];
+      if (prev.includes(g)) {
+        next = prev.filter(item => item !== g);
+        // Không để mảng rỗng, mặc định còn Unisex
+        if (next.length === 0) next = ['Unisex'];
+      } else {
+        next = [...prev, g];
+      }
+      setFormData(f => ({ ...f, gender: next.join(', ') }));
+      return next;
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -194,14 +226,19 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
 
       const method = editingProduct ? 'PUT' : 'POST';
 
+      const finalGender = selectedGenders.length > 0 ? selectedGenders.join(', ') : (formData.gender || 'Unisex');
+      const finalBrand = formData.brand && formData.brand.trim() !== '' ? formData.brand.trim() : null;
+
       const payload = {
         ...formData,
+        brand: finalBrand,
+        gender: finalGender,
         image_url: formData.images.length > 0 ? formData.images[0] : formData.image_url,
       };
 
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload)
       });
 
@@ -256,14 +293,14 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
             {/* Row 1: ID & Name */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Mã Sản phẩm (ASIN)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Mã định danh (SKU)</label>
                 <input
                   type="text"
                   disabled={!!editingProduct}
                   value={formData.product_id}
                   onChange={e => setFormData({ ...formData, product_id: e.target.value })}
                   className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm disabled:bg-gray-100 font-mono"
-                  placeholder="Tự sinh nếu để trống"
+                  placeholder="VD: KADY-SP-001"
                 />
               </div>
               <div className="md:col-span-2">
@@ -279,20 +316,28 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
               </div>
             </div>
 
-            {/* Row 2: Brand & Gender */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-blue-50/40 p-4 rounded-xl border border-blue-100">
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-                  <Award size={16} className="text-blue-600" />
-                  Thương hiệu (Brand)
-                </label>
-                <div className="flex gap-2">
+            {/* Row 2: Thương hiệu & Đối tượng */}
+            <div className="flex flex-col gap-4">
+              {/* Block Thương hiệu */}
+              <div className="bg-blue-50/40 p-4 rounded-xl border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    <Award size={16} className="text-blue-600" />
+                    Thương hiệu
+                  </label>
+                  {!formData.brand && (
+                    <span className="text-[11px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
+                      Không có thương hiệu
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap sm:flex-nowrap gap-2">
                   <select
                     value={formData.brand}
                     onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                    className="flex-1 px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white font-medium focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                    className="flex-1 min-w-[200px] px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white font-medium focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
                   >
-                    <option value="">-- Chọn thương hiệu --</option>
+                    <option value="">-- Không có thương hiệu --</option>
                     {availableBrands.map(b => (
                       <option key={b} value={b}>{b}</option>
                     ))}
@@ -302,65 +347,130 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
                     placeholder="Hoặc nhập khác..."
                     value={formData.brand}
                     onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                    className="w-36 px-3 py-2 border border-gray-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full sm:w-44 px-3 py-2 border border-gray-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 outline-none"
                   />
+                  {formData.brand && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, brand: "" })}
+                      className="px-3 py-2 text-xs font-semibold text-gray-500 hover:text-red-600 bg-gray-100 hover:bg-red-50 rounded-xl transition border border-gray-200 cursor-pointer shrink-0"
+                      title="Xóa thương hiệu"
+                    >
+                      Bỏ chọn
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
-                  <Tag size={16} className="text-blue-600" />
-                  Đối tượng (Giới tính)
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['Nam', 'Nữ', 'Unisex', 'Trẻ em'].map(g => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, gender: g })}
-                      className={`py-2 text-xs font-bold rounded-xl border transition-all ${formData.gender === g
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                        }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
+              {/* Block Đối tượng */}
+              <div className="bg-blue-50/40 p-4 rounded-xl border border-blue-100">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                    <Tag size={16} className="text-blue-600" />
+                    Đối tượng
+                  </label>
+                  <span className="text-xs font-bold text-blue-600">
+                    Đã chọn: {selectedGenders.join(', ')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {['Nam', 'Nữ', 'Unisex', 'Trẻ em'].map(g => {
+                    const isSelected = selectedGenders.includes(g);
+                    return (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => toggleGender(g)}
+                        className={`py-2.5 px-3 text-xs font-bold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${isSelected
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-500/20'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                          }`}
+                      >
+                        {isSelected && <span>✓</span>}
+                        <span>{g}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
-            {/* Row 3: Price & Stock */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Row 3: Price & Stock (Chia đôi cân bằng 50/50, ngang hàng, không chú thích) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Giá bán (VNĐ) *</label>
-                <input
-                  required
-                  type="number"
-                  value={formData.price}
-                  onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none"
-                />
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Giá bán *</label>
+                <div className="relative">
+                  <input
+                    required
+                    type="text"
+                    inputMode="numeric"
+                    value={
+                      isPriceFocused
+                        ? (formData.price === 0 ? '' : String(formData.price))
+                        : (formData.price > 0 ? formData.price.toLocaleString('vi-VN') : '0')
+                    }
+                    onFocus={(e) => {
+                      setIsPriceFocused(true);
+                      e.target.select();
+                    }}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      const num = raw === '' ? 0 : parseInt(raw, 10);
+                      setFormData(prev => ({ ...prev, price: num }));
+                      setDisplayPrice(num > 0 ? num.toLocaleString('vi-VN') : '0');
+                    }}
+                    onBlur={() => {
+                      setIsPriceFocused(false);
+                      setDisplayPrice(formData.price > 0 ? formData.price.toLocaleString('vi-VN') : '0');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    placeholder="0"
+                    className="w-full px-3.5 py-2.5 pr-10 border border-gray-300 rounded-xl text-sm font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400 pointer-events-none">
+                    VNĐ
+                  </span>
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center justify-between">
-                  <span>Số lượng tồn kho *</span>
-                  {formData.variants.length > 0 && (
-                    <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                      Tự tính từ Ma trận phân loại
-                    </span>
-                  )}
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Số lượng tồn kho *
                 </label>
                 <input
                   required
                   type="number"
-                  value={formData.stock}
-                  readOnly={formData.variants.length > 0}
-                  onChange={e => setFormData({ ...formData, stock: Number(e.target.value) })}
-                  className={`w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-semibold outline-none transition-all ${formData.variants.length > 0
-                      ? 'bg-gray-100 text-blue-700 font-bold cursor-not-allowed border-blue-200'
-                      : 'focus:ring-2 focus:ring-blue-500'
-                    }`}
+                  min={0}
+                  placeholder="0"
+                  value={formData.stock === 0 ? '' : formData.stock}
+                  onFocus={e => e.target.select()}
+                  onChange={e => {
+                    const rawVal = e.target.value === '' ? 0 : Number(e.target.value);
+                    const newTotal = Math.max(0, rawVal);
+
+                    if (formData.variants.length > 0) {
+                      const count = formData.variants.length;
+                      const base = Math.floor(newTotal / count);
+                      let rem = newTotal % count;
+                      const updatedVariants = formData.variants.map(v => {
+                        const extra = rem > 0 ? 1 : 0;
+                        if (rem > 0) rem--;
+                        return { ...v, stock: base + extra };
+                      });
+                      setFormData(prev => ({
+                        ...prev,
+                        stock: newTotal,
+                        variants: updatedVariants,
+                      }));
+                    } else {
+                      setFormData(prev => ({ ...prev, stock: newTotal }));
+                    }
+                  }}
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-bold text-blue-600 focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
             </div>
@@ -411,12 +521,13 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
               onToggleSize={toggleSize}
             />
 
-            {/* Row 6.5: Ma trận Tồn kho theo Biến thể (Màu x Size) */}
+            {/* Row 6.5: Ma trận Tồn kho theo Biến thể */}
             <ProductVariantMatrix
               colors={formData.colors}
               sizes={formData.sizes}
               variants={formData.variants}
               productId={formData.product_id}
+              targetTotalStock={formData.stock}
               onChangeVariants={(newVariants) => {
                 const totalStock = newVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
                 setFormData(prev => ({

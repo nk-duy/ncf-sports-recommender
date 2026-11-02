@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RefreshCcw } from "lucide-react";
 import { notifications } from "@mantine/notifications";
-
+import { getAuthHeaders } from "@/shared/lib/authHeader";
+import { BannerItem } from "../types";
 import BannerForm from "./BannerForm";
 import BannerList from "./BannerList";
 
 export default function BannerManagement() {
-  const [banners, setBanners] = useState<any[]>([]);
+  const [banners, setBanners] = useState<BannerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,46 +18,61 @@ export default function BannerManagement() {
   const [newSubtitle, setNewSubtitle] = useState("");
   const [newBadge, setNewBadge] = useState("");
   const [newLink, setNewLink] = useState("");
-  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload');
+  const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
   const [newImageFile, setNewImageFile] = useState<File | null>(null);
   const [newImageUrl, setNewImageUrl] = useState("");
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
-  useEffect(() => {
-    fetchBanners();
-  }, []);
-
-  const fetchBanners = async () => {
+  const fetchBanners = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/banners`);
       if (res.ok) {
-        const data = await res.json();
-        setBanners(Array.isArray(data) ? data : []);
+        const data: unknown = await res.json();
+        setBanners(Array.isArray(data) ? (data as BannerItem[]) : []);
       }
-    } catch (err) {
-      console.error("Error loading banners:", err);
-      notifications.show({ title: "Lỗi", message: "Không thể tải danh sách banner", color: "red" });
+    } catch {
+      notifications.show({
+        title: "Lỗi",
+        message: "Không thể tải danh sách banner",
+        color: "red",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) {
-      notifications.show({ title: "Thiếu thông tin", message: "Vui lòng nhập tiêu đề banner", color: "amber" });
+      notifications.show({
+        title: "Thiếu thông tin",
+        message: "Vui lòng nhập tiêu đề banner",
+        color: "amber",
+      });
       return;
     }
 
-    if (imageMode === 'upload' && !newImageFile) {
-      notifications.show({ title: "Thiếu ảnh", message: "Vui lòng chọn ảnh để tải lên", color: "amber" });
+    if (imageMode === "upload" && !newImageFile) {
+      notifications.show({
+        title: "Thiếu ảnh",
+        message: "Vui lòng chọn ảnh để tải lên",
+        color: "amber",
+      });
       return;
     }
 
-    if (imageMode === 'url' && !newImageUrl.trim()) {
-      notifications.show({ title: "Thiếu link ảnh", message: "Vui lòng nhập đường dẫn URL hình ảnh", color: "amber" });
+    if (imageMode === "url" && !newImageUrl.trim()) {
+      notifications.show({
+        title: "Thiếu link ảnh",
+        message: "Vui lòng nhập đường dẫn URL hình ảnh",
+        color: "amber",
+      });
       return;
     }
 
@@ -64,7 +80,7 @@ export default function BannerManagement() {
     try {
       let finalImageUrl = newImageUrl.trim();
 
-      if (imageMode === 'upload' && newImageFile) {
+      if (imageMode === "upload" && newImageFile) {
         const formData = new FormData();
         formData.append("file", newImageFile);
 
@@ -74,7 +90,7 @@ export default function BannerManagement() {
         });
 
         if (!uploadRes.ok) throw new Error("Upload ảnh thất bại");
-        const uploadData = await uploadRes.json();
+        const uploadData: { url: string } = await uploadRes.json();
         finalImageUrl = uploadData.url;
       }
 
@@ -90,12 +106,16 @@ export default function BannerManagement() {
 
       const res = await fetch(`${API_URL}/banners/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(bannerPayload),
       });
 
       if (res.ok) {
-        notifications.show({ title: "Thành công", message: "Đã thêm banner mới thành công!", color: "green" });
+        notifications.show({
+          title: "Thành công",
+          message: "Đã thêm banner mới thành công!",
+          color: "green",
+        });
         setNewTitle("");
         setNewSubtitle("");
         setNewBadge("");
@@ -104,54 +124,80 @@ export default function BannerManagement() {
         setNewImageUrl("");
         fetchBanners();
       } else {
-        const errData = await res.json().catch(() => null);
-        notifications.show({ title: "Lỗi", message: errData?.detail || "Không thể tạo banner", color: "red" });
+        const errData: { detail?: string } | null = await res.json().catch(() => null);
+        notifications.show({
+          title: "Lỗi",
+          message: errData?.detail || "Không thể tạo banner",
+          color: "red",
+        });
       }
-    } catch (err: any) {
-      console.error("Lỗi khi tạo banner:", err);
-      notifications.show({ title: "Lỗi", message: err?.message || "Có lỗi xảy ra khi tạo banner", color: "red" });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Có lỗi xảy ra khi tạo banner";
+      notifications.show({ title: "Lỗi", message, color: "red" });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleToggleStatus = async (banner: any) => {
+  const handleToggleStatus = async (banner: BannerItem) => {
     try {
       const newStatus = !banner.is_active;
       const res = await fetch(`${API_URL}/banners/${banner._id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ is_active: newStatus }),
       });
 
       if (res.ok) {
-        setBanners(prev => prev.map(b => b._id === banner._id ? { ...b, is_active: newStatus } : b));
+        setBanners((prev) =>
+          prev.map((b) =>
+            b._id === banner._id ? { ...b, is_active: newStatus } : b
+          )
+        );
         notifications.show({
           title: "Đã cập nhật",
-          message: newStatus ? "Đã bật hiển thị banner trên trang chủ" : "Đã tạm ẩn banner khỏi trang chủ",
+          message: newStatus
+            ? "Đã bật hiển thị banner trên trang chủ"
+            : "Đã tạm ẩn banner khỏi trang chủ",
           color: "green",
         });
       }
     } catch {
-      notifications.show({ title: "Lỗi", message: "Không thể đổi trạng thái", color: "red" });
+      notifications.show({
+        title: "Lỗi",
+        message: "Không thể đổi trạng thái",
+        color: "red",
+      });
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Bạn có chắc chắn muốn xóa banner này vĩnh viễn?")) return;
     try {
-      const res = await fetch(`${API_URL}/banners/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/banners/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
       if (res.ok) {
-        notifications.show({ title: "Thành công", message: "Đã xóa banner khỏi hệ thống", color: "green" });
-        setBanners(prev => prev.filter(b => b._id !== id));
+        notifications.show({
+          title: "Thành công",
+          message: "Đã xóa banner khỏi hệ thống",
+          color: "green",
+        });
+        setBanners((prev) => prev.filter((b) => b._id !== id));
       }
     } catch {
-      notifications.show({ title: "Lỗi", message: "Có lỗi khi xóa banner", color: "red" });
+      notifications.show({
+        title: "Lỗi",
+        message: "Có lỗi khi xóa banner",
+        color: "red",
+      });
     }
   };
 
-  const handleMove = async (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  const handleMove = async (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= banners.length) return;
 
     const updated = [...banners];
@@ -164,33 +210,45 @@ export default function BannerManagement() {
     try {
       await fetch(`${API_URL}/banners/reorder`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reordered.map(b => ({ id: b._id, position: b.position }))),
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(
+          reordered.map((b) => ({ id: b._id, position: b.position }))
+        ),
       });
-      notifications.show({ title: "Thành công", message: "Đã cập nhật thứ tự hiển thị", color: "green" });
+      notifications.show({
+        title: "Thành công",
+        message: "Đã cập nhật thứ tự hiển thị",
+        color: "green",
+      });
     } catch {
-      notifications.show({ title: "Lỗi", message: "Không thể lưu thứ tự mới", color: "red" });
+      notifications.show({
+        title: "Lỗi",
+        message: "Không thể lưu thứ tự mới",
+        color: "red",
+      });
     }
   };
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý Banner Trang chủ</h1>
-          <p className="text-xs text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Quản lý Banner Trang chủ
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
             Tùy biến hình ảnh quảng bá, thứ tự chạy slider và liên kết chiến dịch sự kiện
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="h-10 px-3.5 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 flex items-center text-sm font-semibold">
-            {banners.filter(b => b.is_active).length} Đang hoạt động / {banners.length} Tổng số
+          <div className="h-10 px-3.5 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 flex items-center text-sm font-semibold tabular-nums">
+            {banners.filter((b) => b.is_active).length} Đang hoạt động / {banners.length} Tổng số
           </div>
-          <button 
-            onClick={fetchBanners} 
-            className="h-10 px-3.5 text-gray-700 hover:text-gray-900 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 rounded-xl shadow-2xs inline-flex items-center gap-2 text-sm font-semibold transition"
+          <button
+            onClick={fetchBanners}
+            className="h-10 px-3.5 text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl shadow-2xs inline-flex items-center gap-2 text-sm font-semibold transition-colors duration-150"
             title="Làm mới danh sách"
+            aria-label="Làm mới danh sách"
           >
             <RefreshCcw size={15} />
             <span>Làm mới</span>
@@ -199,7 +257,7 @@ export default function BannerManagement() {
       </div>
 
       {/* 1. Form Thêm Banner Mới */}
-      <BannerForm 
+      <BannerForm
         newTitle={newTitle}
         setNewTitle={setNewTitle}
         newSubtitle={newSubtitle}
@@ -219,7 +277,7 @@ export default function BannerManagement() {
       />
 
       {/* 2. Danh Sách Banner & Điều Khiển */}
-      <BannerList 
+      <BannerList
         banners={banners}
         loading={loading}
         onToggleStatus={handleToggleStatus}

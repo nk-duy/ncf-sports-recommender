@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { notifications } from "@mantine/notifications";
-import { CartItem } from "@/shared/store/cartStore";
+import { useState } from 'react';
+import { notifications } from '@mantine/notifications';
+import type { CartItem } from '@/shared/store/cartStore';
 
 export function QuantityControl({
   item,
@@ -14,29 +14,30 @@ export function QuantityControl({
   onRequestRemove: () => void;
 }) {
   const max = item.stock || 100;
-  const [draft, setDraft] = useState(String(item.quantity));
-
-  useEffect(() => {
-    setDraft(String(item.quantity));
-  }, [item.quantity]);
+  const [editingDraft, setEditingDraft] = useState<string | null>(null);
+  const displayValue = editingDraft ?? String(item.quantity);
 
   const commit = () => {
-    const trimmed = draft.trim();
+    if (editingDraft === null) return;
+    const trimmed = editingDraft.trim();
+    setEditingDraft(null);
+
     if (trimmed === '0') {
-      setDraft(String(item.quantity));
       onRequestRemove();
       return;
     }
     let n = parseInt(trimmed, 10);
-    if (isNaN(n) || n < 1) {
-      setDraft(String(item.quantity));
+    if (Number.isNaN(n) || n < 1) {
       return;
     }
     if (n > max) {
-      notifications.show({ title: 'Vượt quá tồn kho', message: `Sản phẩm này chỉ còn ${max} cái trong kho`, color: 'red' });
+      notifications.show({
+        title: 'Vượt quá tồn kho',
+        message: `Sản phẩm này chỉ còn ${max} cái trong kho`,
+        color: 'red',
+      });
       n = max;
     }
-    setDraft(String(n));
     if (n !== item.quantity) onChange(n);
   };
 
@@ -56,8 +57,8 @@ export function QuantityControl({
         inputMode="numeric"
         disabled={disabled}
         className="w-12 h-8 text-center text-sm font-medium focus:outline-none focus:bg-blue-50 disabled:bg-gray-50"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ''))}
+        value={displayValue}
+        onChange={(e) => setEditingDraft(e.target.value.replace(/[^0-9]/g, ''))}
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -68,7 +69,11 @@ export function QuantityControl({
         disabled={disabled}
         onClick={() => {
           if (item.quantity >= max) {
-            notifications.show({ title: 'Vượt quá tồn kho', message: `Sản phẩm này chỉ còn ${max} cái trong kho`, color: 'red' });
+            notifications.show({
+              title: 'Vượt quá tồn kho',
+              message: `Sản phẩm này chỉ còn ${max} cái trong kho`,
+              color: 'red',
+            });
           } else {
             onChange(item.quantity + 1);
           }

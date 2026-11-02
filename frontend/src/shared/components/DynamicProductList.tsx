@@ -1,5 +1,6 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import ProductCard from '@/modules/public/san-pham/components/ProductCard';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
@@ -7,6 +8,15 @@ import Pagination from '@/shared/components/Pagination';
 
 interface DynamicProductListProps {
   initialCategory?: string;
+}
+
+interface CatalogProductItem {
+  product_id: string;
+  name: string;
+  price: number;
+  discount_percent?: number;
+  category?: string[];
+  image_url: string;
 }
 
 export default function DynamicProductList({ initialCategory }: DynamicProductListProps) {
@@ -26,7 +36,7 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
   const gender = searchParams.get('gender');
   const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
 
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<CatalogProductItem[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
@@ -48,16 +58,16 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
         if (sizes) url += `&sizes=${encodeURIComponent(sizes)}`;
         if (colors) url += `&colors=${encodeURIComponent(colors)}`;
         if (gender) url += `&gender=${encodeURIComponent(gender)}`;
-        
+
         const res = await fetch(url);
         if (res.ok) {
           const totalHeader = res.headers.get('x-total-count') || res.headers.get('X-Total-Count');
-          const data = await res.json();
+          const data: CatalogProductItem[] = await res.json();
           setProducts(data);
           setTotalCount(totalHeader ? parseInt(totalHeader, 10) : data.length);
         }
       } catch (error) {
-        console.error("Failed to fetch products:", error);
+        console.error('Failed to fetch products:', error);
       } finally {
         setLoading(false);
       }
@@ -103,10 +113,10 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
       <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white rounded-2xl border border-gray-100 p-4 shadow-sm mb-6 gap-4">
         <div className="text-sm text-gray-600">
           Hiển thị <span className="font-bold text-gray-900">{startIdx} - {endIdx}</span> trên tổng số <span className="font-bold text-blue-600">{totalCount}</span> sản phẩm
-          {search && <span> cho từ khóa "<span className="font-bold text-blue-600">{search}</span>"</span>}
-          {sport_type && !search && <span> môn "<span className="font-bold text-blue-600">{sport_type}</span>"</span>}
-          {product_type && !search && <span> loại "<span className="font-bold text-blue-600">{product_type}</span>"</span>}
-          {category && !search && <span> trong danh mục "<span className="font-bold text-blue-600">{category}</span>"</span>}
+          {search && <span> cho từ khóa &quot;<span className="font-bold text-blue-600">{search}</span>&quot;</span>}
+          {sport_type && !search && <span> môn &quot;<span className="font-bold text-blue-600">{sport_type.split(',').join(', ')}</span>&quot;</span>}
+          {product_type && !search && <span> loại &quot;<span className="font-bold text-blue-600">{product_type.split(',').join(', ')}</span>&quot;</span>}
+          {category && !search && <span> trong danh mục &quot;<span className="font-bold text-blue-600">{category}</span>&quot;</span>}
         </div>
       </div>
 
@@ -114,11 +124,11 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
         {products.map((p, idx) => {
           const discountPct = p.discount_percent || 0;
           const discountedPrice = discountPct > 0 ? p.price * (1 - discountPct / 100) : p.price;
-          const displayCategory = p.category && p.category.length > 0 ? p.category[p.category.length - 1] : "SẢN PHẨM THỂ THAO";
-          
+          const displayCategory = p.category && p.category.length > 0 ? p.category[p.category.length - 1] : 'SẢN PHẨM THỂ THAO';
+
           return (
-            <ProductCard 
-              key={`${p.product_id}-${idx}`} 
+            <ProductCard
+              key={`${p.product_id}-${idx}`}
               product={{
                 id: p.product_id,
                 name: p.name,
@@ -128,7 +138,7 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
                 discountLabel: discountPct > 0 ? `-${discountPct}%` : undefined,
                 category: displayCategory,
                 discountPercent: discountPct > 0 ? discountPct : undefined,
-              }} 
+              }}
             />
           );
         })}

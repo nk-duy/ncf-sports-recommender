@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Truck, X, Sparkles, Check, ExternalLink } from 'lucide-react';
+import { notifications } from '@mantine/notifications';
+import type { OrderItem } from '../types';
 
 interface ShippingModalProps {
-  order: any | null;
+  order: OrderItem | null;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (orderId: string, carrier: string, trackingCode: string) => Promise<void>;
@@ -18,37 +20,65 @@ const CARRIERS = [
   { id: 'VNPOST', name: 'VNPost (Bưu Điện)', prefix: 'VN', trackUrl: 'http://www.vnpost.vn/' },
 ];
 
-export default function ShippingModal({
+function resolveInitialCarrier(order: OrderItem, customerShippingMethod: string): string {
+  if (order.carrier) return order.carrier;
+  const method = (customerShippingMethod || '').toLowerCase();
+  if (method.includes('tiết kiệm') || method.includes('ghtk')) return 'GHTK';
+  if (method.includes('viettel')) return 'VIETTEL';
+  if (method.includes('vnpost') || method.includes('bưu điện') || method.includes('tiêu chuẩn')) {
+    return 'VNPOST';
+  }
+  if (method.includes('j&t')) return 'J&T';
+  return 'GHN';
+}
+
+function buildDefaultTrackingCode(order: OrderItem, carrierId: string): string {
+  if (order.tracking_code) return order.tracking_code;
+  const selectedObj = CARRIERS.find((c) => c.id === carrierId);
+  const prefix = selectedObj ? selectedObj.prefix : 'GHN';
+  const cleanId = (order._id || '')
+    .substring(Math.max(0, (order._id || '').length - 6))
+    .toUpperCase();
+  let hash = 0;
+  for (let i = 0; i < cleanId.length; i++) {
+    hash = (hash * 31 + cleanId.charCodeAt(i)) % 9000;
+  }
+  const suffix = 1000 + Math.abs(hash);
+  return `${prefix}${cleanId}${suffix}`;
+}
+
+function ShippingModalInner({
   order,
-  isOpen,
   onClose,
   onConfirm,
-}: ShippingModalProps) {
-  const [carrier, setCarrier] = useState<string>('GHN');
-  const [trackingCode, setTrackingCode] = useState<string>('');
+}: {
+  order: OrderItem;
+  onClose: () => void;
+  onConfirm: (orderId: string, carrier: string, trackingCode: string) => Promise<void>;
+}) {
+  const customerShippingMethod =
+    order.shipping_method ||
+    (order.shipping_fee === 60000
+      ? 'Hỏa Tốc 24H'
+      : order.shipping_fee === 35000
+        ? 'Giao Hàng Nhanh'
+        : 'VNExpress Tiêu chuẩn');
+
+  const [carrier, setCarrier] = useState<string>(() =>
+    resolveInitialCarrier(order, customerShippingMethod)
+  );
+  const [trackingCode, setTrackingCode] = useState<string>(() =>
+    buildDefaultTrackingCode(order, resolveInitialCarrier(order, customerShippingMethod))
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (order) {
-      setCarrier(order.carrier || 'GHN');
-      if (order.tracking_code) {
-        setTrackingCode(order.tracking_code);
-      } else {
-        // Auto-generate realistic tracking code based on order ID
-        const cleanId = (order._id || '').substring(Math.max(0, (order._id || '').length - 6)).toUpperCase();
-        const rand = Math.floor(1000 + Math.random() * 9000);
-        setTrackingCode(`GHN${cleanId}${rand}`);
-      }
-    }
-  }, [order, isOpen]);
-
-  if (!isOpen || !order) return null;
 
   const handleSelectCarrier = (selectedId: string) => {
     setCarrier(selectedId);
-    const selectedObj = CARRIERS.find(c => c.id === selectedId);
+    const selectedObj = CARRIERS.find((c) => c.id === selectedId);
     const prefix = selectedObj ? selectedObj.prefix : 'VN';
-    const cleanId = (order._id || '').substring(Math.max(0, (order._id || '').length - 6)).toUpperCase();
+    const cleanId = (order._id || '')
+      .substring(Math.max(0, (order._id || '').length - 6))
+      .toUpperCase();
     const rand = Math.floor(1000 + Math.random() * 9000);
     setTrackingCode(`${prefix}${cleanId}${rand}`);
   };
@@ -56,7 +86,11 @@ export default function ShippingModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!trackingCode.trim()) {
-      alert('Vui lòng nhập hoặc tạo mã vận đơn');
+      notifications.show({
+        title: 'Chưa có mã vận đơn',
+        message: 'Vui lòng nhập mã hoặc bấm "Tạo mã tự động" trước khi tạo vận đơn!',
+        color: 'orange',
+      });
       return;
     }
     setIsSubmitting(true);
@@ -68,12 +102,11 @@ export default function ShippingModal({
     }
   };
 
-  const selectedCarrierObj = CARRIERS.find(c => c.id === carrier);
+  const selectedCarrierObj = CARRIERS.find((c) => c.id === carrier);
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
-        
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-white">
           <div className="flex items-center gap-3">
@@ -81,7 +114,9 @@ export default function ShippingModal({
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-gray-900">Giao Hàng & Mã Vận Đơn (Tracking)</h2>
+              <h2 className="text-base font-bold text-gray-900">
+                Giao Hàng &amp; Mã Vận Đơn (Tracking)
+              </h2>
               <p className="text-xs text-blue-700 font-medium">Đơn hàng #{order._id}</p>
             </div>
           </div>
@@ -94,26 +129,51 @@ export default function ShippingModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          
-          {/* Thông tin người nhận tóm tắt */}
-          <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 text-xs text-gray-600 space-y-1">
+          {/* Thông tin người nhận & Hình thức khách đã chọn */}
+          <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200/70 text-xs text-gray-600 space-y-1.5">
             <p className="flex justify-between">
               <span className="text-gray-400">Người nhận:</span>
-              <strong className="text-gray-900">{order.customer_name} ({order.customer_phone})</strong>
+              <strong className="text-gray-900">
+                {order.customer_name} ({order.customer_phone})
+              </strong>
             </p>
             <p className="flex justify-between">
               <span className="text-gray-400">Địa chỉ:</span>
-              <span className="text-gray-800 text-right truncate max-w-[260px] font-medium" title={order.customer_address}>
+              <span
+                className="text-gray-800 text-right truncate max-w-[260px] font-medium"
+                title={order.customer_address}
+              >
                 {order.customer_address}
               </span>
             </p>
+            <div className="pt-2 mt-1 border-t border-gray-200/70 flex items-center justify-between">
+              <span className="text-gray-500 font-medium flex items-center gap-1.5">
+                <Truck size={14} className="text-blue-600" /> Hình thức khách đã chọn:
+              </span>
+              <span className="font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full text-xs">
+                {customerShippingMethod}{' '}
+                {order.shipping_fee
+                  ? `(${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.shipping_fee)})`
+                  : '(Freeship)'}
+              </span>
+            </div>
           </div>
 
           {/* Chọn Đơn vị vận chuyển */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-2">
-              1. Chọn Đơn vị vận chuyển liên kết
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-gray-700">
+                1. Đơn vị vận chuyển đối tác lấy hàng &amp; phát mã Tracking
+              </label>
+              <span className="text-[10px] text-blue-700 font-bold bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
+                Tự động đề xuất
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 mb-2">
+              Hệ thống tự động đề xuất đơn vị phù hợp với gói{' '}
+              <strong>{customerShippingMethod}</strong> của khách. Bạn có thể đổi đối tác khác nếu
+              cần điều phối:
+            </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {CARRIERS.map((c) => (
                 <button
@@ -147,7 +207,7 @@ export default function ShippingModal({
                 <Sparkles className="w-3 h-3" /> Tự sinh mã mới
               </button>
             </div>
-            
+
             <div className="relative">
               <input
                 type="text"
@@ -159,15 +219,19 @@ export default function ShippingModal({
               />
             </div>
             <p className="text-[11px] text-gray-400 mt-1">
-              Mã này sẽ hiển thị trong trang <strong>Lịch sử đơn hàng</strong> để khách hàng tự tra cứu lộ trình vận chuyển.
+              Mã này sẽ hiển thị trong trang <strong>Lịch sử đơn hàng</strong> để khách hàng tự tra
+              cứu lộ trình vận chuyển.
             </p>
           </div>
 
-          {/* Link tra cứu thử */}
           {selectedCarrierObj && trackingCode && (
             <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 text-xs text-blue-900 flex items-center justify-between">
               <span className="truncate text-[11px]">
-                Link tra cứu mẫu: <strong>{selectedCarrierObj.trackUrl}{trackingCode}</strong>
+                Link tra cứu mẫu:{' '}
+                <strong>
+                  {selectedCarrierObj.trackUrl}
+                  {trackingCode}
+                </strong>
               </span>
               <a
                 href={`${selectedCarrierObj.trackUrl}${trackingCode}`}
@@ -180,7 +244,6 @@ export default function ShippingModal({
             </div>
           )}
 
-          {/* Nút hành động */}
           <div className="pt-2 flex items-center justify-end gap-2 border-t border-gray-100">
             <button
               type="button"
@@ -199,10 +262,25 @@ export default function ShippingModal({
               <span>{isSubmitting ? 'Đang cập nhật...' : 'Xác nhận Đang Giao Hàng'}</span>
             </button>
           </div>
-
         </form>
-
       </div>
     </div>
+  );
+}
+
+export default function ShippingModal({
+  order,
+  isOpen,
+  onClose,
+  onConfirm,
+}: ShippingModalProps) {
+  if (!isOpen || !order) return null;
+  return (
+    <ShippingModalInner
+      key={order._id}
+      order={order}
+      onClose={onClose}
+      onConfirm={onConfirm}
+    />
   );
 }

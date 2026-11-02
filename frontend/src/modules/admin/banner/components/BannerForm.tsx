@@ -3,6 +3,7 @@
 import React from "react";
 import { Plus, Image as ImageIcon } from "lucide-react";
 import { Loader } from "@mantine/core";
+import { FALLBACK_BANNER_IMAGE } from "../types";
 
 interface BannerFormProps {
   newTitle: string;
@@ -13,8 +14,8 @@ interface BannerFormProps {
   setNewBadge: (val: string) => void;
   newLink: string;
   setNewLink: (val: string) => void;
-  imageMode: 'upload' | 'url';
-  setImageMode: (mode: 'upload' | 'url') => void;
+  imageMode: "upload" | "url";
+  setImageMode: (mode: "upload" | "url") => void;
   newImageFile: File | null;
   setNewImageFile: (file: File | null) => void;
   newImageUrl: string;
@@ -41,9 +42,12 @@ export default function BannerForm({
   submitting,
   onSubmit,
 }: BannerFormProps) {
-  const previewSource = imageMode === 'upload' 
-    ? (newImageFile ? URL.createObjectURL(newImageFile) : "")
-    : newImageUrl.trim();
+  const previewSource =
+    imageMode === "upload"
+      ? newImageFile
+        ? URL.createObjectURL(newImageFile)
+        : ""
+      : newImageUrl.trim();
 
   return (
     <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm">
@@ -63,9 +67,9 @@ export default function BannerForm({
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Tiêu đề Banner (Hiển thị lớn) *
             </label>
-            <input 
+            <input
               required
-              type="text" 
+              type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -77,8 +81,8 @@ export default function BannerForm({
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Huy hiệu nổi bật (Badge)
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={newBadge}
               onChange={(e) => setNewBadge(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium"
@@ -92,8 +96,8 @@ export default function BannerForm({
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Mô tả phụ (Subtitle)
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={newSubtitle}
               onChange={(e) => setNewSubtitle(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -105,8 +109,8 @@ export default function BannerForm({
             <label className="block text-sm font-semibold text-gray-700 mb-1">
               Đường dẫn liên kết (Link khi click)
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={newLink}
               onChange={(e) => setNewLink(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -119,23 +123,30 @@ export default function BannerForm({
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-semibold text-gray-700">
-              Hình ảnh Banner * <span className="text-xs font-normal text-gray-500">(Khuyến nghị ngang 1920x800)</span>
+              Hình ảnh Banner *{" "}
+              <span className="text-xs font-normal text-gray-500">
+                (Khuyến nghị ngang 1920x800)
+              </span>
             </label>
             <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
               <button
                 type="button"
-                onClick={() => setImageMode('upload')}
+                onClick={() => setImageMode("upload")}
                 className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
-                  imageMode === 'upload' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                  imageMode === "upload"
+                    ? "bg-white text-blue-600 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 Tải tệp lên
               </button>
               <button
                 type="button"
-                onClick={() => setImageMode('url')}
+                onClick={() => setImageMode("url")}
                 className={`px-3 py-1 text-xs font-bold rounded-lg transition ${
-                  imageMode === 'url' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                  imageMode === "url"
+                    ? "bg-white text-blue-600 shadow-xs"
+                    : "text-gray-500 hover:text-gray-900"
                 }`}
               >
                 Nhập link URL
@@ -143,14 +154,17 @@ export default function BannerForm({
             </div>
           </div>
 
-          {imageMode === 'upload' ? (
+          {imageMode === "upload" ? (
             <div className="border-2 border-gray-200 border-dashed rounded-2xl p-6 text-center hover:border-blue-400 transition bg-gray-50/50">
               {previewSource ? (
                 <div className="flex flex-col items-center">
-                  <img 
-                    src={previewSource} 
-                    alt="Preview" 
+                  <img
+                    src={previewSource}
+                    alt="Preview"
                     className="max-h-52 w-auto object-cover rounded-xl shadow-md border border-gray-200"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_BANNER_IMAGE;
+                    }}
                   />
                   <button
                     type="button"
@@ -164,14 +178,17 @@ export default function BannerForm({
                 <div className="space-y-2">
                   <ImageIcon className="mx-auto h-10 w-10 text-gray-400" strokeWidth={1.5} />
                   <div className="text-sm text-gray-600">
-                    <label htmlFor="file-upload" className="cursor-pointer font-bold text-blue-600 hover:text-blue-700">
+                    <label
+                      htmlFor="file-upload"
+                      className="cursor-pointer font-bold text-blue-600 hover:text-blue-700"
+                    >
                       Chọn tệp ảnh từ máy tính
-                      <input 
-                        id="file-upload" 
-                        type="file" 
-                        className="sr-only" 
-                        accept="image/*" 
-                        onChange={(e) => setNewImageFile(e.target.files?.[0] || null)} 
+                      <input
+                        id="file-upload"
+                        type="file"
+                        className="sr-only"
+                        accept="image/*"
+                        onChange={(e) => setNewImageFile(e.target.files?.[0] || null)}
                       />
                     </label>
                   </div>
@@ -181,7 +198,7 @@ export default function BannerForm({
             </div>
           ) : (
             <div className="space-y-3">
-              <input 
+              <input
                 type="url"
                 value={newImageUrl}
                 onChange={(e) => setNewImageUrl(e.target.value)}
@@ -191,10 +208,13 @@ export default function BannerForm({
               {previewSource && (
                 <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 inline-block">
                   <p className="text-xs text-gray-500 mb-1.5 font-medium">Xem trước link ảnh:</p>
-                  <img 
-                    src={previewSource} 
-                    alt="Preview from URL" 
+                  <img
+                    src={previewSource}
+                    alt="Preview from URL"
                     className="max-h-48 w-auto object-cover rounded-lg shadow-sm"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_BANNER_IMAGE;
+                    }}
                   />
                 </div>
               )}
@@ -203,7 +223,7 @@ export default function BannerForm({
         </div>
 
         <div className="flex justify-end pt-2">
-          <button 
+          <button
             type="submit"
             disabled={submitting}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm transition hover:shadow-md disabled:opacity-50"

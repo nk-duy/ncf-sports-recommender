@@ -25,7 +25,14 @@ export function SavedForLater({ savedItems, moveSavedToCart, removeSaved, showNo
         return (
           <div key={key} className="flex items-center gap-4 px-5 py-3 border-b border-gray-50 last:border-b-0">
             <Link href={`/san-pham/${item.product_id}`} className="block w-16 h-16 border border-gray-200 shrink-0">
-              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+              <img 
+                src={item.image_url} 
+                alt={item.name} 
+                className="w-full h-full object-cover" 
+                onError={(e) => {
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=400&q=80';
+                }}
+              />
             </Link>
             <div className="flex-1 min-w-0">
               <Link href={`/san-pham/${item.product_id}`} className="text-sm font-medium text-gray-900 line-clamp-1 hover:text-blue-600">

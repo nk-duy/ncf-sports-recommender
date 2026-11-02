@@ -58,14 +58,14 @@ export default function ProductCategoryCascade({
               ))
             ) : (
               <>
-                <option value="Đá bóng">Đá bóng (Football)</option>
-                <option value="Cầu lông">Cầu lông (Badminton)</option>
+                <option value="Đá bóng">Đá bóng</option>
+                <option value="Cầu lông">Cầu lông</option>
                 <option value="Pickleball">Pickleball</option>
-                <option value="Chạy bộ">Chạy bộ (Running)</option>
+                <option value="Chạy bộ">Chạy bộ</option>
                 <option value="Bóng chuyền">Bóng chuyền</option>
                 <option value="Bóng rổ">Bóng rổ</option>
                 <option value="Dã ngoại">Dã ngoại / Leo núi</option>
-                <option value="Đa dụng">Đa dụng (Gym / Yoga)</option>
+                <option value="Đa dụng">Đa dụng / Gym / Yoga</option>
               </>
             )}
           </select>
@@ -90,7 +90,7 @@ export default function ProductCategoryCascade({
         <div className="pt-2 border-t border-emerald-100">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-bold text-emerald-900">
-              Danh mục con chi tiết (Chọn 1 hoặc nhiều):
+              Danh mục con chi tiết:
             </span>
             <span className="text-[11px] text-gray-500">{selectedCategories.length} đã chọn</span>
           </div>

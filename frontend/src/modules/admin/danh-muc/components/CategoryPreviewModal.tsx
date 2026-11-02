@@ -43,7 +43,7 @@ export default function CategoryPreviewModal({ isOpen, onClose, menu }: Category
                 Xem Trước Menu Khách Hàng (Live MegaMenu)
               </h2>
               <p className="text-xs text-gray-500">
-                Mô phỏng chính xác khung menu thả xuống ngoài trang chủ khi khách hàng rê chuột vào mục "Sản phẩm"
+                Mô phỏng chính xác khung menu thả xuống ngoài trang chủ khi khách hàng rê chuột vào mục &quot;Sản phẩm&quot;
               </p>
             </div>
           </div>

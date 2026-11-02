@@ -1,9 +1,10 @@
 'use client';
-import React from 'react';
+
 import { AlertTriangle, X, XCircle } from 'lucide-react';
+import type { OrderItem } from '../types';
 
 interface RejectOrderModalProps {
-  order: any | null;
+  order: OrderItem | null;
   onClose: () => void;
   selectedRejectPreset: string;
   setSelectedRejectPreset: (preset: string) => void;
@@ -34,7 +35,7 @@ export default function RejectOrderModal({
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-5 border-b border-gray-100 bg-red-50/60 flex items-center justify-between">
@@ -63,7 +64,6 @@ export default function RejectOrderModal({
             <strong className="text-gray-900">{order.customer_name}</strong>:
           </p>
 
-          {/* Preset Reason Options */}
           <div className="space-y-2">
             {PRESET_REASONS.map((preset) => (
               <label
@@ -86,7 +86,6 @@ export default function RejectOrderModal({
             ))}
           </div>
 
-          {/* Custom text area */}
           <div>
             <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
               {selectedRejectPreset === 'Khác'

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import type { RawReviewResponse } from '../types';
 
 export interface ReviewItem {
   id: string;
@@ -20,22 +21,24 @@ export function useProductReviews(productId: string) {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>('all');
 
-  // Form viết đánh giá modal state
   const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
   const [newRating, setNewRating] = useState(5);
   const [newComment, setNewComment] = useState('');
+  const [reviewImages, setReviewImages] = useState<string[]>([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const fetchReviews = async () => {
       try {
         const res = await fetch(`http://localhost:8000/api/v1/reviews/product/${productId}`);
         if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            const mappedReviews: ReviewItem[] = data.map((r: any, idx: number) => ({
+          const data: unknown = await res.json();
+          if (active && Array.isArray(data)) {
+            const mappedReviews: ReviewItem[] = (data as RawReviewResponse[]).map((r, idx) => ({
               id: r.id || r._id || `rev-${idx}`,
               user_name: r.user_name || 'Khách hàng',
               avatar_url: r.avatar_url,
@@ -48,21 +51,53 @@ export function useProductReviews(productId: string) {
               color_bought: r.color_bought,
             }));
             setReviews(mappedReviews);
-          } else {
+          } else if (active) {
             setReviews([]);
           }
-        } else {
+        } else if (active) {
           setReviews([]);
         }
-      } catch (err) {
-        setReviews([]);
+      } catch {
+        if (active) setReviews([]);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchReviews();
+    return () => {
+      active = false;
+    };
   }, [productId]);
+
+  const handleUploadImage = async (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    if (reviewImages.length >= 4) return;
+
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch('http://localhost:8000/api/v1/uploads/', {
+        method: 'POST',
+        body: formData,
+      });
+      if (res.ok) {
+        const data: { url?: string } = await res.json();
+        if (data.url) {
+          setReviewImages((prev) => [...prev, data.url as string]);
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi tải ảnh:', err);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setReviewImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,25 +105,34 @@ export function useProductReviews(productId: string) {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('token');
-      await fetch('http://localhost:8000/api/v1/reviews/', {
+      const token = localStorage.getItem('kady_customer_token') || localStorage.getItem('token');
+      const payload = {
+        product_id: productId,
+        rating: newRating,
+        comment: newComment.trim(),
+        images: reviewImages,
+      };
+
+      const res = await fetch('http://localhost:8000/api/v1/reviews/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({
-          product_id: productId,
-          rating: newRating,
-          comment: newComment,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      let returnedReview: RawReviewResponse | null = null;
+      if (res.ok) {
+        returnedReview = await res.json();
+      }
+
       const newReviewObj: ReviewItem = {
-        id: 'rev-' + Date.now(),
-        user_name: 'Khách hàng (Tôi)',
+        id: returnedReview?.id || 'rev-' + Date.now(),
+        user_name: returnedReview?.user_name || 'Khách hàng (Tôi)',
         rating: newRating,
-        comment: newComment,
+        comment: newComment.trim(),
+        images: reviewImages,
         timestamp: new Date().toISOString(),
         verified_purchase: true,
       };
@@ -99,6 +143,8 @@ export function useProductReviews(productId: string) {
         setIsWriteModalOpen(false);
         setSubmitSuccess(false);
         setNewComment('');
+        setReviewImages([]);
+        setNewRating(5);
       }, 1500);
     } catch (err) {
       console.error(err);
@@ -109,9 +155,10 @@ export function useProductReviews(productId: string) {
 
   // Tính toán số liệu THỰC TẾ từ danh sách đánh giá trong CSDL
   const totalCount = reviews.length;
-  const avgRating = totalCount > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount).toFixed(1)
-    : '0.0';
+  const avgRating =
+    totalCount > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount).toFixed(1)
+      : '0.0';
 
   const starCounts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   reviews.forEach((r) => {
@@ -130,7 +177,7 @@ export function useProductReviews(productId: string) {
     if (activeFilter === '3') return Math.round(r.rating) === 3;
     if (activeFilter === '2') return Math.round(r.rating) === 2;
     if (activeFilter === '1') return Math.round(r.rating) === 1;
-    if (activeFilter === 'images') return r.images && r.images.length > 0;
+    if (activeFilter === 'images') return Boolean(r.images && r.images.length > 0);
     return true;
   });
 
@@ -145,6 +192,10 @@ export function useProductReviews(productId: string) {
     setNewRating,
     newComment,
     setNewComment,
+    reviewImages,
+    handleUploadImage,
+    handleRemoveImage,
+    isUploadingImage,
     isSubmitting,
     submitSuccess,
     isExpanded,

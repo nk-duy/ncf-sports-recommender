@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+
+import { useState } from 'react';
 import { Phone, X, Headphones } from 'lucide-react';
 
 export default function FloatingSupportWidget() {
@@ -12,10 +13,8 @@ export default function FloatingSupportWidget() {
 
   return (
     <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 select-none">
-      {/* Khi mở rộng: Danh sách các kênh hỗ trợ */}
       {isExpanded && (
         <div className="flex flex-col items-end gap-2 mb-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          {/* Zalo Button */}
           <a
             href={zaloLink}
             target="_blank"
@@ -33,7 +32,6 @@ export default function FloatingSupportWidget() {
             </div>
           </a>
 
-          {/* Hotline Call Button */}
           <a
             href={`tel:${rawHotline}`}
             className="flex items-center gap-2.5 bg-white text-gray-800 pl-3 pr-2 py-1.5 rounded-full shadow-lg border border-gray-200/90 hover:shadow-xl hover:border-rose-300 transition-all active:scale-95 group"
@@ -49,13 +47,12 @@ export default function FloatingSupportWidget() {
         </div>
       )}
 
-      {/* Nút bấm tròn đại diện duy nhất (cố định góc phải màn hình) */}
       <button
         type="button"
         onClick={() => setIsExpanded((prev) => !prev)}
         className={`relative w-12 h-12 rounded-full shadow-xl flex items-center justify-center text-white transition-all transform duration-200 active:scale-90 ${
-          isExpanded 
-            ? 'bg-gray-800 hover:bg-gray-900 rotate-90' 
+          isExpanded
+            ? 'bg-gray-800 hover:bg-gray-900 rotate-90'
             : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-2xl'
         }`}
         title={isExpanded ? 'Thu gọn hỗ trợ' : 'Mở kênh tư vấn'}
@@ -65,7 +62,6 @@ export default function FloatingSupportWidget() {
         ) : (
           <>
             <Headphones size={22} />
-            {/* Chấm xanh online nhấp nháy */}
             <span className="absolute top-0 right-0 flex h-3.5 w-3.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>

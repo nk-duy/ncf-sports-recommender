@@ -1,18 +1,19 @@
 'use client';
-import React, { useEffect, useState } from "react";
-import { Ticket, X, Check, Loader2, Zap } from "lucide-react";
-import { notifications } from "@mantine/notifications";
-import { useCheckoutStore } from "@/shared/store/checkoutStore";
+
+import { useEffect, useState } from 'react';
+import { Check, Loader2, Ticket, X, Zap } from 'lucide-react';
+import { notifications } from '@mantine/notifications';
+import { useCheckoutStore } from '@/shared/store/checkoutStore';
 import {
   API_BASE,
-  Voucher,
+  type Voucher,
+  calcEffectiveShippingFee,
   describeVoucher,
   fetchVoucherByCode,
+  findBestVoucher,
   formatVND,
   getVoucherError,
-  findBestVoucher,
-  calcEffectiveShippingFee,
-} from "@/shared/lib/cart";
+} from '@/shared/lib/cart';
 
 /** Ô nhập mã + danh sách voucher khả dụng ở trang giỏ hàng */
 export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
@@ -91,8 +92,9 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
         message: `${voucher.code}: ${describeVoucher(voucher)}`,
         color: 'green',
       });
-    } catch (e: any) {
-      notifications.show({ title: 'Lỗi', message: e?.message || 'Không thể kết nối đến máy chủ.', color: 'red' });
+    } catch (e: unknown) {
+      const message = e instanceof Error && e.message ? e.message : 'Không thể kết nối đến máy chủ.';
+      notifications.show({ title: 'Lỗi', message, color: 'red' });
     } finally {
       setApplying(false);
     }
@@ -151,15 +153,15 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && applyVoucher(code)}
+          onKeyDown={(e) => e.key === 'Enter' && void applyVoucher(code)}
           placeholder="Nhập mã giảm giá"
-          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-l-lg text-sm uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          className="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-l-lg text-sm uppercase focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <button
           type="button"
-          onClick={() => applyVoucher(code)}
+          onClick={() => void applyVoucher(code)}
           disabled={applying}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-r-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center gap-1.5"
+          className="h-10 bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-r-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center gap-1.5 cursor-pointer shrink-0"
         >
           {applying && <Loader2 size={14} className="animate-spin" />}
           Áp dụng
@@ -180,13 +182,13 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
                   key={v.code}
                   type="button"
                   disabled={isApplied}
-                  onClick={() => applyVoucher(v.code)}
+                  onClick={() => void applyVoucher(v.code)}
                   className={`text-left rounded-lg border border-dashed px-3 py-2.5 transition-all ${
                     isApplied
                       ? 'border-green-400 bg-green-50 cursor-default'
                       : error
-                      ? 'border-gray-300 bg-gray-50 opacity-70 hover:opacity-100'
-                      : 'border-blue-300 bg-blue-50/50 hover:bg-blue-50 hover:border-blue-500'
+                        ? 'border-gray-300 bg-gray-50 opacity-70 hover:opacity-100'
+                        : 'border-blue-300 bg-blue-50/50 hover:bg-blue-50 hover:border-blue-500'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -195,7 +197,9 @@ export default function CartVoucherBox({ subtotal }: { subtotal: number }) {
                   </div>
                   <div className="text-xs text-gray-700 mt-0.5">{describeVoucher(v)}</div>
                   <div className="text-[11px] text-gray-500 mt-0.5">
-                    {v.min_order_value ? `Đơn tối thiểu ${formatVND(v.min_order_value)}` : 'Không yêu cầu đơn tối thiểu'}
+                    {v.min_order_value
+                      ? `Đơn tối thiểu ${formatVND(v.min_order_value)}`
+                      : 'Không yêu cầu đơn tối thiểu'}
                     {!isApplied && missing > 0 && subtotal > 0 && (
                       <span className="text-amber-600 font-medium"> · mua thêm {formatVND(missing)}</span>
                     )}

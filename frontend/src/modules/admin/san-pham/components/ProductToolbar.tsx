@@ -60,7 +60,7 @@ export default function ProductToolbar({
               type="button"
               onClick={onExportExcel}
               className="flex items-center justify-center gap-2 h-10 px-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm rounded-xl shadow-2xs transition cursor-pointer"
-              title="Xuất danh sách sản phẩm ra file Excel (.csv)"
+              title="Xuất danh sách sản phẩm ra file Excel (.xls)"
             >
               <Download size={16} className="text-emerald-600" />
               <span>Xuất Excel</span>
@@ -161,7 +161,7 @@ export default function ProductToolbar({
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Tìm theo tên sản phẩm hoặc mã ASIN..."
+              placeholder="Tìm theo tên hoặc mã sản phẩm..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-10 pl-10 pr-4 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-gray-50/50 hover:bg-white transition shadow-2xs"
@@ -189,6 +189,7 @@ export default function ProductToolbar({
             className="h-10 px-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white cursor-pointer hover:border-gray-300 transition text-gray-700 shadow-2xs font-medium"
           >
             <option value="">Tất cả thương hiệu</option>
+            <option value="none">Không có thương hiệu</option>
             {availableBrands.map(b => (
               <option key={b} value={b}>{b}</option>
             ))}
@@ -202,9 +203,9 @@ export default function ProductToolbar({
             className="h-10 px-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white cursor-pointer hover:border-gray-300 transition text-gray-700 shadow-2xs font-medium"
           >
             <option value="">Tất cả kho hàng</option>
-            <option value="in_stock">Còn hàng (&gt;10)</option>
-            <option value="low_stock">Sắp hết hàng (1-10)</option>
-            <option value="out_of_stock">Hết hàng (0)</option>
+            <option value="in_stock">Còn hàng</option>
+            <option value="low_stock">Sắp hết hàng</option>
+            <option value="out_of_stock">Hết hàng</option>
           </select>
 
           {/* Clear Filter Button */}

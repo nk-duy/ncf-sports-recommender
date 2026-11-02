@@ -8,11 +8,12 @@ interface BreadcrumbItem {
 
 interface BreadcrumbProps {
   items: BreadcrumbItem[];
+  currentClassName?: string;
 }
 
-export default function Breadcrumb({ items }: BreadcrumbProps) {
+export default function Breadcrumb({ items, currentClassName = "text-slate-900 font-medium not-italic" }: BreadcrumbProps) {
   return (
-    <nav className="flex items-center space-x-2 text-sm text-gray-700 py-4 font-medium">
+    <nav className="flex items-center space-x-2 text-sm text-gray-700 py-1 font-medium">
       {items.map((item, index) => (
         <React.Fragment key={index}>
           {item.href ? (
@@ -23,7 +24,7 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
               {item.label}
             </a>
           ) : (
-            <span className="text-[#84B541] italic">{item.label}</span>
+            <span className={currentClassName}>{item.label}</span>
           )}
           {index < items.length - 1 && (
             <ChevronRight size={16} className="text-gray-400" />

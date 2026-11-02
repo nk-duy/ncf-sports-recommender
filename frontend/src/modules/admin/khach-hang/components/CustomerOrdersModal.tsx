@@ -1,66 +1,86 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { X, ShoppingBag, Calendar, CreditCard, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, ShoppingBag, Calendar } from "lucide-react";
+import type { CustomerItem, CustomerOrderSummary } from "../types";
 
 interface CustomerOrdersModalProps {
   opened: boolean;
   onClose: () => void;
-  customer: any | null;
+  customer: CustomerItem | null;
 }
 
-export default function CustomerOrdersModal({
-  opened,
+function CustomerOrdersModalInner({
+  customer,
   onClose,
-  customer
-}: CustomerOrdersModalProps) {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+}: {
+  customer: CustomerItem;
+  onClose: () => void;
+}) {
+  const [orders, setOrders] = useState<CustomerOrderSummary[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (opened && customer?.id) {
-      const fetchOrders = async () => {
-        try {
-          setLoading(true);
-          const res = await fetch(`http://localhost:8000/api/v1/customers/${customer.id}/orders`);
-          if (res.ok) {
-            const data = await res.json();
-            setOrders(Array.isArray(data) ? data : []);
-          }
-        } catch (e) {
-          console.error("Failed to load customer orders:", e);
-        } finally {
+    let cancelled = false;
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/v1/customers/${customer.id}/orders`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setOrders(Array.isArray(data) ? data : []);
+        }
+      } catch {
+        // Bỏ qua lỗi khi tải lịch sử đơn hàng
+      } finally {
+        if (!cancelled) {
           setLoading(false);
         }
-      };
-      fetchOrders();
-    }
-  }, [opened, customer?.id]);
-
-  if (!opened || !customer) return null;
+      }
+    };
+    fetchOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, [customer.id]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
       case "delivered":
       case "Hoàn tất":
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-green-100 text-green-800">Hoàn tất</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-green-100 text-green-800">
+            Hoàn tất
+          </span>
+        );
       case "shipping":
       case "Đang giao":
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800">Đang giao</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 text-blue-800">
+            Đang giao
+          </span>
+        );
       case "cancelled":
       case "Đã hủy":
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800">Đã hủy</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800">
+            Đã hủy
+          </span>
+        );
       default:
-        return <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">Đang xử lý</span>;
+        return (
+          <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">
+            Đang xử lý
+          </span>
+        );
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]"
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
@@ -73,7 +93,7 @@ export default function CustomerOrdersModal({
                 Lịch sử đơn hàng: {customer.name}
               </h3>
               <p className="text-xs text-gray-500 font-mono">
-                {customer.code} • Tổng {orders.length} đơn hàng • Chi tiêu: {customer.spent}
+                {customer.code} • Tổng {orders.length} đơn hàng • Chi tiêu: {customer.spentFormatted || customer.spent}
               </p>
             </div>
           </div>
@@ -97,7 +117,7 @@ export default function CustomerOrdersModal({
               Khách hàng chưa có đơn hàng nào trong hệ thống.
             </div>
           ) : (
-            orders.map(order => (
+            orders.map((order) => (
               <div
                 key={order.id}
                 className="p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-xs transition-all flex items-center justify-between gap-4 bg-white"
@@ -112,7 +132,12 @@ export default function CustomerOrdersModal({
                       <Calendar size={13} /> {order.created_at}
                     </span>
                     <span>•</span>
-                    <span className="truncate">{order.first_item_name} {order.items_count > 1 ? `(+${order.items_count - 1} món)` : ""}</span>
+                    <span className="truncate">
+                      {order.first_item_name}{" "}
+                      {order.items_count && order.items_count > 1
+                        ? `(+${order.items_count - 1} món)`
+                        : ""}
+                    </span>
                   </div>
                 </div>
 
@@ -133,9 +158,7 @@ export default function CustomerOrdersModal({
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <span className="text-xs text-gray-500">
-            Hiển thị {orders.length} đơn hàng
-          </span>
+          <span className="text-xs text-gray-500">Hiển thị {orders.length} đơn hàng</span>
           <button
             onClick={onClose}
             className="px-4 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-white text-sm font-semibold transition-colors"
@@ -146,4 +169,13 @@ export default function CustomerOrdersModal({
       </div>
     </div>
   );
+}
+
+export default function CustomerOrdersModal({
+  opened,
+  onClose,
+  customer,
+}: CustomerOrdersModalProps) {
+  if (!opened || !customer) return null;
+  return <CustomerOrdersModalInner key={customer.id} customer={customer} onClose={onClose} />;
 }

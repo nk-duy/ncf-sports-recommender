@@ -11,10 +11,10 @@ export default async function ProductsPage({
   
   let currentLabel = "Tất cả sản phẩm";
   if (search) currentLabel = `Tìm kiếm: ${search}`;
-  else if (sport_type && product_type) currentLabel = `${product_type} ${sport_type}`;
-  else if (sport_type) currentLabel = `Đồ Thể Thao ${sport_type}`;
+  else if (sport_type && product_type) currentLabel = `${product_type.split(',').join(', ')} - ${sport_type.split(',').join(', ')}`;
+  else if (sport_type) currentLabel = `Đồ Thể Thao: ${sport_type.split(',').join(', ')}`;
   else if (product_type && category) currentLabel = `${category}`;
-  else if (product_type) currentLabel = product_type;
+  else if (product_type) currentLabel = product_type.split(',').join(', ');
   else if (category) currentLabel = category;
 
   const breadcrumbItems = [

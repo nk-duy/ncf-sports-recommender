@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Download, Megaphone, Plus } from "lucide-react";
 
 interface CustomerHeaderProps {
@@ -30,7 +29,7 @@ export default function CustomerHeader({
           <button
             onClick={onExportExcel}
             className="flex items-center justify-center gap-2 h-10 px-3.5 bg-white border border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-sm rounded-xl shadow-2xs transition cursor-pointer"
-            title="Xuất danh sách khách hàng ra file Excel (.csv)"
+            title="Xuất danh sách khách hàng ra file Excel (.xls)"
           >
             <Download size={16} className="text-emerald-600" />
             <span>Xuất Excel</span>

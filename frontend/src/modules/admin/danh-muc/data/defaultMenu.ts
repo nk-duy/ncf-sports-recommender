@@ -46,7 +46,7 @@ export const defaultMenu: MegaMenuSport[] = [
     ]
   },
   {
-    sport_type: 'Đa dụng',
+    sport_type: 'Gym & Fitness',
     product_types: [
       { product_type: 'Quần áo', categories: [{ category: 'Đồ Tập Gym & Yoga' }] },
       { product_type: 'Thiết bị', categories: [{ category: 'Dụng Cụ Kháng Lực' }] },

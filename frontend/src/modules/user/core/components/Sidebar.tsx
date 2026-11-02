@@ -7,14 +7,16 @@ import {
   LayoutDashboard, 
   ShoppingBag, 
   Heart, 
-  Zap, 
+  ThumbsUp, 
   Settings,
   LogOut, 
   Star,
-  Phone
+  Phone,
+  Bell
 } from "lucide-react";
-import { useAuthStore } from "@/shared/store/authStore";
+import { useAuthStore, getUserInitials } from "@/shared/store/authStore";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
+import { useNotificationStore } from "@/shared/store/notificationStore";
 import { useRouter } from "next/navigation";
 
 export default function AccountSidebar() {
@@ -22,6 +24,7 @@ export default function AccountSidebar() {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { items: wishlistItems } = useWishlistStore();
+  const { unreadCount } = useNotificationStore();
   
   const handleLogout = () => {
     logout();
@@ -30,7 +33,7 @@ export default function AccountSidebar() {
 
   const displayName = user?.full_name || user?.username || "Tài khoản";
   const displayEmail = user?.email || "chua_dang_nhap@kadysports.vn";
-  const initials = displayName.substring(0, 2).toUpperCase();
+  const initials = getUserInitials(user);
   const favoriteSport = user?.interested_sports && user.interested_sports.length > 0 
     ? user.interested_sports.join(", ") 
     : "Chạy bộ, Thể hình";
@@ -39,7 +42,8 @@ export default function AccountSidebar() {
     { icon: LayoutDashboard, label: "Tổng quan tài khoản", href: "/tai-khoan" },
     { icon: ShoppingBag, label: "Lịch sử mua hàng", href: "/tai-khoan/orders" },
     { icon: Heart, label: "Sản phẩm yêu thích", href: "/tai-khoan/wishlist", badge: wishlistItems.length > 0 ? wishlistItems.length : undefined, badgeColor: "red" },
-    { icon: Zap, label: "Gợi ý riêng cho bạn", href: "/tai-khoan/recommendations", badge: "AI", badgeColor: "blue" },
+    { icon: ThumbsUp, label: "Gợi ý riêng cho bạn", href: "/tai-khoan/recommendations" },
+    { icon: Bell, label: "Thông báo của tôi", href: "/tai-khoan/notifications", badge: unreadCount > 0 ? unreadCount : undefined, badgeColor: "blue" },
     { icon: Settings, label: "Cài đặt tài khoản", href: "/tai-khoan/settings" },
   ];
 
@@ -61,7 +65,7 @@ export default function AccountSidebar() {
         </p>
         <div className="bg-amber-50 text-amber-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium border border-amber-200 w-full justify-center">
           <Star size={16} className="fill-amber-500 text-amber-500 mr-2" />
-          Hạng thành viên: <span className="font-bold ml-1">{user?.tier || "Thành viên Thể thao"}</span>
+          Hạng thành viên: <span className="font-bold ml-1">{user?.tier || "Đồng"}</span>
         </div>
         
         <div className="w-full mt-6 space-y-2 text-sm">

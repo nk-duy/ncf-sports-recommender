@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Search, Filter, RotateCcw } from "lucide-react";
 
 interface CustomerFilterBarProps {
@@ -43,7 +42,7 @@ export default function CustomerFilterBar({
   onResetFilter,
 }: CustomerFilterBarProps) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-xs border border-gray-100 flex flex-col gap-4">
+    <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-200/80 flex flex-col gap-4">
       {/* Quick Filter Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <button
@@ -51,10 +50,10 @@ export default function CustomerFilterBar({
           className={`px-4 py-1.5 rounded-lg font-semibold text-sm whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === "all"
               ? "bg-blue-50 text-blue-700 font-bold"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          Tất cả <span className="ml-1 text-[11px] opacity-75 font-mono">({stats.total.toLocaleString("vi-VN")})</span>
+          Tất cả <span className="ml-1 text-[11px] opacity-75 font-sans tabular-nums font-semibold">({stats.total.toLocaleString("vi-VN")})</span>
         </button>
 
         <button
@@ -62,10 +61,10 @@ export default function CustomerFilterBar({
           className={`px-4 py-1.5 rounded-lg font-medium text-sm whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === "vip"
               ? "bg-blue-50 text-blue-700 font-bold"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          Hội viên VIP <span className="ml-1 text-[11px] font-mono">({stats.vip.toLocaleString("vi-VN")})</span>
+          Hội viên VIP <span className="ml-1 text-[11px] font-sans tabular-nums font-semibold">({stats.vip.toLocaleString("vi-VN")})</span>
         </button>
 
         <button
@@ -73,10 +72,10 @@ export default function CustomerFilterBar({
           className={`px-4 py-1.5 rounded-lg font-medium text-sm whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === "new"
               ? "bg-blue-50 text-blue-700 font-bold"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          Khách hàng mới <span className="ml-1 text-[11px] font-mono">({stats.new > 0 ? stats.new : Math.floor(stats.total * 0.15)})</span>
+          Khách hàng mới <span className="ml-1 text-[11px] font-sans tabular-nums font-semibold">({(stats.new ?? 0).toLocaleString("vi-VN")})</span>
         </button>
 
         <button
@@ -84,21 +83,25 @@ export default function CustomerFilterBar({
           className={`px-4 py-1.5 rounded-lg font-medium text-sm whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === "potential"
               ? "bg-blue-50 text-blue-700 font-bold"
-              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          Tiềm năng <span className="ml-1 text-[11px] font-mono">({stats.potential > 0 ? stats.potential : Math.floor(stats.total * 0.4)})</span>
+          Tiềm năng <span className="ml-1 text-[11px] font-sans tabular-nums font-semibold">({(stats.potential ?? 0).toLocaleString("vi-VN")})</span>
         </button>
 
         <button
           onClick={() => onTabChange("churn_risk")}
-          className={`px-4 py-1.5 rounded-lg font-medium text-sm whitespace-nowrap transition-colors cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg font-medium text-sm whitespace-nowrap transition-colors cursor-pointer inline-flex items-center gap-2 ${
             activeTab === "churn_risk"
-              ? "bg-red-100 text-red-700 font-bold"
-              : "text-red-600 hover:bg-red-50 hover:text-red-700"
+              ? "bg-slate-100 text-slate-900 font-bold"
+              : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
           }`}
         >
-          Nguy cơ rời bỏ <span className="ml-1 text-[11px] font-mono">({stats.churn_risk > 0 ? stats.churn_risk : Math.floor(stats.total * 0.05)})</span>
+          <span className="size-2 rounded-full bg-rose-500 shrink-0 animate-pulse" />
+          <span>Nguy cơ rời bỏ</span>
+          <span className="px-1.5 py-0.5 rounded-md bg-rose-50 text-rose-600 font-sans tabular-nums text-[11px] font-bold">
+            {(stats.churn_risk ?? 0).toLocaleString("vi-VN")}
+          </span>
         </button>
       </div>
 
@@ -106,14 +109,14 @@ export default function CustomerFilterBar({
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
         {/* Search Box (Span 4) */}
         <div className="md:col-span-4 relative">
-          <Search className="absolute left-3.5 top-3 text-gray-400 pointer-events-none" size={16} />
+          <Search className="absolute left-3.5 top-3 text-slate-400 pointer-events-none" size={16} />
           <input
             type="text"
             placeholder="Tìm theo tên, email, SĐT, mã KH (#KH-...)"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onApplyFilter()}
-            className="w-full h-10 pl-10 pr-3 rounded-xl border border-gray-200 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+            className="w-full h-10 pl-10 pr-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 text-sm placeholder:text-slate-400 focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
           />
         </div>
 
@@ -122,7 +125,7 @@ export default function CustomerFilterBar({
           <select
             value={tierFilter}
             onChange={(e) => onTierChange(e.target.value)}
-            className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
+            className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
           >
             <option value="">Phân hạng: Tất cả</option>
             <option value="Kim Cương">Kim Cương</option>
@@ -137,7 +140,7 @@ export default function CustomerFilterBar({
           <select
             value={sportFilter}
             onChange={(e) => onSportChange(e.target.value)}
-            className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
+            className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
           >
             <option value="">Bộ môn: Tất cả</option>
             <option value="Chạy bộ">Chạy bộ</option>
@@ -153,7 +156,7 @@ export default function CustomerFilterBar({
           <select
             value={regionFilter}
             onChange={(e) => onRegionChange(e.target.value)}
-            className="w-full h-10 px-3 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
+            className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
           >
             <option value="">Khu vực: Tất cả</option>
             <option value="Hà Nội">Hà Nội</option>
@@ -173,8 +176,9 @@ export default function CustomerFilterBar({
           </button>
           <button
             onClick={onResetFilter}
-            className="h-10 w-10 rounded-xl bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+            className="size-10 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Làm mới bộ lọc"
+            aria-label="Làm mới bộ lọc"
           >
             <RotateCcw size={16} />
           </button>

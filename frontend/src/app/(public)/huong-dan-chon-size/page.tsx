@@ -1,4 +1,3 @@
-import React from 'react';
 import SizeGuideContent from '@/modules/public/chinh-sach/components/SizeGuideContent';
 
 export const metadata = {

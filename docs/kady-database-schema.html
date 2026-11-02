@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DATABASE DESIGN - KADY Sports & AI Recommender System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+            },
+            darknav: '#0f172a',
+            navyheader: '#0b1329',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    code, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    
+    /* Print optimizations */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm 10mm 12mm 10mm;
+      }
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-full {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .collection-card {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        margin-bottom: 20px !important;
+      }
+      .collection-body {
+        display: block !important;
+      }
+      .sticky {
+        position: static !important;
+      }
+      .sidebar-container {
+        display: none !important;
+      }
+      .main-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      table {
+        page-break-inside: auto;
+      }
+      tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+      }
+      thead {
+        display: table-header-group;
+      }
+      .print-header-banner {
+        display: block !important;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid #0f172a;
+      }
+    }
+    @media screen {
+      .print-header-banner {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-800 antialiased selection:bg-teal-500 selection:text-white">
+
+  <!-- PRINT ONLY BANNER -->
+  <div class="print-header-banner">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="text-xs font-black tracking-widest text-teal-600 uppercase">ĐẶC TẢ CƠ SỞ DỮ LIỆU NOSQL (MONGODB + PYTORCH NCF)</span>
+        <h1 class="text-2xl font-black text-slate-900 mt-1">KADY SPORTS & AI RECOMMENDER SYSTEM</h1>
+        <p class="text-xs text-slate-600 mt-1">Đồ án tốt nghiệp: Hệ thống thương mại điện tử thể thao tích hợp gợi ý cá nhân hóa Neural Collaborative Filtering</p>
+      </div>
+      <div class="text-right text-xs text-slate-500">
+        <p class="font-bold text-slate-800">12 Collections & Models</p>
+        <p>160+ Fields & Schema Specs</p>
+        <p>ODM: Beanie / Motor AsyncIO</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row min-h-screen">
+    
+    <!-- ========================================== -->
+    <!-- LEFT SIDEBAR: METRICS & MODULE NAVIGATION  -->
+    <!-- ========================================== -->
+    <aside class="sidebar-container w-full lg:w-[340px] xl:w-[380px] bg-white border-r border-slate-200 p-5 lg:p-6 lg:fixed lg:h-screen lg:overflow-y-auto z-30 shrink-0">
+      
+      <!-- Gradient Brand Header Box -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-600 text-white p-5 shadow-lg shadow-teal-500/15 mb-6">
+        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="relative z-10">
+          <span class="inline-block px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black tracking-widest uppercase mb-2">
+            DATABASE DESIGN
+          </span>
+          <h1 class="text-2xl font-black tracking-tight leading-tight mb-2">
+            KADY Sports
+          </h1>
+          <p class="text-xs text-emerald-50 font-medium leading-relaxed opacity-95">
+            Schema NoSQL (MongoDB + Beanie ODM) cho hệ thống E-commerce thể thao tích hợp gợi ý Neural Collaborative Filtering (NCF).
+          </p>
+        </div>
+      </div>
+
+      <!-- 3 Metrics Statistic Grid -->
+      <div class="grid grid-cols-3 gap-2.5 mb-6">
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-center">
+          <div class="text-2xl font-black text-slate-900 font-mono" id="stat-modules">5</div>
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Modules</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-center">
+          <div class="text-2xl font-black text-teal-600 font-mono" id="stat-collections">12</div>
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Tables</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-center">
+          <div class="text-2xl font-black text-amber-500 font-mono" id="stat-fields">162</div>
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Columns</div>
+        </div>
+      </div>
+
+      <!-- Module Navigation List Header -->
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-black uppercase tracking-wider text-slate-800">
+          Tất cả module
+        </span>
+        <span class="px-2 py-0.5 bg-slate-900 text-white rounded-full text-[11px] font-mono font-bold" id="badge-total-tables">
+          12
+        </span>
+      </div>
+
+      <!-- Module Filter Buttons -->
+      <div class="space-y-1.5 mb-6 text-sm" id="module-filters">
+        <button onclick="filterByModule('all')" class="module-btn active w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-semibold transition-all bg-teal-50 text-teal-700 border border-teal-200" data-module="all">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-500 ring-4 ring-teal-100"></span>
+            <span>Tất cả Collections</span>
+          </div>
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white border border-teal-200 text-teal-700">12</span>
+        </button>
+
+        <button onclick="filterByModule('auth')" class="module-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-transparent" data-module="auth">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Authentication & Users</div>
+              <div class="text-[11px] text-slate-400 font-normal">users · 1 collection</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">1</span>
+        </button>
+
+        <button onclick="filterByModule('catalog')" class="module-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-transparent" data-module="catalog">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Product & MegaMenu</div>
+              <div class="text-[11px] text-slate-400 font-normal">products, menu, attrs · 3 collections</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">3</span>
+        </button>
+
+        <button onclick="filterByModule('order')" class="module-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-transparent" data-module="order">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Order & Promotion</div>
+              <div class="text-[11px] text-slate-400 font-normal">orders, vouchers, banners · 3 collections</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">3</span>
+        </button>
+
+        <button onclick="filterByModule('ai')" class="module-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-transparent" data-module="ai">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+            <div>
+              <div class="text-xs font-bold text-slate-900">AI NCF & Interactions</div>
+              <div class="text-[11px] text-slate-400 font-normal">interactions, reviews, ncf · 3 entities</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">3</span>
+        </button>
+
+        <button onclick="filterByModule('support')" class="module-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-semibold text-slate-600 hover:bg-slate-100 transition-all border border-transparent" data-module="support">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <div>
+              <div class="text-xs font-bold text-slate-900">Support & Branch Stores</div>
+              <div class="text-[11px] text-slate-400 font-normal">contacts, stores · 2 collections</div>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">2</span>
+        </button>
+      </div>
+
+      <!-- Conventions Box -->
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-600 text-xs space-y-1.5">
+        <div class="font-bold text-slate-800 flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+          <svg class="w-3.5 h-3.5 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          </svg>
+          Quy ước kiến trúc CSDL
+        </div>
+        <p class="leading-relaxed text-[11px] text-slate-500">
+          • <span class="font-semibold text-slate-700">Khóa chính:</span> BSON <code class="text-slate-800 bg-slate-200/60 px-1 py-0.5 rounded">_id: ObjectId</code> tự động sinh hoặc gán mã nghiệp vụ (ví dụ: <code class="text-slate-800 bg-slate-200/60 px-1 py-0.5 rounded">product_id: ASIN</code>).
+        </p>
+        <p class="leading-relaxed text-[11px] text-slate-500">
+          • <span class="font-semibold text-slate-700">Kiến trúc AI:</span> Dữ liệu tương tác phản hồi ngầm (Implicit Feedback) được ánh xạ qua ma trận Vector nhúng 16/32 chiều.
+        </p>
+      </div>
+
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- MAIN CONTENT: TOOLBAR & COLLECTION CARDS   -->
+    <!-- ========================================== -->
+    <main class="main-container flex-1 lg:ml-[340px] xl:ml-[380px] p-4 sm:p-6 lg:p-8">
+      
+      <!-- STICKY TOP TOOLBAR -->
+      <div class="no-print sticky top-0 z-20 bg-[#f8fafc]/95 backdrop-blur-md pt-2 pb-4 mb-6 border-b border-slate-200/80">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          
+          <!-- Search Input with Clear Button -->
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              id="search-input" 
+              placeholder="Tìm bảng, cột, module, ghi chú... ví dụ: product_id, ncf, variants, rating, voucher" 
+              class="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 shadow-sm transition-all"
+              oninput="handleSearch()"
+            />
+            <button 
+              id="search-clear-btn" 
+              onclick="clearSearch()" 
+              class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Action Buttons Group -->
+          <div class="flex items-center gap-2 shrink-0">
+            <button 
+              onclick="expandAll()" 
+              class="px-3.5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              title="Mở tất cả bảng dữ liệu"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+              <span>Mở tất cả</span>
+            </button>
+
+            <button 
+              onclick="collapseAll()" 
+              class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              title="Thu gọn tất cả bảng dữ liệu"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
+              </svg>
+              <span>Thu gọn</span>
+            </button>
+
+            <button 
+              onclick="window.print()" 
+              class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-sm shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer"
+              title="Xuất tài liệu PDF / In ấn"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+              </svg>
+              <span>In/PDF</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Realtime Filter Status -->
+        <div class="flex items-center justify-between text-xs text-slate-500 mt-2.5">
+          <p>
+            Đang hiển thị <span class="font-bold text-slate-900 font-mono" id="showing-count">12</span> / 12 bảng.
+            <span class="text-slate-400 ml-1 hidden sm:inline">Click từng card để mở/đóng. Có thể tìm kiếm theo tên bảng, tên cột hoặc ghi chú nghiệp vụ.</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- COLLECTION CARDS LIST                                    -->
+      <!-- ======================================================== -->
+      <div class="space-y-6" id="collections-container">
+
+        <!-- ================================================== -->
+        <!-- 1. AUTH & USERS: users                             -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="auth" id="card-users">
+          <!-- Card Header (Clickable Accordion) -->
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-users')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-blue-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-blue-500/20">
+                auth
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">users</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">MVP</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">Core</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800">Beanie Document</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Tài khoản người dùng & Hồ sơ thể thao</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ thông tin đăng nhập, phân quyền, môn thể thao ưa thích, kích cỡ form dáng và hồ sơ AI.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">16</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Card Body / Table -->
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Định danh bản ghi MongoDB tự sinh.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-blue-700">username</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-mono text-xs">String (Indexed, Unique)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên định danh tài khoản, cho phép đăng nhập cùng với email.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-blue-700">email</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-mono text-xs">EmailStr (Indexed, Unique)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Địa chỉ email chính xác nhận hóa đơn và thông báo đặt hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">hashed_password</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Bcrypt)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mật khẩu đã được hash bằng thư viện Passlib (Bcrypt).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">full_name</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Họ và tên đầy đủ hiển thị trên header và thông tin nhận hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">phone</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số điện thoại liên lạc khi giao hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">address</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Địa chỉ giao nhận hàng mặc định của khách.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">tier</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">String (Default: "Đồng")</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Hạng khách hàng tích lũy: Đồng, Bạc, Vàng, Kim Cương.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-teal-700">interested_sports</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Các môn thể thao yêu thích (Chạy bộ, Cầu lông, Bóng đá,...) làm trọng số cho NCF Recommender.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-teal-700">shoe_size</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Cỡ giày chuẩn của người dùng (EU 38-45) để auto-select biến thể.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">preferred_colors</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Gu màu sắc ưa thích (Đen, Trắng, Đỏ, Xanh Navy,...).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">ai_profile</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Cụm thói quen thể thao được phân tích tự động bởi mô hình AI.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">ai_score</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">Int32 (Default: 0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Điểm sẵn sàng dữ liệu (data readiness) phục vụ độ chính xác của NCF.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-purple-700">role</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-md font-mono text-xs">String (Default: "user")</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Quyền hạn truy cập: "user", "admin", "manager".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">created_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (UTC)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm người dùng đăng ký tài khoản.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">is_active</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Boolean (Default: true)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Trạng thái khóa/kích hoạt tài khoản.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 2. CATALOG: products                               -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="catalog" id="card-products">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-products')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-indigo-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-indigo-500/20">
+                prod
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">products</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">MVP</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800">Core Catalog</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-100 text-cyan-800">NCF Target Item</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Kho sản phẩm thể thao & biến thể tồn kho</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu thông tin sản phẩm, phân loại môn, nhúng mảng biến thể (variants), giá bán, chiết khấu và liên kết Amazon ASIN.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">25</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Khóa chính BSON ID của MongoDB.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-indigo-700">product_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md font-mono text-xs">String (Unique, Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mã ASIN Amazon hoặc mã nội bộ duy nhất; khóa ánh xạ NCF item index.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">name</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Text Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên sản phẩm tiếng Việt đã chuẩn hóa theo ngữ cảnh thể thao.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-emerald-700">price</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-mono text-xs">Float / Double (Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Giá niêm yết bán lẻ VND (đã chuẩn hóa theo phân khúc 95k - 2.95tr).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">image_url</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (URL)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đường dẫn ảnh đại diện chính của sản phẩm (tỉ lệ 1:1, studio HD).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">images</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Bộ sưu tập ảnh chụp góc phụ, ảnh chi tiết chất liệu thực tế.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-indigo-700">product_type</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md font-mono text-xs">String (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Loại sản phẩm: Quần áo, Giày dép, Phụ kiện, Thiết bị.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-indigo-700">sport_type</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md font-mono text-xs">String (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Môn thể thao: Chạy bộ, Cầu lông, Đá bóng, Bóng chuyền, Pickleball, Dã ngoại, Đa dụng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">category</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Danh mục tổng hợp chi tiết theo ngữ cảnh hiển thị Breadcrumb và lọc phụ.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">brand</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thương hiệu sản phẩm: Nike, Adidas, Yonex, Lining, Puma, Mikasa,...</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">rating</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">Float (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Điểm đánh giá sao trung bình (4.0 - 5.0) đồng bộ cùng reviews.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">reviews_count</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Int32 (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số lượng đánh giá đã được gửi từ khách hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">sizes</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tập hợp các kích cỡ có thể chọn trên giao diện.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">colors</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tập hợp màu sắc sản phẩm có sẵn.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-teal-700">variants</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md font-mono text-xs">Array&lt;EmbeddedDoc&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mảng cấu trúc biến thể chi tiết (gồm: color, size, stock, sku, price).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">gender</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Default: "Unisex")</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Phân loại đối tượng: "Nam", "Nữ", "Unisex".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">stock</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Int32 (Default: 100)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tổng số lượng tồn kho của toàn bộ sản phẩm.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">description</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Text Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mô tả đặc tính công nghệ, chất liệu thoáng khí, độ bền vật lý.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-red-700">discount_percent</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded-md font-mono text-xs">Int32 (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">% Giảm giá trực tiếp (0 - 50%).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">discount_start_date</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời gian mở bán chương trình khuyến mãi.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">discount_end_date</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời gian kết thúc flash sale.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">is_hidden</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Boolean (Default: false)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Ẩn khỏi catalog nếu hết hàng hoặc tạm dừng bán.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">is_deleted</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Boolean (Default: false)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Trạng thái xóa mềm (Soft delete) hỗ trợ khôi phục trong thùng rác Admin.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">created_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (UTC)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời gian tạo sản phẩm lần đầu trong hệ thống.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">updated_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (UTC)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời gian cập nhật dữ liệu lần cuối.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 3. CATALOG: mega_menu                              -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="catalog" id="card-mega-menu">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-mega-menu')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-indigo-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-indigo-500/20">
+                menu
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">mega_menu</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">Navigation</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">Dynamic UI</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Cấu hình cây danh mục điều hướng MegaMenu 3 cấp</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ cấu trúc điều hướng phân cấp (Sport Type -> Product Type -> Sub Category) quản lý từ trang Admin.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">6</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID bản ghi MongoDB.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-indigo-700">config_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md font-mono text-xs">String (Default: "default")</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Khóa định danh phiên bản cấu hình menu đang chạy.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-teal-700">menu_data</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md font-mono text-xs">Array&lt;MegaMenuSport&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mảng các node môn thể thao cấp cao nhất (Chạy bộ, Cầu lông, Bóng đá,...).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">↳ sport_type</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Cấp 1)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên môn thể thao hiển thị trên header dropdown.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">↳ product_types</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;MegaMenuProductType&gt; (Cấp 2)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Nhóm phân loại: Giày dép thể thao, Trang phục thi đấu, Vợt & Thiết bị, Phụ kiện.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">↳ categories</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;MegaMenuCategory&gt; (Cấp 3)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Danh mục con chi tiết (Giày chạy Marathon, Áo bóng đá CLB, Vợt cầu lông Carbon,...).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 4. CATALOG: product_attributes                     -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="catalog" id="card-product-attributes">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-product-attributes')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-indigo-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-indigo-500/20">
+                attr
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">product_attributes</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800">Master Data</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800">Filter Engine</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Bảng định nghĩa thuộc tính sản phẩm toàn sàn</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Quản lý danh sách chuẩn hóa của thương hiệu (brands), màu sắc kèm mã HEX, bảng size giày & quần áo.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">7</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID bản ghi cấu hình thuộc tính toàn cục.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-indigo-700">brands</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Danh sách thương hiệu chính hãng (Nike, Adidas, Yonex, Lining, Puma,...).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-teal-700">colors</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md font-mono text-xs">Array&lt;AttributeColor&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mảng đối tượng: Tên màu tiếng Việt và mã màu HEX tương ứng phục vụ render UI.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">shoe_sizes</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Bảng kích cỡ giày chuẩn EU: 38, 39, 40, 41, 42, 43, 44, 45.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">clothing_sizes</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Bảng kích cỡ trang phục chuẩn quốc tế: S, M, L, XL, 2XL, 3XL.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">sport_specs</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Các thông số kỹ thuật (độ căng cước vợt, độ dày đĩa đệm carbon, áp suất bóng).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">updated_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (UTC)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời gian cập nhật danh mục thuộc tính từ giao diện quản trị.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 5. ORDERS: orders                                  -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="order" id="card-orders">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-orders')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-amber-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-amber-500/20">
+                ord
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">orders</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">MVP</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">Checkout</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">Transactional</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Đơn đặt hàng & Lịch sử thanh toán</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Quản lý giao dịch mua hàng, danh sách OrderItem nhúng, trạng thái vận chuyển, chiết khấu voucher và mã vận đơn.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">20</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID đơn hàng BSON tự sinh duy nhất.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">customer_name</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên người nhận hàng ghi trên bưu kiện.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">customer_phone</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">String (Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số điện thoại liên lạc nhận hàng (có index tra cứu đơn).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">customer_address</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Địa chỉ chi tiết nơi giao hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">payment_method</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Phương thức: "cod" (tiền mặt khi nhận), "vnpay", "momo", "bank_transfer".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-teal-700">items</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-md font-mono text-xs">Array&lt;OrderItem&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mảng chi tiết sản phẩm: product_id, product_name, quantity, price, size, color, image_url.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-emerald-700">total_amount</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-mono text-xs">Float / Double</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tổng tiền thanh toán cuối cùng sau khi cộng ship và trừ voucher.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">subtotal</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Float (Default: 0.0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tổng tiền hàng gốc trước khi áp dụng chiết khấu.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">shipping_fee</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Float (Default: 0.0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Phí giao hàng (đồng giá hoặc miễn phí nếu có mã freeship).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-red-700">discount_amount</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 rounded-md font-mono text-xs">Float (Default: 0.0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số tiền được giảm trừ từ khuyến mãi.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">voucher_code</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">String (Nullable, Ref)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mã voucher đã sử dụng (FK liên kết vouchers.code).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-blue-700">status</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-mono text-xs">String (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Trạng thái: "pending", "confirmed", "shipping", "delivered", "cancelled".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">rejection_reason</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Lý do hủy đơn hoặc giao hàng không thành công.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">tracking_code</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mã vận đơn đối tác (GHN, GHTK, Viettel Post) tra cứu hành trình.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">carrier</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên đơn vị vận chuyển tiếp nhận kiện hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">shipping_method</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Hình thức giao nhận: "Giao tiêu chuẩn" hoặc "Hỏa tốc 2H".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">payment_status</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Default: "unpaid")</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tình trạng thanh toán: "unpaid", "paid", "refunded".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">paid_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm thanh toán trực tuyến thành công.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-blue-700">user_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-mono text-xs">String (Indexed, Ref)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">FK liên kết users._id (null nếu khách vãng lai không đăng nhập).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">created_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm khách hoàn tất ấn Đặt hàng.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 6. ORDERS: vouchers                                -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="order" id="card-vouchers">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-vouchers')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-amber-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-amber-500/20">
+                vouc
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">vouchers</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-800">Marketing</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">Promotion</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Kho mã giảm giá & Khuyến mãi toàn sàn</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Quản lý mã coupon (FREESHIP, VNPAY10, SALE50), tỷ lệ giảm, giá trị đơn hàng tối thiểu và giới hạn sử dụng.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">12</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID bản ghi voucher MongoDB.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">code</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">String (Indexed, Unique)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Chuỗi mã nhập (FREESHIP0D, VNPAY10, SALE50, WELCOME50K).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">discount_type</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Cơ chế chiết khấu: "fixed" (tiền cố định), "percent" (%), "freeship".</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-emerald-700">discount_value</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-mono text-xs">Float / Double</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Giá trị giảm (ví dụ: 50.000đ hoặc 10%).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">max_discount</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Float (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Trần tiền giảm tối đa khi áp dụng voucher theo phần trăm.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">min_order_value</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Float (Default: 0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Giá trị đơn hàng tối thiểu cần đạt để kích hoạt giảm giá.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">usage_limit</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Int32 (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tổng số lượt mã có thể sử dụng toàn sàn trước khi đóng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">used_count</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Int32 (Default: 0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số lần mã đã được khách hàng áp dụng thanh toán thành công.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">valid_from</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm bắt đầu có hiệu lực áp dụng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">valid_until</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm voucher hết hạn sử dụng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">is_active</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Boolean (Compound Indexed)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Cờ bật/tắt voucher tức thời từ ban quản trị.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">applicable_categories</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt; (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Danh mục thể thao áp dụng riêng (null = áp dụng cho toàn bộ giỏ hàng).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 7. ORDERS: banners                                 -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="order" id="card-banners">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-banners')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-amber-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-amber-500/20">
+                bann
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">banners</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800">Media</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">Homepage Slider</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Banner & Hero Sliders trang chủ</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ ảnh quảng cáo banner thể thao, phụ đề, đường dẫn điều hướng khuyến mãi và thứ tự hiển thị.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">8</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID bản ghi banner MongoDB.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">title</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tiêu đề chính nổi bật của chiến dịch thể thao.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">subtitle</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Dòng phụ đề bổ sung thông điệp khuyến mãi.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">badge</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Huy hiệu nhỏ gắn kèm (HOT, MÙA THỂ THAO 2026, GIẢM 50%).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">image_url</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (URL)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đường dẫn hình ảnh hero độ nét cao (1600x600px).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">link</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đường link chuyển hướng khi người dùng click (URL nội bộ/ngoại bộ).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">position</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Int32 (Default: 0)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số thứ tự ưu tiên hiển thị trên thanh carousel.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">is_active</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Boolean (Default: true)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Trạng thái kích hoạt hiển thị ngoài trang chủ.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 8. AI NCF: interactions                            -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="ai" id="card-interactions">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-interactions')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-cyan-600/20">
+                ai
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">interactions</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-100 text-cyan-800">Implicit Feedback</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800">NCF Dataset</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Tương tác người dùng & Dữ liệu huấn luyện AI</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Thu thập hành vi tương tác thực tế (view, click, add_to_cart, purchase) để chuẩn hóa thành ma trận điểm huấn luyện mô hình NCF.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">6</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID log tương tác MongoDB.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">user_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">String (Indexed, Ref)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID người dùng thực hiện tương tác (FK liên kết users._id).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">product_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">String (Indexed, Ref)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mã sản phẩm được tương tác (FK liên kết products.product_id).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-indigo-700">interaction_type</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Hành vi: "view" (1đ), "click" (2đ), "add_to_cart" (3đ), "purchase" (4đ).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">rating</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">Float (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Điểm đánh giá sao trực tiếp nếu người dùng có chấm điểm (1.0 - 5.0).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">timestamp</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (UTC)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm ghi nhận hành vi phục vụ phân rã dữ liệu theo chuỗi thời gian.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 9. AI NCF: reviews                                 -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="ai" id="card-reviews">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-reviews')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-cyan-600/20">
+                rev
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">reviews</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">Explicit Feedback</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">Verified</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Đánh giá sản phẩm, nhận xét & ảnh thực tế</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ phản hồi đánh giá của khách hàng, xác thực mua hàng, thông tin size/màu đã mua và mảng ảnh chụp feedback.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">11</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID đánh giá duy nhất.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">user_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">String (Indexed, Ref)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID người gửi nhận xét (FK liên kết users._id).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">product_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">String (Indexed, Ref)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Mã sản phẩm được đánh giá (FK liên kết products.product_id).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-amber-700">rating</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-md font-mono text-xs">Int32 (1..5)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số sao đánh giá từ 1 đến 5 sao.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">comment</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Nội dung nhận xét cảm nhận trải nghiệm sản phẩm thể thao.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">user_name</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Cache)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên người đánh giá (denormalized cache để tăng tốc render không cần lookup).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">avatar_url</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Cache, URL)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Avatar người đánh giá (cache).</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">size_bought</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Size giày / trang phục khách đã mua trong đơn thực tế.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">color_bought</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Màu sắc khách đã mua trong đơn thực tế.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-emerald-700">verified_purchase</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-mono text-xs">Boolean (Default: false)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đánh dấu đơn hàng đã được giao thành công ("Đã mua hàng tại KADY").</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">images</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Array&lt;String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Ảnh chụp trên tay feedback của khách hàng.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 10. AI NCF: ncf_mappings                           -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="ai" id="card-ncf-mappings">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-ncf-mappings')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-cyan-600 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-cyan-600/20">
+                ncf
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">ncf_mappings</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-100 text-cyan-800">PyTorch Artifact</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800">Deep Learning</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Cấu trúc ánh xạ không gian nhúng mô hình AI NCF</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ metadata bảng ánh xạ chỉ số User/Item sang Tensor Indices và tham số mô hình NeuMF (GMF + MLP).</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">7</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">file_path</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String / JSON Path</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đường dẫn tệp trọng số: <code class="text-xs bg-slate-100 px-1 py-0.5 rounded">backend/app/ml/saved_models/mappings.json</code>.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">user_to_index</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">Map&lt;String, Int32&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Ánh xạ từ User ID sang số nguyên [0..N-1] cho Tensor User Embedding.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-cyan-700">item_to_index</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-md font-mono text-xs">Map&lt;String, Int32&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Ánh xạ từ Product ASIN sang số nguyên [0..M-1] cho Tensor Item Embedding.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">index_to_user</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Map&lt;Int32, String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Ánh xạ ngược từ chỉ số Index về User ID gốc.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">index_to_item</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Map&lt;Int32, String&gt;</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Ánh xạ ngược từ chỉ số Index về Product ASIN để truy vấn Collection products.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-purple-700">num_users / num_items</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-md font-mono text-xs">Int32</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Kích thước ma trận tương tác phân tán n_users × n_items.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-purple-700">model_architecture</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded-md font-mono text-xs">PyTorch Module Spec</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Embedding Dim = 16/32; GMF (Linear) + MLP [32, 16, 8] (Non-linear) + Sigmoid Output.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 11. SUPPORT: contacts                              -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="support" id="card-contacts">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-contacts')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-emerald-500/20">
+                cont
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">contacts</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">Support</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800">CRM</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Thư liên hệ, khiếu nại & tư vấn khách hàng</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Tiếp nhận thông điệp phản hồi từ form liên hệ ngoài giao diện người dùng và theo dõi trạng thái xử lý.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">7</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID bản ghi liên hệ.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">name</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Họ và tên người gửi yêu cầu.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-blue-700">email</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-md font-mono text-xs">String (Email)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Email của khách để CSKH gửi thư phúc đáp.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">phone</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số điện thoại liên hệ nhanh.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">message</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Nội dung chi tiết lời nhắn hoặc yêu cầu hỗ trợ bảo hành.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-emerald-700">is_resolved</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-mono text-xs">Boolean (Default: false)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đánh dấu tình trạng đã được nhân viên hỗ trợ xong hay chưa.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">created_at</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ISODate (UTC)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Thời điểm khách gửi biểu mẫu liên hệ.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ================================================== -->
+        <!-- 12. SUPPORT: stores                                -->
+        <!-- ================================================== -->
+        <div class="collection-card bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden transition-all duration-200 hover:border-slate-300" data-module="support" id="card-stores">
+          <div class="cursor-pointer p-4 sm:p-5 flex items-start sm:items-center justify-between gap-4 select-none hover:bg-slate-50/60 transition-colors" onclick="toggleCard('card-stores')">
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-emerald-500 text-white font-bold flex items-center justify-center text-sm font-mono shrink-0 shadow-sm shadow-emerald-500/20">
+                stor
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                  <span class="text-base sm:text-lg font-bold font-mono text-slate-900">stores</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-800">Branch System</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">Retail Location</span>
+                </div>
+                <h3 class="text-xs sm:text-sm font-semibold text-slate-700">Hệ thống chi nhánh cửa hàng KADY Sports toàn quốc</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Lưu trữ thông tin địa điểm chi nhánh tại Hà Nội, TP.HCM, Đà Nẵng, số hotline, giờ mở cửa và tọa độ Google Maps.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">Columns <b class="text-slate-800">8</b></span>
+              <span class="card-toggle-text text-xs font-semibold text-slate-400 hidden sm:inline">Thu gọn</span>
+              <svg class="card-icon w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="collection-body border-t border-slate-200/90 overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-[#0b1329] text-white font-semibold uppercase tracking-wider text-[11px]">
+                <tr>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">CỘT / TRƯỜNG DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/4">KIỂU DỮ LIỆU</th>
+                  <th class="py-3 px-4 sm:px-6 w-1/2">GHI CHÚ NGHIỆP VỤ</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">_id</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">ObjectId PK</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">ID bản ghi chi nhánh MongoDB.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">name</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Tên cửa hàng (ví dụ: "KADY Sports Cầu Giấy", "KADY Quận 1").</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">address</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Địa chỉ cụ thể mặt tiền đường, quận huyện.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-emerald-700">city</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Khu vực thành phố phục vụ lọc chi nhánh: 'hanoi', 'hcm', 'danang'.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">phone</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Số điện thoại bàn/hotline của cửa hàng.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">hours</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Khung giờ mở cửa hoạt động (ví dụ: "08:00 - 22:00").</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">is_active</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">Boolean (Default: true)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Trạng thái hoạt động phục vụ khách ghé trải nghiệm.</td>
+                </tr>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4 sm:px-6 font-mono font-bold text-slate-900">google_maps_url</td>
+                  <td class="py-3 px-4 sm:px-6"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-md font-mono text-xs">String (Nullable, URL)</span></td>
+                  <td class="py-3 px-4 sm:px-6 text-slate-600">Đường dẫn Google Maps chỉ đường trực tiếp tới showroom.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Info -->
+      <footer class="mt-12 pt-6 border-t border-slate-200/90 text-center text-xs text-slate-400 no-print">
+        <p class="font-medium">KADY Sports Recommender System · Database Specification Document · MongoDB & PyTorch NCF</p>
+        <p class="mt-1">Generated for Graduation Thesis Presentation · Version 2.0 Production-Ready</p>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- INTERACTIVE LOGIC (VANILLA JS) -->
+  <script>
+    // State
+    let currentModule = 'all';
+
+    // Toggle single card
+    function toggleCard(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const body = card.querySelector('.collection-body');
+      const icon = card.querySelector('.card-icon');
+      const text = card.querySelector('.card-toggle-text');
+
+      if (body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        if (icon) icon.classList.remove('-rotate-90');
+        if (text) text.innerText = 'Thu gọn';
+      } else {
+        body.classList.add('hidden');
+        if (icon) icon.classList.add('-rotate-90');
+        if (text) text.innerText = 'Mở rộng';
+      }
+    }
+
+    // Expand all
+    function expandAll() {
+      document.querySelectorAll('.collection-card').forEach(card => {
+        const body = card.querySelector('.collection-body');
+        const icon = card.querySelector('.card-icon');
+        const text = card.querySelector('.card-toggle-text');
+        if (body) body.classList.remove('hidden');
+        if (icon) icon.classList.remove('-rotate-90');
+        if (text) text.innerText = 'Thu gọn';
+      });
+    }
+
+    // Collapse all
+    function collapseAll() {
+      document.querySelectorAll('.collection-card').forEach(card => {
+        const body = card.querySelector('.collection-body');
+        const icon = card.querySelector('.card-icon');
+        const text = card.querySelector('.card-toggle-text');
+        if (body) body.classList.add('hidden');
+        if (icon) icon.classList.add('-rotate-90');
+        if (text) text.innerText = 'Mở rộng';
+      });
+    }
+
+    // Filter by module
+    function filterByModule(moduleName) {
+      currentModule = moduleName;
+
+      // Update button styling
+      document.querySelectorAll('.module-btn').forEach(btn => {
+        if (btn.getAttribute('data-module') === moduleName) {
+          btn.classList.add('active', 'bg-teal-50', 'text-teal-700', 'border-teal-200');
+          btn.classList.remove('text-slate-600', 'border-transparent');
+        } else {
+          btn.classList.remove('active', 'bg-teal-50', 'text-teal-700', 'border-teal-200');
+          btn.classList.add('text-slate-600', 'border-transparent');
+        }
+      });
+
+      applyCombinedFilters();
+    }
+
+    // Realtime search
+    function handleSearch() {
+      const input = document.getElementById('search-input');
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (input.value.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      applyCombinedFilters();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      document.getElementById('search-clear-btn').classList.add('hidden');
+      applyCombinedFilters();
+      input.focus();
+    }
+
+    // Combined filter function
+    function applyCombinedFilters() {
+      const searchQuery = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const cards = document.querySelectorAll('.collection-card');
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const cardModule = card.getAttribute('data-module');
+        const cardText = card.innerText.toLowerCase();
+
+        const matchModule = (currentModule === 'all' || cardModule === currentModule);
+        const matchSearch = (!searchQuery || cardText.includes(searchQuery));
+
+        if (matchModule && matchSearch) {
+          card.classList.remove('hidden');
+          visibleCount++;
+          // If searching, auto-expand matching cards so results are visible
+          if (searchQuery.length > 1) {
+            const body = card.querySelector('.collection-body');
+            const icon = card.querySelector('.card-icon');
+            const text = card.querySelector('.card-toggle-text');
+            if (body) body.classList.remove('hidden');
+            if (icon) icon.classList.remove('-rotate-90');
+            if (text) text.innerText = 'Thu gọn';
+          }
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      document.getElementById('showing-count').innerText = visibleCount;
+    }
+
+    // Initialize counts on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      applyCombinedFilters();
+    });
+  </script>
+</body>
+</html>

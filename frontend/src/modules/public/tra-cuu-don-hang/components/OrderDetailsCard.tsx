@@ -1,74 +1,127 @@
-import React from 'react';
-import { Package, Truck, CheckCircle, Clock } from 'lucide-react';
+'use client';
+
+import { Calendar, CheckCircle2, Clock, Truck, XCircle } from 'lucide-react';
+import type { TrackedOrder } from '../types';
+import OrderTimelineStepper from './OrderTimelineStepper';
+import OrderRecipientGrid from './OrderRecipientGrid';
+import OrderItemsBreakdown from './OrderItemsBreakdown';
 
 interface OrderDetailsCardProps {
-  order: any;
+  order: TrackedOrder;
 }
 
 export default function OrderDetailsCard({ order }: OrderDetailsCardProps) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
-  };
+  const statusRaw = (order.status || '').toLowerCase().trim();
 
-  const getStatusDisplay = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending': return { text: 'Chờ xác nhận', color: 'text-amber-600', icon: <Clock size={24} /> };
-      case 'shipped': return { text: 'Đang giao hàng', color: 'text-blue-600', icon: <Truck size={24} /> };
-      case 'delivered': return { text: 'Đã giao thành công', color: 'text-green-600', icon: <CheckCircle size={24} /> };
-      default: return { text: status, color: 'text-gray-600', icon: <Package size={24} /> };
+  // Status mapping
+  const isCancelled =
+    statusRaw === 'cancelled' ||
+    statusRaw === 'canceled' ||
+    statusRaw === 'rejected' ||
+    statusRaw === 'đã hủy';
+  const isConfirmed =
+    statusRaw === 'confirmed' ||
+    statusRaw === 'đã xác nhận' ||
+    statusRaw === 'shipping' ||
+    statusRaw === 'delivered' ||
+    statusRaw === 'completed';
+  const isShipping =
+    statusRaw === 'shipping' ||
+    statusRaw === 'shipped' ||
+    statusRaw === 'đang giao' ||
+    statusRaw === 'đang vận chuyển' ||
+    statusRaw === 'delivered' ||
+    statusRaw === 'completed';
+  const isDelivered =
+    statusRaw === 'delivered' ||
+    statusRaw === 'completed' ||
+    statusRaw === 'đã giao' ||
+    statusRaw === 'hoàn tất';
+
+  const getStatusDisplay = () => {
+    if (isCancelled) {
+      return {
+        text: 'Đã hủy đơn',
+        color: 'text-red-700 bg-red-50 border-red-200',
+        icon: <XCircle size={18} className="text-red-600" />,
+      };
     }
+    if (isDelivered) {
+      return {
+        text: 'Giao thành công',
+        color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        icon: <CheckCircle2 size={18} className="text-emerald-600" />,
+      };
+    }
+    if (isShipping) {
+      return {
+        text: 'Đang vận chuyển',
+        color: 'text-indigo-700 bg-indigo-50 border-indigo-200',
+        icon: <Truck size={18} className="text-indigo-600" />,
+      };
+    }
+    if (isConfirmed) {
+      return {
+        text: 'Đã xác nhận',
+        color: 'text-blue-700 bg-blue-50 border-blue-200',
+        icon: <CheckCircle2 size={18} className="text-blue-600" />,
+      };
+    }
+    return {
+      text: 'Chờ xác nhận',
+      color: 'text-amber-700 bg-amber-50 border-amber-200',
+      icon: <Clock size={18} className="text-amber-600" />,
+    };
   };
 
-  const statusDisplay = getStatusDisplay(order.status);
+  const statusDisplay = getStatusDisplay();
+  const shortCode = order._id ? `ORD-${order._id.slice(-6).toUpperCase()}` : '';
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
-      <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-xs divide-y divide-slate-100">
+      {/* 1. Header: Order ID & Live Status */}
+      <div className="bg-slate-50/80 p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-sm font-bold text-gray-900">Mã đơn hàng: <span className="font-mono text-blue-600">{order._id}</span></h2>
-          <p className="text-xs text-gray-500 mt-1">Ngày đặt: {new Date(order.created_at).toLocaleString('vi-VN')}</p>
-        </div>
-        <div className={`flex items-center gap-2 ${statusDisplay.color}`}>
-          {statusDisplay.icon}
-          <span className="font-bold text-sm uppercase tracking-wider">{statusDisplay.text}</span>
-        </div>
-      </div>
-      
-      <div className="p-6">
-        <h3 className="text-sm font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Thông tin người nhận</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-6">
-          <div>
-            <span className="text-gray-500 block mb-1">Họ tên:</span>
-            <span className="font-medium text-gray-900">{order.customer_name}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mã đơn hàng:</span>
+            <span className="font-mono font-black text-blue-600 text-base sm:text-lg tracking-wide tabular-nums">
+              #{shortCode}
+            </span>
+            <span className="text-xs text-slate-400 font-mono hidden md:inline tabular-nums">
+              ({order._id})
+            </span>
           </div>
-          <div>
-            <span className="text-gray-500 block mb-1">Số điện thoại:</span>
-            <span className="font-medium text-gray-900">{order.customer_phone}</span>
-          </div>
-          <div className="sm:col-span-2">
-            <span className="text-gray-500 block mb-1">Địa chỉ nhận hàng:</span>
-            <span className="font-medium text-gray-900">{order.customer_address}</span>
+          <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+            <Calendar size={13} className="text-slate-400 shrink-0" />
+            <span>Ngày đặt:</span>
+            <span className="font-semibold text-slate-700 tabular-nums">
+              {order.created_at ? new Date(order.created_at).toLocaleString('vi-VN') : 'Vừa xong'}
+            </span>
           </div>
         </div>
 
-        <h3 className="text-sm font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2">Chi tiết sản phẩm</h3>
-        <div className="space-y-4">
-          {order.items.map((item: any, idx: number) => (
-            <div key={idx} className="flex justify-between items-center text-sm">
-              <div className="flex flex-col">
-                <span className="font-medium text-gray-900">Sản phẩm ID: {item.product_id}</span>
-                <span className="text-xs text-gray-500">Số lượng: {item.quantity}</span>
-              </div>
-              <span className="font-mono font-medium text-gray-900">{formatPrice(item.price * item.quantity)}</span>
-            </div>
-          ))}
-        </div>
-        
-        <div className="mt-6 pt-4 border-t border-gray-200 flex justify-between items-center">
-          <span className="font-bold text-gray-900">Tổng cộng (Đã bao gồm phí ship):</span>
-          <span className="text-xl font-bold font-mono text-gray-900">{formatPrice(order.total_amount)}</span>
+        <div
+          className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider shadow-2xs ${statusDisplay.color}`}
+        >
+          {statusDisplay.icon}
+          <span>{statusDisplay.text}</span>
         </div>
       </div>
+
+      {/* 2. Order Timeline Stepper */}
+      <OrderTimelineStepper
+        order={order}
+        isCancelled={isCancelled}
+        isConfirmed={isConfirmed}
+        isShipping={isShipping}
+        isDelivered={isDelivered}
+      />
+
+      {/* 3. Customer & Shipping Info Grid */}
+      <OrderRecipientGrid order={order} />
+
+      {/* 4-6. Products, Cost Breakdown & Footer Actions */}
+      <OrderItemsBreakdown order={order} />
     </div>
   );
 }

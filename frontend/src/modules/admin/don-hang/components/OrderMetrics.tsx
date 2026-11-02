@@ -1,14 +1,10 @@
 'use client';
-import React from 'react';
+
 import { Package, Clock, Truck, CheckCircle } from 'lucide-react';
+import type { OrderMetricsData } from '../types';
 
 interface OrderMetricsProps {
-  metrics: {
-    totalCount: number;
-    pendingCount: number;
-    shippingCount: number;
-    deliveredCount: number;
-  };
+  metrics: OrderMetricsData;
 }
 
 export default function OrderMetrics({ metrics }: OrderMetricsProps) {
@@ -19,7 +15,9 @@ export default function OrderMetrics({ metrics }: OrderMetricsProps) {
           <Package size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Tổng đơn hàng</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            Tổng đơn hàng
+          </p>
           <p className="text-lg font-black text-gray-900">{metrics.totalCount}</p>
         </div>
       </div>
@@ -33,7 +31,9 @@ export default function OrderMetrics({ metrics }: OrderMetricsProps) {
           <Clock size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Cần duyệt ngay</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            Cần duyệt ngay
+          </p>
           <p className="text-lg font-black text-amber-600">{metrics.pendingCount}</p>
         </div>
       </div>
@@ -43,7 +43,9 @@ export default function OrderMetrics({ metrics }: OrderMetricsProps) {
           <Truck size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Đang giao hàng</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            Đang giao hàng
+          </p>
           <p className="text-lg font-black text-indigo-600">{metrics.shippingCount}</p>
         </div>
       </div>
@@ -53,7 +55,9 @@ export default function OrderMetrics({ metrics }: OrderMetricsProps) {
           <CheckCircle size={20} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Đã giao hoàn tất</p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            Đã giao hoàn tất
+          </p>
           <p className="text-lg font-black text-emerald-600">{metrics.deliveredCount}</p>
         </div>
       </div>

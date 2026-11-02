@@ -1,2 +1,14 @@
 @import "tailwindcss";
 
+/* Base font-size for Compact & Refined E-commerce scale (~10% proportional rem reduction) */
+html {
+  font-size: 14.5px;
+}
+
+/* Hide browser default password reveal button (Edge / Chrome ms-reveal) to prevent duplicate eye icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Users, ArrowUp, UserCheck, Award, Infinity as InfinityIcon } from "lucide-react";
 
 interface CustomerKPICardsProps {

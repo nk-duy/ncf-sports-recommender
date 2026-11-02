@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   X,
   Edit3,
@@ -9,17 +8,19 @@ import {
   MapPin,
   Sparkles,
   Gift,
+  Bell,
 } from "lucide-react";
+import type { CustomerItem, CustomerOrderSummary } from "../types";
 
 interface CustomerDetailDrawerProps {
-  customer: any;
-  orders: any[];
+  customer: CustomerItem | undefined;
+  orders: CustomerOrderSummary[];
   loadingOrders: boolean;
   onClose: () => void;
-  onEdit: (customer: any) => void;
-  onSendEmail: (customer: any) => void;
-  onSendVoucher: (customer: any) => void;
-  onViewAllOrders: (customer: any) => void;
+  onEdit: (customer: CustomerItem) => void;
+  onSendEmail: (customer: CustomerItem) => void;
+  onSendVoucher: (customer: CustomerItem) => void;
+  onViewAllOrders: (customer: CustomerItem) => void;
 }
 
 export default function CustomerDetailDrawer({
@@ -96,24 +97,35 @@ export default function CustomerDetailDrawer({
       </div>
 
       {/* Customer KPI Mini Grid */}
-      <div className="grid grid-cols-3 gap-2 bg-blue-50/50 border border-blue-100 p-3 rounded-lg text-center">
+      <div className="grid grid-cols-4 gap-2 bg-blue-50/50 border border-blue-100 p-3 rounded-lg text-center">
         <div className="flex flex-col">
           <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
             Tổng đơn
           </span>
-          <span className="text-lg font-bold text-gray-900 mt-0.5">{customer.orders}</span>
+          <span className="text-base font-bold text-gray-900 mt-0.5">{customer.orders}</span>
         </div>
         <div className="flex flex-col border-x border-blue-100/50">
           <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
             Chi tiêu
           </span>
-          <span className="text-lg font-bold text-blue-600 mt-0.5">{customer.spentShort}</span>
+          <span className="text-base font-bold text-blue-600 mt-0.5">{customer.spentShort}</span>
+        </div>
+        <div className="flex flex-col border-r border-blue-100/50">
+          <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+            Điểm
+          </span>
+          <span className="text-base font-bold text-amber-600 mt-0.5 tabular-nums">
+            {(customer.loyalty_points !== undefined
+              ? customer.loyalty_points
+              : Math.floor((customer.spent || 0) / 10000)
+            ).toLocaleString("vi-VN")}
+          </span>
         </div>
         <div className="flex flex-col">
           <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
             Hoàn trả
           </span>
-          <span className="text-lg font-bold text-green-600 mt-0.5">{customer.returnRate}</span>
+          <span className="text-base font-bold text-green-600 mt-0.5">{customer.returnRate}</span>
         </div>
       </div>
 
@@ -139,8 +151,8 @@ export default function CustomerDetailDrawer({
           <div className="flex items-center justify-between text-xs">
             <span className="text-gray-500">Gam màu ưa thích:</span>
             <div className="flex items-center gap-1.5">
-              {customer.colors?.map((c: string, i: number) => (
-                <span key={i} className={`w-3.5 h-3.5 rounded-full ${c} inline-block shadow-2xs`}></span>
+              {customer.colors?.map((c, i) => (
+                <span key={i} className={`w-3.5 h-3.5 rounded-full ${c} inline-block shadow-2xs`} />
               ))}
               <span className="text-xs font-medium text-gray-500 ml-1">
                 {customer.colorNames}
@@ -171,15 +183,13 @@ export default function CustomerDetailDrawer({
               Khách hàng chưa có đơn hàng nào
             </div>
           ) : (
-            orders.slice(0, 3).map((ord: any) => (
+            orders.slice(0, 3).map((ord) => (
               <div
                 key={ord.id}
                 className="flex items-center justify-between p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-gray-900 font-mono">
-                    {ord.code}
-                  </span>
+                  <span className="text-xs font-semibold text-gray-900 font-mono">{ord.code}</span>
                   <span className="text-[10px] text-gray-500 mt-0.5 truncate max-w-[150px]">
                     {ord.created_at} • {ord.first_item_name}
                   </span>
@@ -192,8 +202,8 @@ export default function CustomerDetailDrawer({
                     {ord.status === "completed"
                       ? "Hoàn tất"
                       : ord.status === "shipping"
-                      ? "Đang giao"
-                      : "Đang xử lý"}
+                        ? "Đang giao"
+                        : "Đang xử lý"}
                   </span>
                 </div>
               </div>
@@ -208,8 +218,8 @@ export default function CustomerDetailDrawer({
           onClick={() => onSendEmail(customer)}
           className="w-full h-9 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
         >
-          <Mail size={16} />
-          <span>Gửi Email thông báo</span>
+          <Bell size={16} />
+          <span>🔔 Gửi Thông báo / Email</span>
         </button>
         <div className="grid grid-cols-2 gap-2">
           <button

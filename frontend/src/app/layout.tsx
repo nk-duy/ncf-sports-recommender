@@ -5,12 +5,9 @@ import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
+import { LanguageProvider } from "@/shared/context/LanguageContext";
 
-// Nếu báo lỗi @, hãy đổi thành đường dẫn tương đối (vd: "../modules/...")
-import Header from "@/modules/public/cot-loi/components/Header";
-import Footer from "@/modules/public/cot-loi/components/Footer";
-
-const inter = Inter({ 
+const inter = Inter({
   subsets: ["latin", "vietnamese"],
   display: "swap",
 });
@@ -30,8 +27,10 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <MantineProvider>
-          <Notifications position="top-right" zIndex={1000} />
-          {children}
+          <LanguageProvider>
+            <Notifications position="top-right" zIndex={1000} />
+            {children}
+          </LanguageProvider>
         </MantineProvider>
       </body>
     </html>
