@@ -6,6 +6,7 @@ import OrderFilterHeader from "./OrderFilterHeader";
 import OrderCard from "./OrderCard";
 import OrderDetailModal from "./OrderDetailModal";
 import OrderReviewModal from "./OrderReviewModal";
+import ViewReviewModal from "./ViewReviewModal";
 import { useOrdersList } from "../hooks/useOrdersList";
 
 export default function OrdersList() {
@@ -31,12 +32,25 @@ export default function OrdersList() {
     setReviewingItem,
     reviewRating,
     setReviewRating,
+    reviewTitle,
+    setReviewTitle,
     reviewComment,
     setReviewComment,
+    reviewImages,
+    isUploadingImage,
+    handleUploadReviewImage,
+    handleRemoveReviewImage,
     isSubmittingReview,
     handleCancelOrder,
     handleSubmitReview,
     handleResetFilter,
+    // View review states & handlers
+    viewingItem,
+    viewReviewData,
+    isViewReviewOpen,
+    setIsViewReviewOpen,
+    isLoadingReview,
+    handleViewReview,
   } = useOrdersList();
 
   return (
@@ -68,6 +82,7 @@ export default function OrdersList() {
               onCancelOrder={handleCancelOrder}
               isCancelling={isCancelling}
               onOpenReview={setReviewingItem}
+              onViewReview={handleViewReview}
             />
           ))
         ) : (
@@ -144,6 +159,7 @@ export default function OrdersList() {
         onCancelOrder={handleCancelOrder}
         isCancelling={isCancelling}
         onOpenReview={setReviewingItem}
+        onViewReview={handleViewReview}
       />
 
       <OrderReviewModal
@@ -152,9 +168,23 @@ export default function OrdersList() {
         onSubmit={handleSubmitReview}
         reviewRating={reviewRating}
         setReviewRating={setReviewRating}
+        reviewTitle={reviewTitle}
+        setReviewTitle={setReviewTitle}
         reviewComment={reviewComment}
         setReviewComment={setReviewComment}
+        reviewImages={reviewImages}
+        isUploadingImage={isUploadingImage}
+        onUploadImage={handleUploadReviewImage}
+        onRemoveImage={handleRemoveReviewImage}
         isSubmittingReview={isSubmittingReview}
+      />
+
+      <ViewReviewModal
+        isOpen={isViewReviewOpen}
+        onClose={() => setIsViewReviewOpen(false)}
+        reviewData={viewReviewData}
+        itemData={viewingItem}
+        loading={isLoadingReview}
       />
     </div>
   );

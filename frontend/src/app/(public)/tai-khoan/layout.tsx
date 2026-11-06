@@ -34,9 +34,9 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   ];
 
   return (
-    <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-8">
-      <Breadcrumb items={breadcrumbItems} />
-      <div className="flex flex-col md:flex-row gap-6 mt-4">
+    <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-3 sm:py-6 md:py-8">
+      <Breadcrumb items={breadcrumbItems} className="text-xs sm:text-sm whitespace-nowrap overflow-x-auto pb-1" />
+      <div className="flex flex-col md:flex-row gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-4">
         <aside className="w-full md:w-72 flex-shrink-0">
           <AccountSidebar />
         </aside>

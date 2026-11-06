@@ -109,7 +109,7 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
   const endIdx = Math.min(currentPage * ITEMS_PER_PAGE, totalCount);
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-full overflow-x-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white rounded-2xl border border-gray-100 p-4 shadow-sm mb-6 gap-4">
         <div className="text-sm text-gray-600">
           Hiển thị <span className="font-bold text-gray-900">{startIdx} - {endIdx}</span> trên tổng số <span className="font-bold text-blue-600">{totalCount}</span> sản phẩm
@@ -120,7 +120,7 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-10">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6 mb-10">
         {products.map((p, idx) => {
           const discountPct = p.discount_percent || 0;
           const discountedPrice = discountPct > 0 ? p.price * (1 - discountPct / 100) : p.price;

@@ -56,6 +56,10 @@ class ReviewService:
             existing_review.comment = review_in.comment
             existing_review.size_bought = review_in.size_bought
             existing_review.color_bought = review_in.color_bought
+            if review_in.title is not None:
+                existing_review.title = review_in.title
+            if review_in.order_id is not None:
+                existing_review.order_id = review_in.order_id
             if review_in.images is not None:
                 existing_review.images = review_in.images
             existing_review.verified_purchase = has_purchased
@@ -67,6 +71,7 @@ class ReviewService:
                 user_id=str(current_user.id),
                 product_id=review_in.product_id,
                 rating=review_in.rating,
+                title=review_in.title,
                 comment=review_in.comment,
                 user_name=current_user.full_name or current_user.email.split('@')[0],
                 avatar_url=None,
@@ -74,21 +79,52 @@ class ReviewService:
                 color_bought=review_in.color_bought,
                 images=review_in.images or [],
                 verified_purchase=has_purchased,
-                is_hidden=False
+                is_hidden=False,
+                order_id=review_in.order_id
             )
             await review_db.insert()
 
+        # Cập nhật trạng thái is_reviewed = True vào đơn hàng để ẩn hoàn toàn nút Đánh giá sản phẩm
+        try:
+            order_to_update = None
+            if review_in.order_id:
+                raw_oid = str(review_in.order_id).strip()
+                if ObjectId.is_valid(raw_oid):
+                    try:
+                        order_to_update = await Order.get(PydanticObjectId(raw_oid))
+                    except Exception:
+                        pass
+                if not order_to_update:
+                    order_to_update = await Order.find_one({"_id": raw_oid})
+
+            if not order_to_update and valid_order:
+                order_to_update = valid_order
+
+            if order_to_update:
+                order_to_update.is_reviewed = True
+                for item in order_to_update.items:
+                    if item.product_id == review_in.product_id:
+                        item.is_reviewed = True
+                await order_to_update.save()
+                logger.info(f"[ReviewService] Marked order {order_to_update.id} as is_reviewed=True")
+        except Exception as e:
+            logger.warning(f"[ReviewService] Could not update order is_reviewed: {e}")
+
         # 3. Khép kín Vòng lặp Phản hồi Tường minh (Explicit Feedback) vào bảng interactions cho mô hình NCF
         try:
+            interaction_type = "positive_review" if review_in.rating >= 4 else "review"
             interaction = Interaction(
                 user_id=str(current_user.id),
                 product_id=review_in.product_id,
-                interaction_type="review",
+                interaction_type=interaction_type,
                 rating=float(review_in.rating),
                 timestamp=datetime.utcnow()
             )
             await interaction.insert()
-            logger.info(f"[ReviewService] Recorded explicit feedback for NCF: user={current_user.id}, product={review_in.product_id}")
+            if review_in.rating >= 4:
+                logger.info(f"[ReviewService] Recorded positive NCF explicit feedback (rating={review_in.rating} >= 4): user={current_user.id}, product={review_in.product_id}")
+            else:
+                logger.info(f"[ReviewService] Recorded explicit feedback for NCF: user={current_user.id}, product={review_in.product_id}")
         except Exception as e:
             logger.warning(f"[ReviewService] Error recording explicit feedback into interactions: {e}")
 

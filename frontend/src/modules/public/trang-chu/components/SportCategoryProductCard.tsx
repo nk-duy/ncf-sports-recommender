@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart } from "lucide-react";
 import { HOME_FALLBACK_SPORT_IMG, type SportProduct } from "../types";
 
 interface SportCategoryProductCardProps {
@@ -10,7 +10,7 @@ interface SportCategoryProductCardProps {
   mounted: boolean;
   wishlisted: boolean;
   onToggleWishlist: (e: React.MouseEvent, p: SportProduct) => void;
-  onQuickAdd: (e: React.MouseEvent, p: SportProduct) => void;
+  onQuickAdd?: (e: React.MouseEvent, p: SportProduct) => void;
 }
 
 export default function SportCategoryProductCard({
@@ -18,7 +18,6 @@ export default function SportCategoryProductCard({
   mounted,
   wishlisted,
   onToggleWishlist,
-  onQuickAdd,
 }: SportCategoryProductCardProps) {
   const pid = product.product_id;
   const discount = product.discount_percent || 0;
@@ -85,14 +84,6 @@ export default function SportCategoryProductCard({
               </span>
             )}
           </div>
-
-          <button
-            onClick={(e) => onQuickAdd(e, product)}
-            className="w-8 h-8 rounded-xl bg-slate-900 hover:bg-blue-600 text-white flex items-center justify-center transition-colors shadow-sm cursor-pointer shrink-0"
-            title="Thêm nhanh vào giỏ"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
     </div>

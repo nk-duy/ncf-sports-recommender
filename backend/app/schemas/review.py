@@ -5,10 +5,12 @@ from datetime import datetime
 class ReviewBase(BaseModel):
     product_id: str
     rating: int = Field(..., ge=1, le=5, description="Điểm đánh giá (1-5)")
+    title: Optional[str] = Field(None, description="Tiêu đề đánh giá")
     comment: Optional[str] = Field(None, description="Nội dung đánh giá")
     size_bought: Optional[str] = Field(None, description="Size đã mua")
     color_bought: Optional[str] = Field(None, description="Màu đã mua")
     images: Optional[List[str]] = Field(default_factory=list, description="Hình ảnh đính kèm của người dùng")
+    order_id: Optional[str] = Field(None, description="Mã đơn hàng liên quan")
 
 class ReviewCreate(ReviewBase):
     pass

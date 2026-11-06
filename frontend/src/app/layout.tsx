@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="vi" suppressHydrationWarning>
       <body
-        className={`${inter.className} min-h-screen flex flex-col antialiased bg-[#F5F7FA] text-[#1A202C]`}
+        className={`${inter.className} min-h-screen flex flex-col antialiased bg-[#F5F7FA] text-[#1A202C] w-full max-w-full overflow-x-hidden`}
         suppressHydrationWarning
       >
         <MantineProvider>

@@ -135,7 +135,7 @@ export default function ProductRecommendations({ productId, sportType }: Product
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4 md:gap-6">
         {loadingRecs ? (
           Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-gray-100 rounded-xl h-80 animate-pulse" />

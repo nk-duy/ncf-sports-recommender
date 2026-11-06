@@ -1,5 +1,5 @@
 export interface AIExplanation {
-  strategy: "hybrid_ncf" | "cold_start" | "cosine_cross_sell";
+  strategy: "hybrid_ncf" | "cold_start" | "cosine_cross_sell" | "visual_ncf_fusion" | string;
   ncf_score?: number;
   context_boost?: number;
   cosine_score?: number;

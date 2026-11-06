@@ -7,6 +7,7 @@ export interface OrderItem {
   color?: string;
   image_url?: string;
   image?: string;
+  is_reviewed?: boolean;
 }
 
 export interface OrderData {
@@ -29,6 +30,7 @@ export interface OrderData {
   shipping_method?: string;
   user_id?: string;
   created_at: string;
+  is_reviewed?: boolean;
 }
 
 export interface ReviewingItem {
@@ -36,6 +38,8 @@ export interface ReviewingItem {
   productName: string;
   size?: string;
   color?: string;
+  imageUrl?: string;
+  orderId?: string;
 }
 
 export const ORDER_TABS = [

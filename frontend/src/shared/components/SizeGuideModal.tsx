@@ -8,8 +8,10 @@ import {
   calcRecommendedApparelSize,
   calcRecommendedShoeSize,
   detectDefaultSizeTab,
+  sizeKindToTab,
   type FitPreference,
   type GenderType,
+  type SizeGuideProductKind,
   type SizeTabId,
 } from './size-guide/sizeGuideData';
 import SizeCalculatorPanel from './size-guide/SizeCalculatorPanel';
@@ -20,6 +22,8 @@ interface SizeGuideModalProps {
   onClose: () => void;
   categories?: string[];
   productName?: string;
+  /** Nhóm sản phẩm đã được phân loại (ưu tiên hơn việc đoán theo tên) để mở đúng bảng quy đổi. */
+  sizeKind?: SizeGuideProductKind;
   onSelectSize?: (size: string) => void;
 }
 
@@ -181,11 +185,12 @@ export default function SizeGuideModal({
   onClose,
   categories = [],
   productName = '',
+  sizeKind,
   onSelectSize,
 }: SizeGuideModalProps) {
   const defaultTab = useMemo(
-    () => detectDefaultSizeTab(productName, categories),
-    [categories, productName]
+    () => (sizeKind ? sizeKindToTab(sizeKind) : detectDefaultSizeTab(productName, categories)),
+    [categories, productName, sizeKind]
   );
 
   if (!isOpen) return null;

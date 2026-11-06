@@ -41,17 +41,17 @@ export default function AdminTopbar({
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shadow-xs z-20 relative shrink-0">
-      {/* Mobile hamburger button */}
+      {/* Mobile & Tablet hamburger button (< 1024px) */}
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenMobileMenu}
-          className="size-10 inline-flex items-center justify-center md:hidden rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-150"
+          className="size-10 inline-flex items-center justify-center lg:hidden rounded-xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors duration-150 cursor-pointer"
           aria-label="Mở menu quản trị"
           title="Mở menu quản trị"
         >
           <Menu size={22} />
         </button>
-        <div className="md:hidden flex items-center gap-2">
+        <div className="lg:hidden flex items-center gap-2">
           <span className="font-black text-slate-900 text-sm tracking-tight">KADY SPORT</span>
           <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
             Admin

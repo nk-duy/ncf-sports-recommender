@@ -232,9 +232,9 @@ export default function SizeGuideTables({
             </div>
             <div className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
               <div className="font-bold text-gray-900 flex justify-between">
-                <span>Độ dày lõi 16mm vs 13mm</span>
+                <span>Độ dày mặt vợt 14mm vs 16mm</span>
               </div>
-              <p className="text-gray-500 text-[11px] mt-0.5">16mm cho độ êm và cảm giác bóng tối đa (Control); 13mm cho tốc độ bay bóng nảy uy lực (Power).</p>
+              <p className="text-gray-500 text-[11px] mt-0.5">16mm (Kiểm soát) cho độ êm và cảm giác bóng tối đa; 14mm (Công thủ) cân bằng giữa tốc độ bay bóng và khả năng kiểm soát.</p>
             </div>
           </div>
         </div>

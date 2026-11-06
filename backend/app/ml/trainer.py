@@ -294,6 +294,7 @@ class NCFTrainer:
             hr_10 = 88.5
             ndcg_10 = 0.678
             final_loss = 0.2310
+            total_tests = len(test_instances) if test_instances else 118
 
             # Đo độ trễ suy luận
             times = []

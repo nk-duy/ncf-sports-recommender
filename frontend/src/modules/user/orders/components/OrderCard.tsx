@@ -22,6 +22,7 @@ interface OrderCardProps {
   onCancelOrder: (orderId: string) => void;
   isCancelling: boolean;
   onOpenReview: (item: ReviewingItem) => void;
+  onViewReview?: (order: OrderData, item?: ReviewingItem) => void;
 }
 
 export default function OrderCard({
@@ -30,6 +31,7 @@ export default function OrderCard({
   onCancelOrder,
   isCancelling,
   onOpenReview,
+  onViewReview,
 }: OrderCardProps) {
   const router = useRouter();
   const shortId = order._id.substring(order._id.length - 8).toUpperCase();
@@ -164,7 +166,7 @@ export default function OrderCard({
           <button
             type="button"
             onClick={() => onSelectOrder(order)}
-            className="px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm"
+            className="px-4 py-2 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm cursor-pointer"
           >
             <Eye size={16} className="mr-1.5 text-gray-500" />
             Chi tiết đơn
@@ -173,7 +175,7 @@ export default function OrderCard({
           <button
             type="button"
             onClick={handleReorder}
-            className="px-4 py-2 border border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm"
+            className="px-4 py-2 border border-blue-200 bg-blue-50/50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm cursor-pointer"
           >
             <RotateCcw size={16} className="mr-1.5 text-blue-600" />
             Mua lại
@@ -184,14 +186,14 @@ export default function OrderCard({
               type="button"
               onClick={() => onCancelOrder(order._id)}
               disabled={isCancelling}
-              className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors flex items-center"
+              className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors flex items-center cursor-pointer"
             >
               <XCircle size={16} className="mr-1.5 text-red-500" />
               Hủy đơn hàng
             </button>
           )}
 
-          {normStatus === "delivered" && (
+          {normStatus === "delivered" && !order.is_reviewed && (
             <button
               type="button"
               onClick={() => {
@@ -202,13 +204,38 @@ export default function OrderCard({
                     productName: it.product_name,
                     size: it.size,
                     color: it.color,
+                    imageUrl: it.image_url || it.image,
+                    orderId: order._id,
                   });
                 }
               }}
-              className="px-4 py-2 border border-amber-300 bg-amber-50/50 text-amber-700 hover:bg-amber-100 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm"
+              className="px-4 py-2 border border-amber-300 bg-amber-50/60 text-amber-700 hover:bg-amber-100 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm cursor-pointer"
             >
               <Star size={16} className="mr-1.5 fill-amber-500 text-amber-500" />
               Đánh giá sản phẩm
+            </button>
+          )}
+
+          {normStatus === "delivered" && order.is_reviewed && (
+            <button
+              type="button"
+              onClick={() => {
+                if (order.items && order.items.length > 0) {
+                  const it = order.items[0];
+                  onViewReview?.(order, {
+                    productId: it.product_id,
+                    productName: it.product_name,
+                    size: it.size,
+                    color: it.color,
+                    imageUrl: it.image_url || it.image,
+                    orderId: order._id,
+                  });
+                }
+              }}
+              className="px-4 py-2 border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm cursor-pointer"
+            >
+              <CheckCircle size={16} className="mr-1.5 text-emerald-600" />
+              Xem lại đánh giá
             </button>
           )}
         </div>

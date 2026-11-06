@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart } from "lucide-react";
 import {
   DEFAULT_RECOMMENDED_SPORT_IMG,
   type UserRecommendedProduct,
@@ -11,14 +11,13 @@ interface RecommendationProductCardProps {
   product: UserRecommendedProduct;
   wishlisted: boolean;
   onToggleWishlist: (product: UserRecommendedProduct) => void;
-  onAddToCart: (product: UserRecommendedProduct) => void;
+  onAddToCart?: (product: UserRecommendedProduct) => void;
 }
 
 export default function RecommendationProductCard({
   product,
   wishlisted,
   onToggleWishlist,
-  onAddToCart,
 }: RecommendationProductCardProps) {
   const categoryLabel = Array.isArray(product.category)
     ? product.category[0] || "Thể thao"
@@ -72,14 +71,6 @@ export default function RecommendationProductCard({
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => onAddToCart(product)}
-            className="w-full py-2 px-3 rounded-lg bg-gray-900 text-white text-xs font-semibold hover:bg-gray-800 transition-colors flex items-center justify-center gap-1.5 active:scale-[0.99]"
-          >
-            <ShoppingBag size={15} />
-            Thêm vào giỏ
-          </button>
         </div>
       </div>
     </div>

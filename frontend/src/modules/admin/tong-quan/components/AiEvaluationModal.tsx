@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, FileSpreadsheet, Sparkles, X } from 'lucide-react';
+import { FileSpreadsheet, Sparkles, X } from 'lucide-react';
 import type {
   BenchmarkComparisonRow,
   DatasetSummary,
@@ -130,35 +130,25 @@ export default function AiEvaluationModal({
       <div className="fixed inset-0" onClick={onClose} />
 
       <div
-        className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-10 flex flex-col max-h-[92vh]"
+        className="relative w-[95vw] max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-10 flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80 shrink-0">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
-              <Sparkles size={22} />
+        <div className="px-4 sm:px-6 py-3.5 sm:py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+              <Sparkles size={20} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
-                  Thực nghiệm &amp; Đánh giá Mô hình NCF
-                </h2>
-                <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
-                  Báo cáo Thực nghiệm
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Số liệu thực nghiệm kiểm thử thực tế trên <strong>{dataset.num_users} Users</strong>{' '}
-                &amp; <strong>{dataset.num_items} Items</strong> • Huấn luyện:{' '}
-                {metricsData?.trained_at || 'Hôm nay'}
-              </p>
+              <h2 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight leading-tight">
+                Thực nghiệm &amp; Đánh giá Mô hình NCF
+              </h2>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors cursor-pointer shrink-0"
             title="Đóng"
           >
             <X size={18} />
@@ -166,14 +156,14 @@ export default function AiEvaluationModal({
         </div>
 
         {/* Tab Filter Navigation */}
-        <div className="px-6 py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2 shrink-0">
-          <div className="flex items-center gap-1.5">
+        <div className="px-4 sm:px-6 py-2 sm:py-2.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between overflow-x-auto gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             {(
               [
                 ['all', 'Toàn bộ Báo cáo'],
-                ['hyperparams', '1. Siêu tham số'],
-                ['charts', '2. Biểu đồ Huấn luyện'],
-                ['benchmark', '3. Bảng Đối sánh Mô hình'],
+                ['hyperparams', 'Siêu tham số'],
+                ['charts', 'Biểu đồ Huấn luyện'],
+                ['benchmark', 'Bảng Đối sánh Mô hình'],
               ] as const
             ).map(([tabKey, label]) => (
               <button
@@ -189,16 +179,10 @@ export default function AiEvaluationModal({
               </button>
             ))}
           </div>
-
-          <div className="text-xs text-slate-500 font-medium flex items-center gap-2">
-            <span className="flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200/60">
-              <CheckCircle2 size={13} /> 100% Số liệu thật từ MongoDB
-            </span>
-          </div>
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 text-slate-800">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-6 sm:space-y-8 text-slate-800">
           {(activeTab === 'all' || activeTab === 'hyperparams') && (
             <HyperparametersSection
               dataset={dataset}
@@ -229,14 +213,7 @@ export default function AiEvaluationModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between flex-wrap gap-3 shrink-0">
-          <div className="text-xs text-slate-500 font-medium">
-            Mã nguồn huấn luyện:{' '}
-            <code className="bg-slate-200/80 text-slate-700 px-1.5 py-0.5 rounded-md font-mono text-[11px]">
-              backend/scripts/train_ncf.py
-            </code>
-          </div>
-
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end flex-wrap gap-3 shrink-0">
           <div className="flex items-center gap-3">
             {onExportReport && (
               <button

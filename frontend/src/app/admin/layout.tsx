@@ -141,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           onLogout={handleLogout}
         />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 p-3 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

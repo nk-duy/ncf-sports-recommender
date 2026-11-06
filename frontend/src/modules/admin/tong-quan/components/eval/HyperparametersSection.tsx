@@ -17,16 +17,10 @@ export default function HyperparametersSection({
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-            1
-          </div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Sliders size={18} className="text-blue-600" />
-            Cấu hình Siêu tham số &amp; Không gian Vector ẩn
-          </h3>
-        </div>
-        <span className="text-xs text-slate-500">He et al. (WWW 2017) NeuMF Protocol</span>
+        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <Sliders size={18} className="text-blue-600" />
+          Cấu hình Siêu tham số &amp; Không gian Vector ẩn
+        </h3>
       </div>
 
       {/* 6 Grid Cards */}

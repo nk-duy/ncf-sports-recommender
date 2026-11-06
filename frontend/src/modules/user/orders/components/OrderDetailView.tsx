@@ -8,11 +8,13 @@ import {
   Star,
   AlertCircle,
   Truck,
+  CheckCircle,
 } from "lucide-react";
 import OrderSummary from "@/modules/public/thanh-toan/success/components/OrderSummary";
 import OrderMetadata from "@/modules/public/thanh-toan/success/components/OrderMetadata";
 import OrderStatusBadge from "./OrderStatusBadge";
 import OrderReviewModal from "./OrderReviewModal";
+import ViewReviewModal from "./ViewReviewModal";
 import { normalizeOrderStatus } from "./types";
 import { useOrderDetail } from "../hooks/useOrderDetail";
 
@@ -29,12 +31,25 @@ export default function OrderDetailView({ id }: OrderDetailViewProps) {
     setReviewingItem,
     reviewRating,
     setReviewRating,
+    reviewTitle,
+    setReviewTitle,
     reviewComment,
     setReviewComment,
+    reviewImages,
+    isUploadingImage,
+    handleUploadReviewImage,
+    handleRemoveReviewImage,
     isSubmittingReview,
     handleReorder,
     handleCancelOrder,
     handleSubmitReview,
+    // View review states
+    viewingItem,
+    viewReviewData,
+    isViewReviewOpen,
+    setIsViewReviewOpen,
+    isLoadingReview,
+    handleViewReview,
   } = useOrderDetail(id);
 
   if (loading) {
@@ -104,7 +119,7 @@ export default function OrderDetailView({ id }: OrderDetailViewProps) {
           <button
             type="button"
             onClick={handleReorder}
-            className="px-4 py-2 border border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs"
+            className="px-4 py-2 border border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs cursor-pointer"
           >
             <RotateCcw size={16} className="mr-1.5 text-blue-600" />
             Mua lại
@@ -115,14 +130,14 @@ export default function OrderDetailView({ id }: OrderDetailViewProps) {
               type="button"
               onClick={handleCancelOrder}
               disabled={isCancelling}
-              className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors flex items-center disabled:opacity-50"
+              className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors flex items-center disabled:opacity-50 cursor-pointer"
             >
               <XCircle size={16} className="mr-1.5 text-red-500" />
               {isCancelling ? "Đang hủy..." : "Hủy đơn hàng"}
             </button>
           )}
 
-          {normStatus === "delivered" && order.items && order.items.length > 0 && (
+          {normStatus === "delivered" && !order.is_reviewed && order.items && order.items.length > 0 && (
             <button
               type="button"
               onClick={() => {
@@ -132,12 +147,35 @@ export default function OrderDetailView({ id }: OrderDetailViewProps) {
                   productName: first.product_name,
                   size: first.size,
                   color: first.color,
+                  imageUrl: first.image_url || first.image,
+                  orderId: order._id,
                 });
               }}
-              className="px-4 py-2 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs"
+              className="px-4 py-2 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs cursor-pointer"
             >
               <Star size={16} className="mr-1.5 fill-amber-500 text-amber-500" />
               Đánh giá sản phẩm
+            </button>
+          )}
+
+          {normStatus === "delivered" && order.is_reviewed && order.items && order.items.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                const first = order.items[0];
+                handleViewReview(order, {
+                  productId: first.product_id,
+                  productName: first.product_name,
+                  size: first.size,
+                  color: first.color,
+                  imageUrl: first.image_url || first.image,
+                  orderId: order._id,
+                });
+              }}
+              className="px-4 py-2 border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs cursor-pointer"
+            >
+              <CheckCircle size={16} className="mr-1.5 text-emerald-600" />
+              Xem lại đánh giá
             </button>
           )}
         </div>
@@ -164,16 +202,31 @@ export default function OrderDetailView({ id }: OrderDetailViewProps) {
         <OrderMetadata order={order} />
       </div>
 
-      {/* Review Modal */}
+      {/* Review Submission Modal */}
       <OrderReviewModal
         reviewingItem={reviewingItem}
         onClose={() => setReviewingItem(null)}
         onSubmit={handleSubmitReview}
         reviewRating={reviewRating}
         setReviewRating={setReviewRating}
+        reviewTitle={reviewTitle}
+        setReviewTitle={setReviewTitle}
         reviewComment={reviewComment}
         setReviewComment={setReviewComment}
+        reviewImages={reviewImages}
+        isUploadingImage={isUploadingImage}
+        onUploadImage={handleUploadReviewImage}
+        onRemoveImage={handleRemoveReviewImage}
         isSubmittingReview={isSubmittingReview}
+      />
+
+      {/* View Submitted Review Modal */}
+      <ViewReviewModal
+        isOpen={isViewReviewOpen}
+        onClose={() => setIsViewReviewOpen(false)}
+        reviewData={viewReviewData}
+        itemData={viewingItem}
+        loading={isLoadingReview}
       />
     </div>
   );

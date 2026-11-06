@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag, Sparkles, Star } from "lucide-react";
+import { Heart, Sparkles, Star } from "lucide-react";
 import AiXRayInspector from "@/shared/components/AiXRayInspector";
 import { HOME_FALLBACK_SPORT_IMG, type HomeRecProduct } from "../types";
 
@@ -13,7 +13,7 @@ interface HomeRecommendationCardProps {
   isXRayActive: boolean;
   onProductClick: (productId: string) => void;
   onToggleWishlist: (e: React.MouseEvent, p: HomeRecProduct) => void;
-  onQuickAdd: (e: React.MouseEvent, p: HomeRecProduct) => void;
+  onQuickAdd?: (e: React.MouseEvent, p: HomeRecProduct) => void;
 }
 
 export default function HomeRecommendationCard({
@@ -23,7 +23,6 @@ export default function HomeRecommendationCard({
   isXRayActive,
   onProductClick,
   onToggleWishlist,
-  onQuickAdd,
 }: HomeRecommendationCardProps) {
   const pid = product.product_id;
   const discount = product.discount_percent || 0;
@@ -49,15 +48,15 @@ export default function HomeRecommendationCard({
         />
 
         {/* AI Match Percent & Discount Badges */}
-        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+        <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
           {product.ai_explanation?.match_percent ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-md tabular-nums">
-              <Sparkles size={10} className="text-yellow-300" />
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-md tabular-nums">
+              <Sparkles size={9} className="text-yellow-300" />
               {product.ai_explanation.match_percent}% Phù hợp
             </span>
           ) : null}
           {discount > 0 && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black uppercase shadow-sm tabular-nums">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-red-600 text-white text-[9.5px] sm:text-[10px] font-black uppercase shadow-sm tabular-nums">
               -{discount}%
             </span>
           )}
@@ -68,25 +67,25 @@ export default function HomeRecommendationCard({
           <button
             onClick={(e) => onToggleWishlist(e, product)}
             aria-label="Thêm vào yêu thích"
-            className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md shadow-sm ${
+            className={`absolute top-2 right-2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-md shadow-sm ${
               wishlisted
                 ? "bg-red-500 text-white scale-110"
                 : "bg-white/90 text-slate-400 hover:text-red-500 hover:bg-white"
             }`}
           >
-            <Heart size={14} className={wishlisted ? "fill-white" : ""} />
+            <Heart size={13} className={wishlisted ? "fill-white" : ""} />
           </button>
         )}
       </Link>
 
       {/* Body Content */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
+      <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
         <div>
-          <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
             <span className="truncate">{product.sport_type || "Thể Thao"}</span>
             {product.rating ? (
               <span className="flex items-center gap-1 text-amber-500 font-bold shrink-0 tabular-nums">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                 {product.rating.toFixed(1)}
               </span>
             ) : null}
@@ -95,52 +94,44 @@ export default function HomeRecommendationCard({
           <Link
             href={`/san-pham/${pid}`}
             onClick={() => onProductClick(pid)}
-            className="font-bold text-slate-800 text-sm line-clamp-2 min-h-[2.5rem] leading-snug group-hover:text-blue-600 transition-colors mb-2"
+            className="font-bold text-slate-800 text-xs sm:text-sm line-clamp-2 min-h-[2.2rem] sm:min-h-[2.5rem] leading-snug group-hover:text-blue-600 transition-colors mb-2"
           >
             {product.name}
           </Link>
 
           {/* AI Explanation Reason */}
           {product.ai_explanation?.reason && (
-            <div className="mb-2.5">
+            <div className="mb-2">
               <span
-                className="inline-flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded max-w-full truncate font-medium border border-blue-100/60"
+                className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-1.5 sm:px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
                 title={product.ai_explanation.reason}
               >
-                <Sparkles size={10} className="shrink-0 text-blue-500" />
-                <span className="truncate">{product.ai_explanation.reason}</span>
+                <Sparkles size={9} className="shrink-0 text-blue-500" />
+                <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
               </span>
             </div>
           )}
 
           {/* AI X-Ray Inspector Box */}
           {isXRayActive && (
-            <div className="mb-3">
+            <div className="mb-2.5">
               <AiXRayInspector explanation={product.ai_explanation} />
             </div>
           )}
         </div>
 
-        {/* Price & Cart CTA */}
+        {/* Price */}
         <div className="pt-2 border-t border-slate-100">
-          <div className="flex items-baseline gap-2 mb-3">
-            <span className="text-base sm:text-lg font-black text-slate-900 tabular-nums">
+          <div className="flex items-baseline gap-1.5 sm:gap-2">
+            <span className="text-sm sm:text-lg font-black text-slate-900 tabular-nums">
               {salePrice.toLocaleString("vi-VN")}đ
             </span>
             {discount > 0 && (
-              <span className="text-xs text-slate-400 line-through font-medium tabular-nums">
+              <span className="text-[11px] sm:text-xs text-slate-400 line-through font-medium tabular-nums">
                 {product.price.toLocaleString("vi-VN")}đ
               </span>
             )}
           </div>
-
-          <button
-            onClick={(e) => onQuickAdd(e, product)}
-            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Thêm Vào Giỏ
-          </button>
         </div>
       </div>
     </div>

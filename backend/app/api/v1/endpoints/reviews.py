@@ -26,12 +26,14 @@ async def create_review(
         avatar_url=review.avatar_url,
         product_id=review.product_id,
         rating=review.rating,
+        title=getattr(review, 'title', None),
         comment=review.comment,
         size_bought=review.size_bought,
         color_bought=review.color_bought,
         verified_purchase=review.verified_purchase,
         is_hidden=getattr(review, 'is_hidden', False),
         images=review.images,
+        order_id=getattr(review, 'order_id', None),
         timestamp=review.timestamp
     )
 
@@ -76,16 +78,102 @@ async def get_my_reviews(current_user: User = Depends(get_current_user)):
             avatar_url=r.avatar_url,
             product_id=r.product_id,
             rating=r.rating,
+            title=getattr(r, 'title', None),
             comment=r.comment,
             size_bought=r.size_bought,
             color_bought=r.color_bought,
             verified_purchase=r.verified_purchase,
             is_hidden=getattr(r, 'is_hidden', False),
-            images=r.images,
+            images=r.images or [],
+            order_id=getattr(r, 'order_id', None),
             timestamp=r.timestamp
         )
         for r in reviews
     ]
+
+@router.get("/order/{order_id}", response_model=ReviewResponse)
+async def get_review_by_order(
+    order_id: str,
+    product_id: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Lấy chi tiết đánh giá của một đơn hàng (và sản phẩm) của user hiện tại"""
+    from app.models.review import Review
+    
+    clean_order_id = order_id.replace("#", "").strip()
+    user_id_str = str(current_user.id)
+    
+    # 1. Tìm theo user_id và order_id (chính xác hoặc biến thể có/không có dấu #)
+    review = await Review.find_one({
+        "user_id": user_id_str,
+        "$or": [
+            {"order_id": order_id},
+            {"order_id": clean_order_id},
+            {"order_id": f"#{clean_order_id}"}
+        ]
+    })
+    
+    if not review:
+        review = await Review.find_one({
+            "$or": [
+                {"order_id": order_id},
+                {"order_id": clean_order_id},
+                {"order_id": f"#{clean_order_id}"}
+            ]
+        })
+        
+    # 2. Nếu chưa thấy và có product_id, tìm theo user_id và product_id
+    if not review and product_id:
+        review = await Review.find_one(
+            Review.user_id == user_id_str,
+            Review.product_id == product_id
+        )
+        
+    # 3. Nếu vẫn chưa thấy, tìm theo product_id của các sản phẩm trong đơn hàng
+    if not review:
+        try:
+            from app.models.order import Order
+            from bson import ObjectId
+            query = {}
+            if ObjectId.is_valid(clean_order_id):
+                query = {"$or": [{"_id": ObjectId(clean_order_id)}, {"_id": clean_order_id}]}
+            else:
+                query = {"_id": clean_order_id}
+            order_obj = await Order.find_one(query)
+            if order_obj and getattr(order_obj, "items", None):
+                for it in order_obj.items:
+                    p_id = getattr(it, "product_id", None)
+                    if p_id:
+                        found = await Review.find_one(
+                            Review.user_id == user_id_str,
+                            Review.product_id == p_id
+                        )
+                        if found:
+                            review = found
+                            break
+        except Exception:
+            pass
+
+    if not review:
+        raise HTTPException(status_code=404, detail="Chưa tìm thấy đánh giá cho đơn hàng này")
+        
+    return ReviewResponse(
+        id=str(review.id),
+        user_id=review.user_id,
+        user_name=review.user_name,
+        avatar_url=review.avatar_url,
+        product_id=review.product_id,
+        rating=review.rating,
+        title=getattr(review, 'title', None),
+        comment=review.comment,
+        size_bought=review.size_bought,
+        color_bought=review.color_bought,
+        verified_purchase=review.verified_purchase,
+        is_hidden=getattr(review, 'is_hidden', False),
+        images=review.images or [],
+        order_id=getattr(review, 'order_id', None),
+        timestamp=review.timestamp
+    )
 
 # ====================================================================
 # ADMIN ENDPOINTS: Quản trị đánh giá & Phê duyệt vi phạm

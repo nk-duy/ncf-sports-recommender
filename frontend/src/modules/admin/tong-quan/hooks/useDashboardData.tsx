@@ -56,6 +56,8 @@ export function useDashboardData() {
   const [trainingStatus, setTrainingStatus] = useState<AiTrainingStatus | null>(null);
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasNotifiedCompletionRef = useRef<boolean>(false);
+  const isRetrainingRef = useRef<boolean>(false);
 
   const fetchAiModelInfo = useCallback(async () => {
     try {
@@ -93,6 +95,7 @@ export function useDashboardData() {
   const pollTrainingStatus = useCallback(() => {
     if (pollIntervalRef.current) {
       clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
     }
 
     pollIntervalRef.current = setInterval(async () => {
@@ -107,23 +110,32 @@ export function useDashboardData() {
               pollIntervalRef.current = null;
             }
             setIsRetraining(false);
-            if (status.error) {
-              notifications.show({
-                title: 'Huấn luyện chưa hoàn tất',
-                message: status.error,
-                color: 'red',
-              });
-            } else {
-              const hr = status.metrics?.hit_rate_at_10 ?? '88.5';
-              const ndcg = status.metrics?.ndcg_at_10 ?? '0.758';
-              notifications.show({
-                title: 'Huấn luyện NCF hoàn tất!',
-                message: `Mô hình NCF cập nhật thành công (Hit Rate @ 10: ${hr}%, NDCG @ 10: ${ndcg}, Loss: ${status.current_loss})`,
-                color: 'teal',
-                icon: <Check size={18} />,
-                autoClose: 6000,
-              });
-              void fetchAiModelInfo();
+            isRetrainingRef.current = false;
+
+            // Đảm bảo chỉ hiển thị 1 thông báo kết quả duy nhất cho mỗi phiên huấn luyện
+            if (!hasNotifiedCompletionRef.current) {
+              hasNotifiedCompletionRef.current = true;
+              if (status.error) {
+                notifications.show({
+                  id: 'ncf-training-result',
+                  title: 'Huấn luyện chưa hoàn tất',
+                  message: status.error,
+                  color: 'red',
+                  autoClose: 5000,
+                });
+              } else {
+                const hr = status.metrics?.hit_rate_at_10 ?? '88.5';
+                const ndcg = status.metrics?.ndcg_at_10 ?? '0.758';
+                notifications.show({
+                  id: 'ncf-training-result',
+                  title: 'Huấn luyện NCF hoàn tất!',
+                  message: `Mô hình NCF cập nhật thành công (Hit Rate @ 10: ${hr}%, NDCG @ 10: ${ndcg}, Loss: ${status.current_loss})`,
+                  color: 'teal',
+                  icon: <Check size={18} />,
+                  autoClose: 5000,
+                });
+                void fetchAiModelInfo();
+              }
             }
           }
         }
@@ -134,7 +146,12 @@ export function useDashboardData() {
   }, [fetchAiModelInfo]);
 
   const handleRetrainAi = useCallback(async () => {
+    // Chống bấm liên tiếp nhiều lần tạo ra nhiều interval chạy song song
+    if (isRetrainingRef.current) return;
+    isRetrainingRef.current = true;
     setIsRetraining(true);
+    hasNotifiedCompletionRef.current = false;
+
     try {
       const res = await fetch('http://localhost:8000/api/v1/recommendations/retrain', {
         method: 'POST',
@@ -142,21 +159,31 @@ export function useDashboardData() {
       if (res.ok) {
         const data = (await res.json()) as RetrainTriggerResponse;
         notifications.show({
+          id: 'ncf-training-trigger',
           title: 'Đã kích hoạt huấn luyện ngầm',
           message:
             data.message || 'Mô hình NCF đang được huấn luyện trong nền với Negative Sampling...',
           color: 'blue',
+          autoClose: 3500,
         });
         if (data.training_status) {
           setTrainingStatus(data.training_status);
         }
         pollTrainingStatus();
       } else {
-        notifications.show({ title: 'Lỗi', message: 'Lỗi từ máy chủ AI', color: 'red' });
+        isRetrainingRef.current = false;
+        notifications.show({
+          id: 'ncf-training-trigger',
+          title: 'Lỗi',
+          message: 'Lỗi từ máy chủ AI',
+          color: 'red',
+        });
         setIsRetraining(false);
       }
     } catch {
+      isRetrainingRef.current = false;
       notifications.show({
+        id: 'ncf-training-trigger',
         title: 'Lỗi kết nối',
         message: 'Không thể kết nối dịch vụ huấn luyện AI',
         color: 'red',

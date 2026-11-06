@@ -2,6 +2,22 @@ export type SizeTabId = 'shoes' | 'apparel' | 'rackets';
 export type GenderType = 'nam' | 'nu';
 export type FitPreference = 'snug' | 'regular' | 'loose';
 
+/** Nhóm sản phẩm do trang chi tiết truyền vào (tương thích với ProductSizeKind của module san-pham). */
+export type SizeGuideProductKind =
+  | 'shoes'
+  | 'apparel'
+  | 'pickleball_paddle'
+  | 'badminton_racket'
+  | 'small_gear'
+  | 'equipment';
+
+/** Giày dép -> bảng size giày; Quần áo -> bảng S–2XL; các nhóm còn lại -> bảng Vợt & Phụ kiện. */
+export function sizeKindToTab(kind: SizeGuideProductKind): SizeTabId {
+  if (kind === 'shoes') return 'shoes';
+  if (kind === 'apparel') return 'apparel';
+  return 'rackets';
+}
+
 export interface ShoeSizeRow {
   eu: string;
   cm: string;
@@ -38,7 +54,6 @@ export const SHOE_SIZE_ROWS: ShoeSizeRow[] = [
   { eu: '42', cm: '25.6 - 26.0', usMen: '8.5', usWomen: '10.0', uk: '8.0' },
   { eu: '43', cm: '26.1 - 26.5', usMen: '9.5', usWomen: '11.0', uk: '9.0' },
   { eu: '44', cm: '26.6 - 27.0', usMen: '10.0', usWomen: '11.5', uk: '9.5' },
-  { eu: '45', cm: '27.1 - 27.5', usMen: '11.0', usWomen: '12.5', uk: '10.5' },
 ];
 
 export const APPAREL_SIZE_ROWS: ApparelSizeRow[] = [
@@ -72,16 +87,14 @@ export function calcRecommendedShoeSize(footLength: number, fitPreference: FitPr
   // Thể thao (Running/Badminton/Pickleball) cần dư mũi chân khoảng 0.5 - 0.8cm
   const adjustedLength =
     fitPreference === 'snug' ? footLength : fitPreference === 'loose' ? footLength + 0.8 : footLength + 0.5;
-  if (adjustedLength < 23.0) return '36';
-  if (adjustedLength < 23.5) return '37';
+  // Cửa hàng chỉ bán giày size 38–44 nên kết quả gợi ý được giới hạn trong dải này.
   if (adjustedLength < 24.0) return '38';
   if (adjustedLength < 24.8) return '39';
   if (adjustedLength < 25.4) return '40';
   if (adjustedLength < 26.0) return '41';
   if (adjustedLength < 26.8) return '42';
   if (adjustedLength < 27.5) return '43';
-  if (adjustedLength < 28.3) return '44';
-  return '45';
+  return '44';
 }
 
 export function calcRecommendedApparelSize(

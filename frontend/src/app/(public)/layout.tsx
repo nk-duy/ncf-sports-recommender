@@ -12,7 +12,7 @@ export default function PublicLayout({
   return (
     <>
       <Header />
-      <main className="flex-1 flex flex-col">{children}</main>
+      <main className="flex-1 flex flex-col w-full max-w-full overflow-x-hidden">{children}</main>
       <Footer />
       <FloatingSupportWidget />
       <BackToTop />

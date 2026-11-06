@@ -21,18 +21,10 @@ export default function BenchmarkTableSection({
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
-            3
-          </div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Award size={18} className="text-amber-600" />
-            Bảng Đối sánh Kết quả Thực nghiệm giữa các Phương pháp
-          </h3>
-        </div>
-        <span className="text-xs text-slate-500">
-          Đối sánh trên cùng bộ dữ liệu kiểm thử Leave-One-Out
-        </span>
+        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <Award size={18} className="text-amber-600" />
+          Bảng Đối sánh Kết quả Thực nghiệm giữa các Phương pháp
+        </h3>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200">

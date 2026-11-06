@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Flame, Heart, ShoppingBag } from "lucide-react";
+import { Flame, Heart } from "lucide-react";
 import { HOME_FALLBACK_SPORT_IMG, type FlashSaleProduct } from "../types";
 
 interface FlashSaleCardProps {
@@ -11,7 +11,7 @@ interface FlashSaleCardProps {
   mounted: boolean;
   wishlisted: boolean;
   onToggleWishlist: (e: React.MouseEvent, p: FlashSaleProduct) => void;
-  onQuickAdd: (e: React.MouseEvent, p: FlashSaleProduct) => void;
+  onQuickAdd?: (e: React.MouseEvent, p: FlashSaleProduct) => void;
 }
 
 export default function FlashSaleCard({
@@ -20,7 +20,6 @@ export default function FlashSaleCard({
   mounted,
   wishlisted,
   onToggleWishlist,
-  onQuickAdd,
 }: FlashSaleCardProps) {
   const pid = product.product_id;
   const discount = product.discount_percent || 0;
@@ -94,7 +93,7 @@ export default function FlashSaleCard({
             )}
           </div>
 
-          <div className="space-y-1 mb-3">
+          <div className="space-y-1">
             <div className="flex items-center justify-between text-[10px] font-bold">
               <span className="text-slate-600 flex items-center gap-0.5 tabular-nums">
                 <Flame className="w-2.5 h-2.5 text-red-500 fill-red-500" />
@@ -109,14 +108,6 @@ export default function FlashSaleCard({
               />
             </div>
           </div>
-
-          <button
-            onClick={(e) => onQuickAdd(e, product)}
-            className="w-full py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Thêm vào giỏ
-          </button>
         </div>
       </div>
     </div>

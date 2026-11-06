@@ -1,25 +1,13 @@
 import type { ProductDetail } from '../types';
+import { normalizeProductVariants } from './normalizeProductVariants';
 
+/**
+ * Danh sách size hiển thị. Luôn đi qua `normalizeProductVariants` nên Giày dép không bao giờ
+ * hiển thị S/M/L/XL..., và sản phẩm thiếu `sizes` được dùng dải size mặc định đúng nhóm
+ * (Giày 38–44, Quần áo S–2XL, Vợt 3U/4U, Vớ/Găng M–XL, còn lại Tiêu chuẩn/Bản Pro).
+ */
 export function getAvailableSizes(product: ProductDetail): string[] {
-  if (product.sizes?.length) return product.sizes;
-  const cat = product.category || [];
-  const nameLower = (product.name || '').toLowerCase();
-  if (
-    cat.includes('Clothing') ||
-    nameLower.includes('áo') ||
-    nameLower.includes('quần') ||
-    product.product_type === 'Quần áo'
-  ) {
-    return ['S', 'M', 'L', 'XL', 'XXL'];
-  }
-  if (
-    cat.includes('Shoes') ||
-    nameLower.includes('giày') ||
-    product.product_type === 'Giày dép'
-  ) {
-    return ['39', '40', '41', '42', '43'];
-  }
-  return ['Tiêu chuẩn', 'Freesize'];
+  return normalizeProductVariants(product).sizes ?? [];
 }
 
 export function getVariantSizeStock(

@@ -62,7 +62,7 @@ export default function CartPageView() {
   }
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen pb-32">
+    <div className="bg-[#f8fafc] min-h-screen pb-32 overflow-x-hidden">
       {/* 1. Thanh tiêu đề giỏ hàng */}
       <CartHeader itemsCount={items.length} />
 

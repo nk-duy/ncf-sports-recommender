@@ -33,18 +33,10 @@ export default function TrainingChartsSection({
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
-            2
-          </div>
-          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <TrendingUp size={18} className="text-emerald-600" />
-            Biểu đồ Hội tụ Hàm mất mát (BCE Loss) &amp; Tăng trưởng Độ đo Xếp hạng (HR@8, NDCG@8)
-          </h3>
-        </div>
-        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-          20 Epochs Huấn luyện
-        </span>
+        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <TrendingUp size={18} className="text-emerald-600" />
+          Biểu đồ Hội tụ Hàm mất mát (BCE Loss) &amp; Tăng trưởng Độ đo Xếp hạng (HR@8, NDCG@8)
+        </h3>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

@@ -48,27 +48,49 @@ export default function AccountSidebar() {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-      {/* Profile Section */}
-      <div className="p-6 flex flex-col items-center border-b border-gray-100">
-        <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center border-[3px] border-white shadow-md relative mb-4">
-          <span className="text-3xl font-bold text-blue-600">
-            {initials}
-          </span>
-          <div className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 border-2 border-white rounded-full"></div>
+    <div className="bg-white rounded-xl shadow-xs border border-gray-100 flex flex-col overflow-hidden">
+      {/* Profile Section - Compact on mobile, Full on desktop */}
+      <div className="p-3 sm:p-4 md:p-6 border-b border-gray-100">
+        <div className="flex flex-row md:flex-col items-center md:text-center gap-3 md:gap-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-24 md:h-24 rounded-full bg-blue-50 flex items-center justify-center border-2 md:border-[3px] border-white shadow-xs md:shadow-md relative shrink-0 md:mb-4">
+            <span className="text-lg sm:text-xl md:text-3xl font-bold text-blue-600">
+              {initials}
+            </span>
+            <div className="absolute bottom-0 right-0 w-3 h-3 md:w-5 md:h-5 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
+
+          <div className="min-w-0 flex-1 md:w-full">
+            <div className="flex items-center gap-2 md:justify-center">
+              <h2 className="text-sm sm:text-base md:text-xl font-bold text-gray-900 truncate">
+                {displayName}
+              </h2>
+              <span className="md:hidden inline-flex items-center text-[10px] font-semibold bg-amber-50 text-amber-800 px-2 py-0.5 rounded-full border border-amber-200 shrink-0">
+                {user?.tier || "Đồng"}
+              </span>
+            </div>
+            <p className="text-xs md:text-sm text-gray-500 truncate md:mb-3">
+              {displayEmail}
+            </p>
+
+            {/* Desktop tier badge */}
+            <div className="hidden md:flex bg-amber-50 text-amber-800 px-4 py-1.5 rounded-full items-center text-sm font-medium border border-amber-200 w-full justify-center">
+              <Star size={16} className="fill-amber-500 text-amber-500 mr-2" />
+              Hạng thành viên: <span className="font-bold ml-1">{user?.tier || "Đồng"}</span>
+            </div>
+          </div>
+
+          {/* Mobile quick logout */}
+          <button
+            onClick={handleLogout}
+            title="Đăng xuất"
+            className="md:hidden p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 transition-colors"
+          >
+            <LogOut size={18} />
+          </button>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-1 text-center">
-          {displayName}
-        </h2>
-        <p className="text-sm text-gray-500 mb-3 text-center">
-          {displayEmail}
-        </p>
-        <div className="bg-amber-50 text-amber-800 px-4 py-1.5 rounded-full flex items-center text-sm font-medium border border-amber-200 w-full justify-center">
-          <Star size={16} className="fill-amber-500 text-amber-500 mr-2" />
-          Hạng thành viên: <span className="font-bold ml-1">{user?.tier || "Đồng"}</span>
-        </div>
-        
-        <div className="w-full mt-6 space-y-2 text-sm">
+
+        {/* Extra profile details - only on desktop */}
+        <div className="hidden md:block w-full mt-6 space-y-2 text-sm">
           <div className="flex justify-between items-center text-gray-600">
             <span>SĐT:</span>
             <span className="font-medium text-gray-900">{user?.phone || "Chưa cập nhật"}</span>
@@ -82,9 +104,9 @@ export default function AccountSidebar() {
         </div>
       </div>
 
-      {/* Navigation Menu */}
-      <div className="flex-1 py-4">
-        <nav className="space-y-1 px-3">
+      {/* Navigation Menu - Horizontal scrollable tabs on mobile, Vertical list on desktop */}
+      <div className="py-2 md:py-4">
+        <nav className="flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible gap-2 md:gap-0 md:space-y-1 px-3 pb-1 md:pb-0 no-scrollbar">
           {menuItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -93,23 +115,25 @@ export default function AccountSidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center shrink-0 whitespace-nowrap px-3.5 md:px-4 py-2 md:py-3 rounded-lg text-xs md:text-sm transition-colors ${
                   isActive 
-                    ? "bg-blue-50 text-blue-700 font-semibold" 
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-blue-600 md:bg-blue-50 text-white md:text-blue-700 font-semibold shadow-xs md:shadow-none" 
+                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900 bg-gray-50 md:bg-transparent"
                 }`}
               >
                 <div className="flex items-center">
-                  <Icon size={20} className={`mr-3 ${isActive ? "text-blue-600" : "text-gray-500"}`} />
-                  {item.label}
+                  <Icon size={16} className={`mr-2 md:mr-3 md:w-5 md:h-5 shrink-0 ${isActive ? "text-white md:text-blue-600" : "text-gray-500"}`} />
+                  <span className="shrink-0">{item.label}</span>
                 </div>
                 {item.badge && (
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    item.badgeColor === "red" 
-                      ? "bg-red-50 text-red-600" 
-                      : item.badgeColor === "blue"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-600"
+                  <span className={`text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.2 md:py-0.5 rounded-full ml-1.5 md:ml-auto ${
+                    isActive
+                      ? "bg-white text-blue-700 md:bg-blue-100 md:text-blue-700"
+                      : item.badgeColor === "red" 
+                        ? "bg-red-50 text-red-600" 
+                        : item.badgeColor === "blue"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-gray-100 text-gray-600"
                   }`}>
                     {item.badge}
                   </span>
@@ -120,8 +144,8 @@ export default function AccountSidebar() {
         </nav>
       </div>
 
-      {/* Logout */}
-      <div className="p-4 border-t border-gray-100">
+      {/* Logout - Desktop */}
+      <div className="hidden md:block p-4 border-t border-gray-100">
         <button 
           onClick={handleLogout}
           className="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium"
@@ -132,8 +156,8 @@ export default function AccountSidebar() {
         </button>
       </div>
 
-      {/* Support Box */}
-      <div className="mx-4 mb-4 mt-2 bg-blue-50 rounded-xl p-4 border border-blue-100">
+      {/* Support Box - Desktop */}
+      <div className="hidden md:block mx-4 mb-4 mt-2 bg-blue-50 rounded-xl p-4 border border-blue-100">
         <div className="flex items-center mb-2">
           <div className="bg-blue-100 p-1.5 rounded-full mr-2 text-blue-600">
             <Phone size={16} />

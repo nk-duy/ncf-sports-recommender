@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
 import { AutocompleteProduct } from '../types';
 
@@ -159,18 +159,37 @@ export function useSearchAutocomplete() {
     };
   }, []);
 
+  const pathname = usePathname();
+
+  // Đóng dropdown và blur ô input khi chuyển trang
+  useEffect(() => {
+    setOpen(false);
+    inputRef.current?.blur();
+  }, [pathname]);
+
+  const handleClearQuery = () => {
+    setQuery('');
+    setResults([]);
+    setLoading(false);
+    refreshHistory();
+    setOpen(true);
+    inputRef.current?.focus();
+  };
+
   const executeSearch = (kw: string) => {
     const clean = kw.trim();
     if (!clean) return;
     saveToHistory(clean);
     setQuery(clean);
     setOpen(false);
+    inputRef.current?.blur();
     router.push(`/san-pham?search=${encodeURIComponent(clean)}`);
   };
 
   const handleSelectProduct = (product: AutocompleteProduct) => {
     saveToHistory(product.name);
     setOpen(false);
+    inputRef.current?.blur();
 
     // Ghi nhận tương tác view nếu người dùng đã đăng nhập
     const token =
@@ -196,6 +215,7 @@ export function useSearchAutocomplete() {
 
   return {
     query,
+    setQuery,
     results,
     loading,
     open,
@@ -206,6 +226,7 @@ export function useSearchAutocomplete() {
     isLiveSearch: query.trim().length >= 2,
     refreshHistory,
     handleQueryChange,
+    handleClearQuery,
     removeHistoryItem,
     clearAllHistory,
     executeSearch,

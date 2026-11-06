@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { notifications } from '@mantine/notifications';
 import { useCartStore, cartKey } from '@/shared/store/cartStore';
 import { useCheckoutStore } from '@/shared/store/checkoutStore';
 import { useWishlistStore } from '@/shared/store/wishlistStore';
@@ -10,7 +11,6 @@ import ProductVariantSelector from './ProductVariantSelector';
 import ProductActionCommitments from './ProductActionCommitments';
 import {
   getAvailableSizes,
-  getDefaultProductSize,
   getVariantSizeStock,
 } from '../utils/productStockUtils';
 import type { ProductDetail } from '../types';
@@ -33,10 +33,9 @@ export default function ProductInfoSection({
   const router = useRouter();
 
   const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState<string>(() => product.colors?.[0] || '');
-  const [internalSelectedSize, setInternalSelectedSize] = useState<string>(() =>
-    getDefaultProductSize(product, product.colors?.[0] || '')
-  );
+  // Không chọn sẵn màu sắc và kích cỡ, để người dùng chủ động lựa chọn
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [internalSelectedSize, setInternalSelectedSize] = useState<string>('');
 
   const selectedSize = externalSelectedSize !== undefined ? externalSelectedSize : internalSelectedSize;
   const setSelectedSize = (size: string) => {
@@ -64,16 +63,13 @@ export default function ProductInfoSection({
     setSelectedColor(nextColor);
     setErrorMsg('');
 
-    if (availableSizes.length > 0) {
+    // Nếu kích cỡ đang chọn không còn hàng ở màu mới, bỏ chọn kích cỡ để người dùng tự chọn lại
+    if (selectedSize && availableSizes.length > 0) {
       const isCurrentValid =
-        selectedSize &&
         availableSizes.includes(selectedSize) &&
         getVariantSizeStock(product, selectedSize, nextColor) > 0;
       if (!isCurrentValid) {
-        const firstAvailable = getDefaultProductSize(product, nextColor);
-        if (firstAvailable && firstAvailable !== selectedSize) {
-          setSelectedSize(firstAvailable);
-        }
+        setSelectedSize('');
       }
     }
   };
@@ -132,16 +128,31 @@ export default function ProductInfoSection({
   const isWishlistedProduct = isWishlisted(product.product_id);
 
   const validateSelection = (): boolean => {
-    if (!selectedSize) {
-      setErrorMsg('Vui lòng chọn Kích cỡ!');
-      return false;
-    }
     if (hasColors && !selectedColor) {
       setErrorMsg('Vui lòng chọn Màu sắc!');
+      notifications.show({
+        title: 'Chưa chọn màu sắc',
+        message: 'Vui lòng chọn Màu sắc sản phẩm!',
+        color: 'orange',
+      });
+      return false;
+    }
+    if (availableSizes.length > 0 && !selectedSize) {
+      setErrorMsg('Vui lòng chọn Kích cỡ!');
+      notifications.show({
+        title: 'Chưa chọn kích cỡ',
+        message: 'Vui lòng chọn Kích cỡ / Size sản phẩm!',
+        color: 'orange',
+      });
       return false;
     }
     if (effectiveStock <= 0) {
       setErrorMsg('Phân loại màu và kích cỡ này hiện đã hết hàng!');
+      notifications.show({
+        title: 'Hết hàng',
+        message: 'Phân loại này hiện đã hết hàng, vui lòng chọn phân loại khác!',
+        color: 'red',
+      });
       return false;
     }
     setErrorMsg('');

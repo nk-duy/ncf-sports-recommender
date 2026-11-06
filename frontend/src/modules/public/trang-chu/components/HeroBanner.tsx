@@ -46,7 +46,7 @@ export default function HeroBanner() {
   const currentBanner = banners[currentIndex] || banners[0];
 
   return (
-    <section className="relative w-full bg-slate-900 pb-6">
+    <section className="relative w-full bg-slate-900 pb-0 md:pb-6">
       <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[1920/600] max-h-[580px] overflow-hidden group">
         <div
           className="flex h-full transition-transform duration-700 ease-in-out"
@@ -143,7 +143,7 @@ export default function HeroBanner() {
         )}
       </div>
 
-      <div className="relative -mt-6 sm:-mt-8 z-30 w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
+      <div className="hidden md:block relative -mt-6 sm:-mt-8 z-30 w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 bg-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-100">
           {QUICK_ACTIONS.map((action) => {
             const ActionIcon = action.icon;

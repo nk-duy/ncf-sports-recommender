@@ -3,6 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { Menu as MenuIcon } from 'lucide-react';
 import { useAuthStore } from '@/shared/store/authStore';
 import { defaultMenu } from '@/modules/admin/danh-muc/data/defaultMenu';
 import { useLanguage } from '@/shared/context/LanguageContext';
@@ -11,6 +12,7 @@ import SearchAutocomplete from './SearchAutocomplete';
 import AnnouncementBar from './AnnouncementBar';
 import HeaderTopActions from './HeaderTopActions';
 import MegaMenu from './MegaMenu';
+import MobileMenuDrawer from './MobileMenuDrawer';
 
 const emptySubscribe = () => () => {};
 const LOGO_FALLBACK =
@@ -26,6 +28,7 @@ export default function Header() {
     () => false
   );
   const [menu, setMenu] = useState<MegaMenuSport[]>(defaultMenu);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -43,8 +46,9 @@ export default function Header() {
       <AnnouncementBar />
 
       {/* Main Header Bar */}
-      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-2.5">
-        <div className="flex items-center justify-between gap-6">
+      <div className="w-full mx-auto px-3 sm:px-6 lg:px-12 xl:px-16 py-2 sm:py-2.5">
+        {/* DESKTOP (md:flex): Single horizontal row - Bảo toàn 100% */}
+        <div className="hidden md:flex items-center justify-between gap-6">
           <Link className="flex flex-shrink-0 items-center" href="/">
             <img
               src="/logo.png"
@@ -61,10 +65,46 @@ export default function Header() {
 
           <HeaderTopActions mounted={mounted} />
         </div>
+
+        {/* MOBILE (< md / 360px - 767px): 2 Tầng gọn gàng */}
+        <div className="flex md:hidden flex-col gap-2">
+          {/* Tầng 1: Hamburger (☰) + Logo KADY + Actions (AI X-Ray, Chuông, Giỏ hàng, Tài khoản) */}
+          <div className="flex items-center justify-between gap-1 w-full">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(true)}
+                className="w-9 h-9 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 flex items-center justify-center transition cursor-pointer"
+                aria-label="Mở danh mục menu"
+              >
+                <MenuIcon size={20} />
+              </button>
+
+              <Link className="flex items-center" href="/">
+                <img
+                  src="/logo.png"
+                  alt="KADY Logo"
+                  className="h-9 sm:h-11 w-auto object-contain"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = LOGO_FALLBACK;
+                  }}
+                />
+              </Link>
+            </div>
+
+            <HeaderTopActions mounted={mounted} />
+          </div>
+
+          {/* Tầng 2: Thanh tìm kiếm Full-Width kèm nút Camera */}
+          <div className="w-full">
+            <SearchAutocomplete />
+          </div>
+        </div>
       </div>
 
-      {/* Navigation Bar */}
-      <div className="bg-white border-t border-gray-100">
+      {/* Navigation Bar (Desktop md: trở lên) */}
+      <div className="hidden md:block bg-white border-t border-gray-100">
         <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
           <nav className="flex justify-center items-center gap-7 md:gap-11 py-2.5 text-sm md:text-[15px] font-black uppercase tracking-wide text-gray-800">
             <Link
@@ -110,6 +150,13 @@ export default function Header() {
           </nav>
         </div>
       </div>
+
+      {/* Ngăn kéo điều hướng Mobile Drawer */}
+      <MobileMenuDrawer
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        menu={menu}
+      />
     </header>
   );
 }

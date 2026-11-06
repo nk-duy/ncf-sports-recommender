@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import { DEFAULT_SPORTS_IMAGE, type RecProduct } from "../types";
 
 interface RecommendedGridCardProps {
@@ -10,7 +10,7 @@ interface RecommendedGridCardProps {
   mounted: boolean;
   wishlisted: boolean;
   onToggleWishlist: (e: React.MouseEvent, p: RecProduct) => void;
-  onQuickAdd: (e: React.MouseEvent, p: RecProduct) => void;
+  onQuickAdd?: (e: React.MouseEvent, p: RecProduct) => void;
 }
 
 export default function RecommendedGridCard({
@@ -18,7 +18,6 @@ export default function RecommendedGridCard({
   mounted,
   wishlisted,
   onToggleWishlist,
-  onQuickAdd,
 }: RecommendedGridCardProps) {
   const pid = product.product_id;
   const discount = product.discount_percent || 0;
@@ -85,9 +84,9 @@ export default function RecommendedGridCard({
           {product.name}
         </Link>
 
-        {/* Price & Cart CTA */}
+        {/* Price */}
         <div className="mt-auto pt-2 border-t border-slate-100">
-          <div className="flex items-baseline gap-2 mb-3">
+          <div className="flex items-baseline gap-2">
             <span className="text-base sm:text-lg font-black text-slate-900 font-mono">
               {salePrice.toLocaleString("vi-VN")}đ
             </span>
@@ -97,15 +96,6 @@ export default function RecommendedGridCard({
               </span>
             )}
           </div>
-
-          {/* Quick Add To Cart Button */}
-          <button
-            onClick={(e) => onQuickAdd(e, product)}
-            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-sm cursor-pointer"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            Thêm Vào Giỏ
-          </button>
         </div>
       </div>
     </div>

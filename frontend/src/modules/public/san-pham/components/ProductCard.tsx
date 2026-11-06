@@ -98,8 +98,8 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
           }}
         />
         {product.ai_explanation?.match_percent ? (
-          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-md tabular-nums">
-            <Sparkles size={10} className="text-yellow-300" />
+          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-md tabular-nums">
+            <Sparkles size={9} className="text-yellow-300" />
             {product.ai_explanation.match_percent}% Phù hợp
           </span>
         ) : product.discountLabel ? (
@@ -110,7 +110,7 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
           <button
             onClick={handleWishlist}
             aria-label={wishlisted ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
-            className={`absolute top-2 left-2 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-md
+            className={`absolute top-2 left-2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm
               ${
                 wishlisted
                   ? "bg-rose-50 border border-rose-200 scale-110 shadow-rose-200/50"
@@ -118,7 +118,7 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
               } ${heartAnim ? "scale-125" : ""}`}
           >
             <Heart
-              size={16}
+              size={13}
               className={wishlisted ? "fill-rose-500 text-rose-500" : "text-gray-400 hover:text-rose-500"}
             />
           </button>
@@ -134,18 +134,18 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
         {product.ai_explanation?.reason && (
           <div className="mb-2">
             <span
-              className="inline-flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded max-w-full truncate font-medium border border-blue-100/60"
+              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-1.5 sm:px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
               title={product.ai_explanation.reason}
             >
-              <Sparkles size={10} className="shrink-0 text-blue-500" />
-              <span className="truncate">{product.ai_explanation.reason}</span>
+              <Sparkles size={9} className="shrink-0 text-blue-500" />
+              <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
             </span>
           </div>
         )}
 
         {/* AI X-Ray Inspector Box */}
         {isXRayActive && product.ai_explanation && (
-          <div className="mb-2.5">
+          <div className="mb-2">
             <AiXRayInspector explanation={product.ai_explanation} />
           </div>
         )}
@@ -154,10 +154,10 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
           <div className={styles.priceWrapper}>
             <span className={`${styles.price} tabular-nums`}>{displayPrice}</span>
             {product.originalPrice && (
-              <div className="flex items-center gap-1.5 ml-1">
+              <div className="flex items-center gap-1 ml-1">
                 <span className={`${styles.originalPrice} tabular-nums`}>{product.originalPrice}</span>
                 {discountVal > 0 && (
-                  <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1 py-0.5 rounded tabular-nums">
+                  <span className="text-[9.5px] sm:text-[10px] font-bold bg-red-100 text-red-600 px-1 py-0.2 rounded tabular-nums">
                     -{discountVal}%
                   </span>
                 )}

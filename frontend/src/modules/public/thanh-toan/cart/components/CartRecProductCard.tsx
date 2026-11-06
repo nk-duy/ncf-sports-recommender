@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Plus, Sparkles, Star } from 'lucide-react';
+import { Sparkles, Star } from 'lucide-react';
 import { calcOriginalPrice, formatVND } from '@/shared/lib/cart';
 import type { AIExplanation } from '@/shared/types/aiExplanation';
 import AiXRayInspector from '@/shared/components/AiXRayInspector';
@@ -26,24 +26,22 @@ const CART_REC_FALLBACK_IMG =
 
 interface CartRecProductCardProps {
   product: CartRecProduct;
-  inCart: boolean;
+  inCart?: boolean;
   isXRayActive: boolean;
   onTrackClick: (productId: string) => void;
-  onQuickAdd: (product: CartRecProduct) => void;
+  onQuickAdd?: (product: CartRecProduct) => void;
 }
 
 export default function CartRecProductCard({
   product: p,
-  inCart,
   isXRayActive,
   onTrackClick,
-  onQuickAdd,
 }: CartRecProductCardProps) {
   const original = calcOriginalPrice(p.price, p.discount_percent);
   const hasDiscount = original > p.price;
 
   return (
-    <div className="group flex flex-col justify-between bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-transform duration-200">
+    <div className="group flex flex-col justify-between bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
       <div>
         <Link
           href={`/san-pham/${p.product_id}`}
@@ -73,7 +71,7 @@ export default function CartRecProductCard({
             )}
           </div>
         </Link>
-        <div className="p-3 pb-1">
+        <div className="p-3">
           <Link
             href={`/san-pham/${p.product_id}`}
             onClick={() => onTrackClick(p.product_id)}
@@ -86,11 +84,11 @@ export default function CartRecProductCard({
           {p.ai_explanation?.reason && (
             <div className="mt-1.5 mb-1">
               <span
-                className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50/80 px-1.5 py-0.5 rounded max-w-full truncate font-medium border border-blue-100/60"
+                className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50/80 px-1.5 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
                 title={p.ai_explanation.reason}
               >
                 <Sparkles size={9} className="shrink-0 text-blue-500" />
-                <span className="truncate">{p.ai_explanation.reason}</span>
+                <span className="line-clamp-2 sm:truncate">{p.ai_explanation.reason}</span>
               </span>
             </div>
           )}
@@ -106,24 +104,13 @@ export default function CartRecProductCard({
             <span>{(p.rating || 0).toFixed(1)}</span>
             <span className="text-gray-400">({p.reviews_count || 0})</span>
           </div>
-          <div className="flex items-baseline gap-2 mt-2 mb-2">
+          <div className="flex items-baseline gap-2 mt-2">
             <span className="text-base font-bold text-blue-600 tabular-nums">{formatVND(p.price)}</span>
             {hasDiscount && (
               <span className="text-xs text-gray-400 line-through tabular-nums">{formatVND(original)}</span>
             )}
           </div>
         </div>
-      </div>
-
-      <div className="p-3 pt-0">
-        <button
-          type="button"
-          onClick={() => onQuickAdd(p)}
-          className="w-full h-9 rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-        >
-          <Plus size={16} />
-          <span>{inCart ? 'Thêm nữa' : 'Thêm vào giỏ'}</span>
-        </button>
       </div>
     </div>
   );

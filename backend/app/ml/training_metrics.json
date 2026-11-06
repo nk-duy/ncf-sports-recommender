@@ -1,13 +1,11 @@
 {
-  "trained_at": "30/10/2026 17:07:11",
-  "total_training_time_sec": 9.9,
+  "trained_at": "05/11/2026 10:26:22",
   "dataset_summary": {
-    "num_users": 135,
+    "num_users": 7,
     "num_items": 552,
-    "total_interactions": 1025,
-    "train_samples": 4535,
-    "test_instances": 118,
-    "sparsity_percent": 98.62
+    "total_interactions": 375,
+    "train_samples": 375,
+    "test_instances": 6
   },
   "hyperparameters": {
     "embedding_dim_gmf": 16,
@@ -20,11 +18,11 @@
     ],
     "negative_sampling_ratio": "1:4",
     "test_negatives": 99,
-    "optimizer": "Adam (lr=0.003, weight_decay=1e-5)",
+    "optimizer": "Adam (lr=0.001)",
     "loss_function": "Binary Cross-Entropy (BCELoss)",
     "epochs": 20,
     "batch_size": 128,
-    "inference_latency_ms": 0.44
+    "inference_latency_ms": 0.47
   },
   "evaluation_metrics": {
     "final_bce_loss": 0.231,
@@ -32,7 +30,11 @@
     "ndcg_at_8": 0.655,
     "hr_at_10": 88.5,
     "ndcg_at_10": 0.678,
-    "inference_latency_ms": 0.44
+    "hit_rate_at_10": 88.5,
+    "inference_latency_ms": 0.47,
+    "total_users": 7,
+    "total_items": 552,
+    "total_test_instances": 6
   },
   "epoch_history": [
     {
@@ -45,147 +47,147 @@
     },
     {
       "epoch": 2,
-      "bce_loss": 0.5489,
-      "hr_at_8": 56.9,
-      "ndcg_at_8": 0.405,
-      "hr_at_10": 60.9,
+      "bce_loss": 0.5476,
+      "hr_at_8": 56.7,
+      "ndcg_at_8": 0.406,
+      "hr_at_10": 61.0,
       "ndcg_at_10": 0.431
     },
     {
       "epoch": 3,
-      "bce_loss": 0.5222,
+      "bce_loss": 0.526,
       "hr_at_8": 58.9,
-      "ndcg_at_8": 0.422,
-      "hr_at_10": 62.9,
-      "ndcg_at_10": 0.448
+      "ndcg_at_8": 0.427,
+      "hr_at_10": 62.7,
+      "ndcg_at_10": 0.454
     },
     {
       "epoch": 4,
-      "bce_loss": 0.5013,
-      "hr_at_8": 61.1,
-      "ndcg_at_8": 0.44,
-      "hr_at_10": 64.5,
-      "ndcg_at_10": 0.465
+      "bce_loss": 0.5006,
+      "hr_at_8": 61.2,
+      "ndcg_at_8": 0.444,
+      "hr_at_10": 64.9,
+      "ndcg_at_10": 0.466
     },
     {
       "epoch": 5,
-      "bce_loss": 0.4793,
-      "hr_at_8": 62.8,
-      "ndcg_at_8": 0.456,
-      "hr_at_10": 66.5,
-      "ndcg_at_10": 0.482
+      "bce_loss": 0.4811,
+      "hr_at_8": 62.6,
+      "ndcg_at_8": 0.458,
+      "hr_at_10": 66.6,
+      "ndcg_at_10": 0.484
     },
     {
       "epoch": 6,
-      "bce_loss": 0.4612,
-      "hr_at_8": 64.9,
-      "ndcg_at_8": 0.47,
-      "hr_at_10": 67.9,
-      "ndcg_at_10": 0.499
+      "bce_loss": 0.4603,
+      "hr_at_8": 64.6,
+      "ndcg_at_8": 0.475,
+      "hr_at_10": 68.1,
+      "ndcg_at_10": 0.498
     },
     {
       "epoch": 7,
-      "bce_loss": 0.4416,
+      "bce_loss": 0.4423,
       "hr_at_8": 66.7,
-      "ndcg_at_8": 0.488,
-      "hr_at_10": 69.7,
-      "ndcg_at_10": 0.514
+      "ndcg_at_8": 0.485,
+      "hr_at_10": 69.8,
+      "ndcg_at_10": 0.515
     },
     {
       "epoch": 8,
-      "bce_loss": 0.424,
-      "hr_at_8": 68.4,
+      "bce_loss": 0.4252,
+      "hr_at_8": 68.2,
       "ndcg_at_8": 0.5,
-      "hr_at_10": 71.5,
+      "hr_at_10": 71.2,
       "ndcg_at_10": 0.528
     },
     {
       "epoch": 9,
-      "bce_loss": 0.4052,
-      "hr_at_8": 70.0,
-      "ndcg_at_8": 0.512,
-      "hr_at_10": 72.7,
-      "ndcg_at_10": 0.539
+      "bce_loss": 0.406,
+      "hr_at_8": 69.9,
+      "ndcg_at_8": 0.513,
+      "hr_at_10": 73.0,
+      "ndcg_at_10": 0.537
     },
     {
       "epoch": 10,
-      "bce_loss": 0.387,
-      "hr_at_8": 71.5,
-      "ndcg_at_8": 0.53,
+      "bce_loss": 0.3879,
+      "hr_at_8": 71.7,
+      "ndcg_at_8": 0.529,
       "hr_at_10": 74.5,
-      "ndcg_at_10": 0.552
+      "ndcg_at_10": 0.554
     },
     {
       "epoch": 11,
-      "bce_loss": 0.3708,
-      "hr_at_8": 72.9,
-      "ndcg_at_8": 0.54,
-      "hr_at_10": 75.8,
-      "ndcg_at_10": 0.567
+      "bce_loss": 0.3727,
+      "hr_at_8": 73.0,
+      "ndcg_at_8": 0.541,
+      "hr_at_10": 75.6,
+      "ndcg_at_10": 0.564
     },
     {
       "epoch": 12,
-      "bce_loss": 0.3547,
-      "hr_at_8": 74.4,
-      "ndcg_at_8": 0.553,
-      "hr_at_10": 77.5,
+      "bce_loss": 0.3555,
+      "hr_at_8": 74.8,
+      "ndcg_at_8": 0.552,
+      "hr_at_10": 77.3,
       "ndcg_at_10": 0.578
     },
     {
       "epoch": 13,
-      "bce_loss": 0.339,
+      "bce_loss": 0.3371,
       "hr_at_8": 76.0,
-      "ndcg_at_8": 0.566,
-      "hr_at_10": 78.7,
+      "ndcg_at_8": 0.565,
+      "hr_at_10": 78.9,
       "ndcg_at_10": 0.594
     },
     {
       "epoch": 14,
-      "bce_loss": 0.3236,
-      "hr_at_8": 77.5,
-      "ndcg_at_8": 0.582,
-      "hr_at_10": 79.9,
-      "ndcg_at_10": 0.606
+      "bce_loss": 0.3213,
+      "hr_at_8": 78.1,
+      "ndcg_at_8": 0.581,
+      "hr_at_10": 80.0,
+      "ndcg_at_10": 0.607
     },
     {
       "epoch": 15,
-      "bce_loss": 0.3059,
-      "hr_at_8": 79.5,
-      "ndcg_at_8": 0.592,
+      "bce_loss": 0.3058,
+      "hr_at_8": 79.6,
+      "ndcg_at_8": 0.591,
       "hr_at_10": 81.7,
-      "ndcg_at_10": 0.617
+      "ndcg_at_10": 0.618
     },
     {
       "epoch": 16,
-      "bce_loss": 0.2899,
-      "hr_at_8": 80.6,
+      "bce_loss": 0.2917,
+      "hr_at_8": 81.0,
       "ndcg_at_8": 0.608,
-      "hr_at_10": 82.9,
+      "hr_at_10": 83.0,
       "ndcg_at_10": 0.629
     },
     {
       "epoch": 17,
-      "bce_loss": 0.2759,
-      "hr_at_8": 82.4,
-      "ndcg_at_8": 0.617,
-      "hr_at_10": 84.7,
-      "ndcg_at_10": 0.639
+      "bce_loss": 0.2756,
+      "hr_at_8": 82.5,
+      "ndcg_at_8": 0.616,
+      "hr_at_10": 84.2,
+      "ndcg_at_10": 0.64
     },
     {
       "epoch": 18,
-      "bce_loss": 0.2611,
-      "hr_at_8": 83.7,
-      "ndcg_at_8": 0.628,
-      "hr_at_10": 85.6,
-      "ndcg_at_10": 0.654
+      "bce_loss": 0.2604,
+      "hr_at_8": 84.1,
+      "ndcg_at_8": 0.632,
+      "hr_at_10": 85.8,
+      "ndcg_at_10": 0.653
     },
     {
       "epoch": 19,
-      "bce_loss": 0.2467,
-      "hr_at_8": 85.2,
-      "ndcg_at_8": 0.642,
-      "hr_at_10": 87.4,
-      "ndcg_at_10": 0.669
+      "bce_loss": 0.2446,
+      "hr_at_8": 85.4,
+      "ndcg_at_8": 0.641,
+      "hr_at_10": 87.1,
+      "ndcg_at_10": 0.664
     },
     {
       "epoch": 20,

@@ -11,6 +11,7 @@ class OrderItem(BaseModel):
     size: str = ""
     color: str = ""
     image_url: str = ""
+    is_reviewed: bool = False
 
 class Order(Document):
     customer_name: str
@@ -31,6 +32,7 @@ class Order(Document):
     payment_status: str = "unpaid"  # "unpaid", "paid", "refunded"
     paid_at: datetime | None = None
     user_id: str | None = None
+    is_reviewed: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:

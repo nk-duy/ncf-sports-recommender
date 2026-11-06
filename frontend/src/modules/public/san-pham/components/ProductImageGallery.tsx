@@ -105,13 +105,13 @@ export default function ProductImageGallery({
       </div>
 
       {/* Danh sách 4 ảnh nhỏ (thumbnails) */}
-      <div className="flex justify-center gap-2.5 mt-3 w-full">
+      <div className="flex justify-center gap-2 sm:gap-2.5 mt-3 w-full overflow-x-auto py-1">
         {allImages.map((img, idx) => (
           <button
             key={idx}
             type="button"
             onClick={() => setSelectedIdx(idx)}
-            className={`relative w-16 h-16 rounded-lg overflow-hidden border transition-all p-0.5 bg-white flex-shrink-0 cursor-pointer ${
+            className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border transition-all p-0.5 bg-white shrink-0 cursor-pointer ${
               selectedIdx === idx
                 ? 'ring-2 ring-blue-600 border-transparent shadow-sm scale-100'
                 : 'border-slate-200/90 opacity-80 hover:opacity-100 hover:border-slate-300'

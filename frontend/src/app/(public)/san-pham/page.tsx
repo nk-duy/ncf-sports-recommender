@@ -2,6 +2,7 @@ import Breadcrumb from "@/shared/components/Breadcrumb";
 import ProductsSidebar from "@/modules/public/san-pham/components/ProductsSidebar";
 import DynamicProductList from "@/shared/components/DynamicProductList";
 import Features from "@/modules/public/trang-chu/components/Features";
+
 export default async function ProductsPage({
   searchParams,
 }: {
@@ -24,20 +25,20 @@ export default async function ProductsPage({
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-10">
-      <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
+    <div className="bg-gray-50 min-h-screen pb-10 w-full max-w-full overflow-x-hidden">
+      <div className="w-full max-w-full mx-auto px-3 sm:px-6 lg:px-12 xl:px-16 overflow-x-hidden">
         <Breadcrumb items={breadcrumbItems} />
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mt-2">
           <aside className="w-full lg:w-[280px] flex-shrink-0">
             <ProductsSidebar />
           </aside>
-          <main className="flex-1">
+          <main className="flex-1 min-w-0 max-w-full overflow-x-hidden">
             <DynamicProductList />
           </main>
         </div>
       </div>
-      <div className="bg-white mt-16 py-10 border-t border-gray-100">
-        <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16">
+      <div className="bg-white mt-16 py-10 border-t border-gray-100 w-full max-w-full overflow-x-hidden">
+        <div className="w-full max-w-full mx-auto px-3 sm:px-6 lg:px-12 xl:px-16">
           <Features />
         </div>
       </div>

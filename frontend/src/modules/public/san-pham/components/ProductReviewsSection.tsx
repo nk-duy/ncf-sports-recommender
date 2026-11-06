@@ -3,7 +3,6 @@
 import { useProductReviews, ReviewItem } from '../hooks/useProductReviews';
 import ReviewsSummaryHeader from './ReviewsSummaryHeader';
 import ReviewListItem from './ReviewListItem';
-import WriteReviewModal from './WriteReviewModal';
 
 export type { ReviewItem };
 
@@ -16,25 +15,12 @@ interface ProductReviewsSectionProps {
 
 export default function ProductReviewsSection({
   productId,
-  productName,
 }: ProductReviewsSectionProps) {
   const {
     reviews,
     loading,
     activeFilter,
     setActiveFilter,
-    isWriteModalOpen,
-    setIsWriteModalOpen,
-    newRating,
-    setNewRating,
-    newComment,
-    setNewComment,
-    reviewImages,
-    handleUploadImage,
-    handleRemoveImage,
-    isUploadingImage,
-    isSubmitting,
-    submitSuccess,
     isExpanded,
     setIsExpanded,
     totalCount,
@@ -42,7 +28,6 @@ export default function ProductReviewsSection({
     starCounts,
     getPercentage,
     filteredReviews,
-    handleSubmitReview,
   } = useProductReviews(productId);
 
   const reviewsWithImagesCount = reviews.filter((r) => r.images && r.images.length > 0).length;
@@ -58,7 +43,6 @@ export default function ProductReviewsSection({
         reviewsWithImagesCount={reviewsWithImagesCount}
         activeFilter={activeFilter}
         onSelectFilter={setActiveFilter}
-        onOpenWriteModal={() => setIsWriteModalOpen(true)}
       />
 
       {/* Danh sách các bài nhận xét thực tế */}
@@ -101,24 +85,6 @@ export default function ProductReviewsSection({
             )}
           </button>
         </div>
-      )}
-
-      {isWriteModalOpen && (
-        <WriteReviewModal
-          productName={productName}
-          submitSuccess={submitSuccess}
-          newRating={newRating}
-          setNewRating={setNewRating}
-          newComment={newComment}
-          setNewComment={setNewComment}
-          reviewImages={reviewImages}
-          isUploadingImage={isUploadingImage}
-          isSubmitting={isSubmitting}
-          onUploadImage={handleUploadImage}
-          onRemoveImage={handleRemoveImage}
-          onSubmit={handleSubmitReview}
-          onClose={() => setIsWriteModalOpen(false)}
-        />
       )}
     </div>
   );

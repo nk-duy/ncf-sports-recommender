@@ -18,13 +18,13 @@ export default function ProductActionCommitments({
   return (
     <>
       {/* 2 Nút hành động (CTA) lớn cân đối */}
-      <div className="grid grid-cols-2 gap-3 pt-1">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1">
         <button
           type="button"
           onClick={onAddToCart}
-          disabled={!isReady || !inStock}
-          className={`h-11 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer border-2 ${
-            !isReady || !inStock
+          disabled={!inStock}
+          className={`h-11 rounded-xl font-bold text-xs sm:text-sm px-2 sm:px-3 transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer border-2 ${
+            !inStock
               ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-70'
               : added
               ? 'bg-emerald-50 border-emerald-600 text-emerald-600 hover:bg-emerald-100'
@@ -51,9 +51,9 @@ export default function ProductActionCommitments({
         <button
           type="button"
           onClick={onBuyNow}
-          disabled={!isReady || !inStock}
-          className={`h-11 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center cursor-pointer ${
-            !isReady || !inStock
+          disabled={!inStock}
+          className={`h-11 rounded-xl font-bold text-xs sm:text-sm px-2 sm:px-3 shadow-md transition-all flex items-center justify-center cursor-pointer ${
+            !inStock
               ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-70 shadow-none'
               : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20 active:scale-98'
           }`}

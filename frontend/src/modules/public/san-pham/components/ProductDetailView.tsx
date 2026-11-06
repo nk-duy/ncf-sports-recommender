@@ -9,7 +9,10 @@ import ProductSpecsSection from './ProductSpecsSection';
 import ProductReviewsSection from './ProductReviewsSection';
 import ProductRecommendations from './ProductRecommendations';
 import { buildProductBreadcrumbs } from '../utils/buildProductBreadcrumbs';
-import { getDefaultProductSize } from '../utils/productStockUtils';
+import {
+  detectProductSizeKind,
+  normalizeProductVariants,
+} from '../utils/normalizeProductVariants';
 import type { ProductDetail } from '../types';
 
 const FALLBACK_PRODUCT: ProductDetail = {
@@ -45,10 +48,13 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
     const fetchProduct = async () => {
       try {
         const res = await fetch(`http://localhost:8000/api/v1/products/${id}`);
-        const resolvedProduct: ProductDetail = res.ok ? await res.json() : FALLBACK_PRODUCT;
+        const rawProduct: ProductDetail = res.ok ? await res.json() : FALLBACK_PRODUCT;
+        // Bảo vệ dữ liệu biến thể: Giày dép luôn 38–44, Quần áo S–2XL, thiết bị không có size quần áo.
+        const resolvedProduct = normalizeProductVariants(rawProduct);
         if (active) {
           setProduct(resolvedProduct);
-          setSelectedSize(getDefaultProductSize(resolvedProduct));
+          // Không chọn sẵn kích cỡ, để người dùng chủ động lựa chọn
+          setSelectedSize('');
         }
       } catch (err) {
         console.error(err);
@@ -96,7 +102,7 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
   const breadcrumbItems = buildProductBreadcrumbs(product);
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-16">
+    <div className="bg-gray-50 min-h-screen pb-16 overflow-x-hidden">
       {wishlistToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-gray-900 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2 animate-bounce">
           <svg className="w-5 h-5 text-red-500 fill-current" viewBox="0 0 20 20">
@@ -106,10 +112,10 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-4 pt-2.5 pb-2">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 pt-2.5 pb-2">
         <Breadcrumb items={breadcrumbItems} />
 
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mt-1.5 border border-slate-100 p-5 lg:p-6">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mt-1.5 border border-slate-100 p-3.5 sm:p-5 lg:p-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             <div className="lg:col-span-5 w-full self-start">
               <ProductImageGallery
@@ -155,6 +161,7 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
         onClose={() => setIsSizeGuideOpen(false)}
         categories={product.category || []}
         productName={product.name}
+        sizeKind={detectProductSizeKind(product)}
         onSelectSize={(size) => setSelectedSize(size)}
       />
     </div>

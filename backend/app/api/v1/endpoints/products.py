@@ -1,11 +1,26 @@
 from fastapi import APIRouter, HTTPException, Query, Response, Depends
 from typing import List, Optional
-from app.schemas.product import ProductResponse, ProductCreate, ProductUpdate
+from app.schemas.product import ProductResponse, ProductCreate, ProductUpdate, VisualSearchRequest, VisualSearchResponse
 from app.services.product_service import product_service
+from app.services.visual_search_service import visual_search_service
 from app.api.deps import get_current_admin_user
 from app.models.user import User
 
 router = APIRouter()
+
+@router.post("/visual-search", response_model=VisualSearchResponse)
+async def visual_search_products(request: VisualSearchRequest):
+    """
+    Tìm kiếm & gợi ý sản phẩm bằng Đặc trưng Hình ảnh (Visual 48D) kết hợp Vector nhúng NCF 32D
+    """
+    result = await visual_search_service.search_by_visual_features(
+        image_base64=request.image_base64,
+        reference_product_id=request.reference_product_id,
+        sport_type=request.sport_type,
+        filename=request.filename,
+        top_k=request.top_k
+    )
+    return result
 
 @router.get("/", response_model=List[ProductResponse])
 @router.get("", response_model=List[ProductResponse], include_in_schema=False)

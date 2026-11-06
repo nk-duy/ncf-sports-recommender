@@ -13,11 +13,13 @@ class Review(Document):
     # Optional detailed fields
     user_name: Optional[str] = Field(None, description="Tên người dùng (cache)")
     avatar_url: Optional[str] = Field(None, description="Ảnh đại diện người dùng (cache)")
+    title: Optional[str] = Field(None, description="Tiêu đề bài đánh giá")
     size_bought: Optional[str] = Field(None, description="Size đã mua")
     color_bought: Optional[str] = Field(None, description="Màu đã mua")
     verified_purchase: bool = Field(False, description="Đã xác thực mua hàng")
     images: List[str] = Field(default_factory=list, description="Hình ảnh đính kèm của người dùng")
     is_hidden: bool = Field(False, description="Ẩn đánh giá vi phạm bởi Quản trị viên")
+    order_id: Optional[str] = Field(None, description="Mã đơn hàng liên quan")
 
     class Settings:
         name = "reviews"

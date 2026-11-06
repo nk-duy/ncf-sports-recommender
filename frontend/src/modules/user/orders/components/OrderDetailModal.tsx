@@ -9,6 +9,7 @@ import {
   AlertCircle,
   XCircle,
   RotateCcw,
+  CheckCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { OrderData, ReviewingItem, normalizeOrderStatus } from "./types";
@@ -24,6 +25,7 @@ interface OrderDetailModalProps {
   onCancelOrder: (orderId: string) => void;
   isCancelling: boolean;
   onOpenReview: (item: ReviewingItem) => void;
+  onViewReview?: (order: OrderData, item?: ReviewingItem) => void;
 }
 
 export default function OrderDetailModal({
@@ -32,6 +34,7 @@ export default function OrderDetailModal({
   onCancelOrder,
   isCancelling,
   onOpenReview,
+  onViewReview,
 }: OrderDetailModalProps) {
   const router = useRouter();
   if (!order) return null;
@@ -60,30 +63,30 @@ export default function OrderDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors shadow-xs"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Modal Body */}
+        {/* Modal Content */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1">
           {normStatus === "rejected" && (
-            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 flex items-start gap-3">
-              <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 flex items-start gap-3">
+              <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold text-sm text-red-900">Đơn hàng đã bị từ chối / hủy</p>
-                <p className="mt-1 text-red-700">
+                <p className="font-bold text-red-900">Đơn hàng này đã bị hủy hoặc từ chối</p>
+                <p className="mt-1 text-red-700 text-xs">
                   <span className="font-semibold text-red-800">Lý do:</span>{" "}
                   {order.rejection_reason ||
-                    "Đơn hàng đã được hủy theo yêu cầu hoặc xử lý của cửa hàng."}
+                    "Đơn hàng đã được hủy theo yêu cầu của bạn hoặc quyết định từ phía quản trị viên cửa hàng."}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Status and Recipient Box */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Delivery & Payment Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <MapPin size={14} className="text-blue-600" />
@@ -162,7 +165,7 @@ export default function OrderDetailModal({
                     <p className="text-xs text-gray-400">
                       {item.price.toLocaleString("vi-VN")} đ / cái
                     </p>
-                    {normStatus === "delivered" && (
+                    {normStatus === "delivered" && !order.is_reviewed && (
                       <button
                         type="button"
                         onClick={() => {
@@ -171,12 +174,34 @@ export default function OrderDetailModal({
                             productName: item.product_name,
                             size: item.size,
                             color: item.color,
+                            imageUrl: item.image_url,
+                            orderId: order._id,
                           });
                         }}
-                        className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                        className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors cursor-pointer"
                       >
                         <Star size={13} className="fill-amber-500 text-amber-500" />
                         Đánh giá
+                      </button>
+                    )}
+
+                    {normStatus === "delivered" && order.is_reviewed && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onViewReview?.(order, {
+                            productId: item.product_id,
+                            productName: item.product_name,
+                            size: item.size,
+                            color: item.color,
+                            imageUrl: item.image_url,
+                            orderId: order._id,
+                          });
+                        }}
+                        className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors cursor-pointer"
+                      >
+                        <CheckCircle size={13} className="text-emerald-600" />
+                        Xem lại đánh giá
                       </button>
                     )}
                   </div>
@@ -220,7 +245,7 @@ export default function OrderDetailModal({
             <button
               type="button"
               onClick={handleReorder}
-              className="px-4 py-2 border border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs"
+              className="px-4 py-2 border border-blue-200 bg-blue-50/60 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-lg transition-colors flex items-center shadow-xs cursor-pointer"
             >
               <RotateCcw size={16} className="mr-1.5 text-blue-600" />
               Mua lại toàn bộ
@@ -230,7 +255,7 @@ export default function OrderDetailModal({
                 type="button"
                 onClick={() => onCancelOrder(order._id)}
                 disabled={isCancelling}
-                className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors flex items-center"
+                className="px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-lg transition-colors flex items-center cursor-pointer"
               >
                 <XCircle size={16} className="mr-1.5 text-red-500" />
                 Hủy đơn hàng này
@@ -240,7 +265,7 @@ export default function OrderDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 text-sm font-semibold rounded-lg transition-colors"
+            className="px-5 py-2 bg-gray-900 text-white hover:bg-gray-800 text-sm font-semibold rounded-lg transition-colors cursor-pointer"
           >
             Đóng
           </button>

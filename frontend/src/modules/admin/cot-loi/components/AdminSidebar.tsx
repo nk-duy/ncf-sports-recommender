@@ -104,7 +104,7 @@ export default function AdminSidebar({
     <>
       {/* DESKTOP SIDEBAR */}
       <aside
-        className={`bg-white border-r border-slate-200 text-slate-900 flex flex-col hidden md:flex h-screen transition-all duration-300 relative z-30 shrink-0 ${
+        className={`bg-white border-r border-slate-200 text-slate-900 flex flex-col hidden lg:flex h-screen transition-all duration-300 relative z-30 shrink-0 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
@@ -174,7 +174,7 @@ export default function AdminSidebar({
 
       {/* MOBILE DRAWER (Hạng mục 3) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+        <div className="fixed inset-0 z-50 lg:hidden flex">
           <div
             className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity animate-in fade-in"
             onClick={onCloseMobileMenu}

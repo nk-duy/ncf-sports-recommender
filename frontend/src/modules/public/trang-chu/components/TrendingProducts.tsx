@@ -150,7 +150,7 @@ export default function TrendingProducts() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 sm:gap-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4 space-y-4 animate-pulse">
               <div className="w-full aspect-square bg-slate-100 rounded-xl" />
@@ -165,7 +165,7 @@ export default function TrendingProducts() {
           Đang cập nhật danh mục sản phẩm...
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 sm:gap-6">
           {displayedProducts.map((p, index) => {
             const displayCategory =
               p.category && p.category.length > 0 ? p.category[0] : p.sport_type || "Thể Thao";

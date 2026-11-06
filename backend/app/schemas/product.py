@@ -77,3 +77,15 @@ class ProductUpdate(BaseModel):
 
 class ProductResponse(ProductBase):
     pass
+
+class VisualSearchRequest(BaseModel):
+    image_base64: Optional[str] = None
+    reference_product_id: Optional[str] = None
+    sport_type: Optional[str] = None
+    filename: Optional[str] = None
+    top_k: int = 8
+
+class VisualSearchResponse(BaseModel):
+    products: List[ProductResponse]
+    metadata: Dict[str, Any]
+

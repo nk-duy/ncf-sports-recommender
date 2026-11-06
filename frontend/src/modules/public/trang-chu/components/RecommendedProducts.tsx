@@ -36,12 +36,12 @@ export default function RecommendedProducts() {
   } = useHomeRecommendations();
 
   return (
-    <section id="ai-recommendations" className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-10 scroll-mt-20">
-      <div className="relative rounded-3xl bg-slate-50/70 border border-slate-200/80 p-5 sm:p-6 lg:p-7 shadow-sm">
+    <section id="ai-recommendations" className="w-full max-w-full mx-auto px-3 sm:px-6 lg:px-12 xl:px-16 py-6 sm:py-10 scroll-mt-20 overflow-x-hidden box-border">
+      <div className="relative rounded-2xl sm:rounded-3xl bg-slate-50/70 border border-slate-200/80 p-3 sm:p-5 lg:p-7 shadow-xs w-full max-w-full box-border overflow-x-hidden">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 pb-6 border-b border-slate-200/80">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-slate-200/80 w-full max-w-full">
+          <div className="min-w-0 max-w-full">
+            <h2 className="text-lg sm:text-2xl font-bold text-slate-900 break-words">
               {isAuthenticated && user ? (
                 <>
                   Gợi ý cho bạn: <span className="text-blue-600">{user.full_name || "Khách hàng"}</span>
@@ -55,14 +55,14 @@ export default function RecommendedProducts() {
             </p>
           </div>
 
-          {/* Action Header: Category Tabs & Refresh Button in 1 clean row */}
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+          {/* Action Header: Category Tabs & Refresh Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full md:w-auto max-w-full">
+            <div className="flex items-center overflow-x-auto max-w-full no-scrollbar gap-1 bg-slate-100 p-1 rounded-xl">
               {CATEGORY_TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveCategoryTab(tab.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                     activeCategoryTab === tab.id
                       ? "bg-white text-slate-900 shadow-sm"
                       : "text-slate-600 hover:text-slate-900"
@@ -73,23 +73,25 @@ export default function RecommendedProducts() {
               ))}
             </div>
 
-            <AiXRayToggle />
+            <div className="flex items-center gap-2 shrink-0">
+              <AiXRayToggle size="sm" />
 
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing || loading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold whitespace-nowrap transition-all shadow-sm cursor-pointer disabled:opacity-50"
-              title="Đổi danh sách gợi ý khác"
-            >
-              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-blue-600" : "text-slate-500"}`} />
-              <span>{isRefreshing ? "Đang tải..." : "Đổi gợi ý"}</span>
-            </button>
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-[11px] sm:text-xs font-semibold whitespace-nowrap transition-all shadow-xs cursor-pointer disabled:opacity-50 shrink-0"
+                title="Đổi danh sách gợi ý khác"
+              >
+                <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-blue-600" : "text-slate-500"}`} />
+                <span>{isRefreshing ? "Đang tải..." : "Đổi gợi ý"}</span>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Product Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-white border border-slate-200/80 rounded-2xl p-4 space-y-4 animate-pulse">
                 <div className="w-full aspect-square bg-slate-100 rounded-xl" />
@@ -111,7 +113,7 @@ export default function RecommendedProducts() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 md:gap-6">
             {filteredProducts.map((p) => (
               <HomeRecommendationCard
                 key={p.product_id}

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, ShoppingBag, Sparkles, Star } from 'lucide-react';
+import { Activity, Sparkles, Star } from 'lucide-react';
 import AiXRayInspector from '@/shared/components/AiXRayInspector';
 import type { PostPurchaseRecProduct } from '../../types';
 
@@ -13,7 +13,7 @@ interface PostPurchaseRecCardProps {
   productId: string;
   isXRayActive: boolean;
   onTrackClick: (productId: string) => void;
-  onQuickAdd: (product: PostPurchaseRecProduct, productId: string) => void;
+  onQuickAdd?: (product: PostPurchaseRecProduct, productId: string) => void;
 }
 
 export default function PostPurchaseRecCard({
@@ -21,7 +21,6 @@ export default function PostPurchaseRecCard({
   productId,
   isXRayActive,
   onTrackClick,
-  onQuickAdd,
 }: PostPurchaseRecCardProps) {
   const detailUrl = `/san-pham/${productId}`;
   const sportLabel = product.sport_type || product.category?.[0] || 'Thể thao';
@@ -60,11 +59,11 @@ export default function PostPurchaseRecCard({
         {product.ai_explanation?.reason && (
           <div className="mb-2">
             <span
-              className="inline-flex items-center gap-1 text-[11px] text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded max-w-full truncate font-medium border border-blue-100/60"
+              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-1.5 sm:px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
               title={product.ai_explanation.reason}
             >
-              <Sparkles size={10} className="shrink-0 text-blue-500" />
-              <span className="truncate">{product.ai_explanation.reason}</span>
+              <Sparkles size={9} className="shrink-0 text-blue-500" />
+              <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
             </span>
           </div>
         )}
@@ -89,21 +88,9 @@ export default function PostPurchaseRecCard({
       </div>
 
       <div className="flex items-center justify-between pt-3 border-t border-slate-200/80 mt-auto">
-        <div>
-          <span className="font-bold text-sm sm:text-base text-slate-900 font-sans tabular-nums">
-            {(product.price || 0).toLocaleString('vi-VN')} đ
-          </span>
-        </div>
-        <button
-          onClick={() => onQuickAdd(product, productId)}
-          className="h-8 px-2.5 sm:px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1 transition-colors duration-150 shadow-xs cursor-pointer"
-          type="button"
-          title="Thêm vào giỏ hàng"
-          aria-label="Thêm vào giỏ hàng"
-        >
-          <ShoppingBag size={13} />
-          <span>+ Thêm</span>
-        </button>
+        <span className="font-bold text-sm sm:text-base text-slate-900 font-sans tabular-nums">
+          {(product.price || 0).toLocaleString('vi-VN')} đ
+        </span>
       </div>
     </div>
   );
