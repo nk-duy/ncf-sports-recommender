@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { notifications } from '@mantine/notifications';
 import { useCartStore, cartKey } from '@/shared/store/cartStore';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import { useCheckoutStore } from '@/shared/store/checkoutStore';
 import { useWishlistStore } from '@/shared/store/wishlistStore';
 import ProductHeaderMeta from './ProductHeaderMeta';
@@ -82,7 +83,8 @@ export default function ProductInfoSection({
   const trackInteraction = (type: string) => {
     const token = localStorage.getItem('kady_customer_token') || localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:8000/api/v1/interactions/', {
+      const apiUrl = resolveApiBaseUrl();
+      fetch(`${apiUrl}/interactions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,6 +157,46 @@ export default function ProductInfoSection({
       });
       return false;
     }
+
+    // Kiểm tra giới hạn tồn kho biến thể và tổng kho sản phẩm kết hợp giỏ hàng hiện tại
+    const cartItems = useCartStore.getState().items;
+    const sameVariantInCart = cartItems.find(
+      (i) => i.product_id === product.product_id && i.size === selectedSize && i.color === selectedColor
+    )?.quantity || 0;
+    const totalSameProductInCart = cartItems
+      .filter((i) => i.product_id === product.product_id)
+      .reduce((sum, i) => sum + i.quantity, 0);
+
+    if (sameVariantInCart + quantity > effectiveStock) {
+      const remainingVariant = Math.max(0, effectiveStock - sameVariantInCart);
+      setErrorMsg(
+        remainingVariant > 0
+          ? `Phân loại này chỉ có thể thêm tối đa ${remainingVariant} sản phẩm nữa (bạn đã có ${sameVariantInCart} trong giỏ).`
+          : `Bạn đã có tối đa ${sameVariantInCart} sản phẩm phân loại này trong giỏ hàng (tồn kho: ${effectiveStock}).`
+      );
+      notifications.show({
+        title: 'Vượt quá tồn kho phân loại',
+        message: `Phân loại ${selectedSize}${selectedColor ? ` · ${selectedColor}` : ''} chỉ còn ${effectiveStock} sản phẩm (bạn đã có ${sameVariantInCart} trong giỏ).`,
+        color: 'orange',
+      });
+      return false;
+    }
+
+    if (totalSameProductInCart + quantity > productStock) {
+      const remainingTotal = Math.max(0, productStock - totalSameProductInCart);
+      setErrorMsg(
+        remainingTotal > 0
+          ? `Sản phẩm này chỉ có thể mua thêm tối đa ${remainingTotal} chiếc (tổng các phân loại trong giỏ đã là ${totalSameProductInCart}).`
+          : `Tổng số lượng sản phẩm này trong giỏ đã đạt mức tối đa tồn kho (${productStock} chiếc).`
+      );
+      notifications.show({
+        title: 'Vượt quá tổng tồn kho sản phẩm',
+        message: `Tổng tồn kho của sản phẩm chỉ còn ${productStock} chiếc (giỏ hàng đã có ${totalSameProductInCart} chiếc ở các phân loại khác).`,
+        color: 'orange',
+      });
+      return false;
+    }
+
     setErrorMsg('');
     return true;
   };
@@ -168,6 +210,7 @@ export default function ProductInfoSection({
     size: selectedSize,
     color: selectedColor,
     stock: effectiveStock,
+    total_stock: productStock,
   });
 
   const handleAddToCart = () => {
@@ -180,7 +223,7 @@ export default function ProductInfoSection({
 
   const handleBuyNow = () => {
     if (!validateSelection()) return;
-    trackInteraction('purchase');
+    trackInteraction('add_to_cart');
     addItem(buildCartPayload());
     useCheckoutStore.getState().setSelectedKeys([
       cartKey({ product_id: product.product_id, size: selectedSize, color: selectedColor }),

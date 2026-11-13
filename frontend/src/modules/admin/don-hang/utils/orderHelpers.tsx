@@ -149,3 +149,48 @@ export const renderOrderStatusBadge = (status: string): React.ReactNode => {
       );
   }
 };
+
+export interface PaymentActionRule {
+  canCollect: boolean;
+  isHidden: boolean;
+  tooltipReason?: string;
+}
+
+/**
+ * Chuẩn hóa logic kiểm tra quyền thao tác nút "Thu tiền" trong trang Quản lý đơn hàng:
+ * - Đơn chuyển khoản / Online: Cho phép thu tiền từ trạng thái Chờ duyệt hoặc Đã xác nhận.
+ * - Đơn Thu hộ (COD): Khóa (disable + tooltip giải thích) khi ở trạng thái Chờ duyệt / Đã xác nhận.
+ *   Chỉ mở khóa khi đơn đã chuyển sang Đang giao hoặc Đã giao.
+ * - Đơn Từ chối / Hủy: Ẩn hoàn toàn nút Thu tiền.
+ */
+export function getPaymentActionRule(order: OrderItem): PaymentActionRule {
+  const status = (order.status || '').toLowerCase();
+  const isCancelled = ['rejected', 'cancelled', 'từ chối', 'đã hủy'].includes(status);
+
+  if (isCancelled) {
+    return {
+      canCollect: false,
+      isHidden: true,
+      tooltipReason: 'Đơn hàng đã bị hủy hoặc từ chối, không thể thu tiền.',
+    };
+  }
+
+  const method = (order.payment_method || '').toLowerCase();
+  const isCod = method.includes('cod') || method.includes('tiền mặt') || method.includes('thu hộ');
+
+  if (isCod) {
+    const isShippingOrDelivered = ['shipping', 'delivered', 'completed', 'đang giao', 'đã giao'].includes(status);
+    if (!isShippingOrDelivered) {
+      return {
+        canCollect: false,
+        isHidden: false,
+        tooltipReason: 'Đơn COD (Thu hộ) chỉ mở khóa Thu tiền khi đơn đang giao hoặc đã giao hàng thành công.',
+      };
+    }
+  }
+
+  return {
+    canCollect: true,
+    isHidden: false,
+  };
+}

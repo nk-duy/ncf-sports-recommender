@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import { notifications } from "@mantine/notifications";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
 import QuickAddToCartModal, { QuickAddProduct } from "@/shared/components/QuickAddToCartModal";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import FlashSaleHeader from "./FlashSaleHeader";
 import FlashSaleCard from "./FlashSaleCard";
 import type { FlashSaleProduct } from "../types";
@@ -59,7 +60,7 @@ export default function FlashSaleSection() {
   }, []);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/products/?is_promotion=true&sort_by=discount_desc&limit=12")
+    fetch(`${resolveApiBaseUrl()}/products/?is_promotion=true&sort_by=discount_desc&limit=12`)
       .then((r) => r.json())
       .then((data: FlashSaleProduct[]) => {
         setProducts(data);

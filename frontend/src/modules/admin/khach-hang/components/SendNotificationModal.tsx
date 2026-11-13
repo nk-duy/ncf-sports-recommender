@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import { X, Bell, Send } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import type { CustomerItem, NotificationTemplate, NotificationType } from "../types";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
+import { getAuthHeaders } from "@/shared/lib/authHeader";
 import { NOTIFICATION_TEMPLATES } from "../data/notificationTemplates";
 import NotificationTypeSelector from "./NotificationTypeSelector";
 
@@ -57,11 +59,12 @@ export default function SendNotificationModal({
 
     try {
       setSending(true);
-      const res = await fetch("http://localhost:8000/api/v1/notifications/send", {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/notifications/send`, {
         method: "POST",
-        headers: {
+        headers: getAuthHeaders({
           "Content-Type": "application/json",
-        },
+        }),
         body: JSON.stringify({
           user_id: customer.id || customer.email,
           title: title.trim(),

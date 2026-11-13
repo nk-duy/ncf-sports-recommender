@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
 import { notifications } from "@mantine/notifications";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import {
   COLOR_PALETTE,
   PRICE_RANGES,
@@ -61,7 +62,7 @@ export function usePromotionsFilter() {
       setLoading(true);
       try {
         const skip = (page - 1) * ITEMS_PER_PAGE;
-        let url = `http://localhost:8000/api/v1/products?is_promotion=true&skip=${skip}&limit=${ITEMS_PER_PAGE}`;
+        let url = `${resolveApiBaseUrl()}/products?is_promotion=true&skip=${skip}&limit=${ITEMS_PER_PAGE}`;
 
         if (selectedSport) url += `&sport_type=${encodeURIComponent(selectedSport)}`;
         if (selectedType) url += `&product_type=${encodeURIComponent(selectedType)}`;

@@ -7,4 +7,5 @@ export interface LiveInfo {
   colors: string[];
   discount_percent: number;
   hidden: boolean;
+  variants?: Array<{ size?: string; color?: string; stock?: number; sku?: string }>;
 }

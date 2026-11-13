@@ -5,6 +5,7 @@ import { Check, Ticket } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import type { VoucherItem } from "../types";
 import VoucherTicketCard from "./VoucherTicketCard";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 
 const VOUCHER_TABS = [
   { id: "all", label: "Tất cả mã" },
@@ -20,7 +21,7 @@ export default function PromotionsVoucher() {
   const [savedCodes, setSavedCodes] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/vouchers/")
+    fetch(`${resolveApiBaseUrl()}/vouchers/`)
       .then((res) => res.json())
       .then((data: VoucherItem[] | { items?: VoucherItem[] }) => {
         const list = Array.isArray(data) ? data : data.items || [];

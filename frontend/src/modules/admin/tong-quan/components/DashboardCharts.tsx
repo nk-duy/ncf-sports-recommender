@@ -137,9 +137,25 @@ export default function DashboardCharts({
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#64748b' }}
-                  tickFormatter={(val: number) => `${val / 1000000}tr`}
-                  width={50}
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  domain={[0, (dataMax: number) => Math.max(Number(dataMax) || 0, 5000000)]}
+                  tickFormatter={(val: number) => {
+                    const num = Number(val) || 0;
+                    if (num <= 0) return '0 đ';
+                    if (num >= 1000000000) {
+                      const billions = num / 1000000000;
+                      return `${Number.isInteger(billions) ? billions : billions.toFixed(1)} tỷ`;
+                    }
+                    if (num >= 1000000) {
+                      const millions = num / 1000000;
+                      return `${Number.isInteger(millions) ? millions : millions.toFixed(1)} tr`;
+                    }
+                    if (num >= 1000) {
+                      return `${Math.round(num / 1000)} k`;
+                    }
+                    return `${num}`;
+                  }}
+                  width={72}
                 />
                 <Tooltip content={<CustomChartTooltip formatPrice={formatPrice} />} />
                 <Area

@@ -1,8 +1,10 @@
 import io
+import os
+import json
 import time
 import base64
 import logging
-import hashlib
+import urllib.request
 from typing import Optional, List, Dict, Any, Tuple
 
 import numpy as np
@@ -14,6 +16,13 @@ from app.services.recommendation_service import recommendation_service
 from app.core.rec_utils import filter_duplicate_recommendations
 
 logger = logging.getLogger(__name__)
+
+VISUAL_FEATURES_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "ml",
+    "saved_models",
+    "visual_features.json"
+)
 
 
 def extract_visual_features(img_input: Any) -> np.ndarray:
@@ -117,53 +126,66 @@ def extract_visual_features(img_input: Any) -> np.ndarray:
 class VisualSearchService:
     def __init__(self):
         self._product_features_cache: Dict[str, np.ndarray] = {}
+        self._loaded_from_disk: bool = False
+
+    def load_visual_features(self) -> int:
+        """Nạp nóng toàn bộ vector đặc trưng thị giác 48 chiều đã trích xuất thực tế từ đĩa lên RAM"""
+        if not os.path.exists(VISUAL_FEATURES_PATH):
+            logger.warning(f"[VisualSearch] Không tìm thấy file {VISUAL_FEATURES_PATH}.")
+            return 0
+        try:
+            with open(VISUAL_FEATURES_PATH, "r", encoding="utf-8") as f:
+                raw_map = json.load(f)
+            count = 0
+            for pid, vec_list in raw_map.items():
+                if isinstance(vec_list, list) and len(vec_list) == 48:
+                    arr = np.array(vec_list, dtype=np.float32)
+                    norm = np.linalg.norm(arr) + 1e-8
+                    self._product_features_cache[pid] = (arr / norm).astype(np.float32)
+                    count += 1
+            self._loaded_from_disk = True
+            logger.info(f"[VisualSearch] Đã nạp {count} vector đặc trưng ảnh 48D thực tế vào RAM.")
+            return count
+        except Exception as e:
+            logger.error(f"[VisualSearch] Lỗi khi đọc {VISUAL_FEATURES_PATH}: {e}")
+            return 0
 
     def get_product_visual_features(self, product: Product) -> np.ndarray:
-        """Lấy hoặc tính toán vector đặc trưng thị giác 48 chiều của sản phẩm trong DB"""
+        """Lấy hoặc trích xuất thực tế vector đặc trưng thị giác 48 chiều từ ảnh sản phẩm (RGB + Sobel)"""
+        if not self._loaded_from_disk and not self._product_features_cache:
+            self.load_visual_features()
+
         pid = product.product_id
         if pid in self._product_features_cache:
             return self._product_features_cache[pid]
 
-        # Khởi tạo vector 48 chiều tất định theo thuộc tính sản phẩm và ảnh
-        seed_str = f"{pid}_{product.sport_type or ''}_{product.product_type or ''}_{product.image_url or ''}"
-        hash_digest = hashlib.sha256(seed_str.encode("utf-8")).digest()
-        seed_int = int.from_bytes(hash_digest[:4], "little")
-        rng = np.random.RandomState(seed_int)
+        # Nếu sản phẩm mới chưa có trong visual_features.json, trích xuất thực tế từ ảnh gốc
+        img_url = (product.image_url or "").strip()
+        if not img_url and product.images:
+            img_url = (product.images[0] or "").strip()
 
-        # Vector đặc trưng thị giác phản ánh màu sắc & hình thái
-        base_features = rng.normal(loc=0.5, scale=0.25, size=48).astype(np.float32)
+        feat_vec: Optional[np.ndarray] = None
+        if img_url:
+            try:
+                if img_url.startswith("data:image/"):
+                    feat_vec = extract_visual_features(img_url)
+                elif img_url.startswith("/uploads/") or img_url.startswith("uploads/"):
+                    local_path = img_url.lstrip("/")
+                    if os.path.exists(local_path):
+                        with open(local_path, "rb") as f:
+                            feat_vec = extract_visual_features(f.read())
+                elif img_url.startswith("http://") or img_url.startswith("https://"):
+                    req = urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"})
+                    with urllib.request.urlopen(req, timeout=6.0) as resp:
+                        feat_vec = extract_visual_features(resp.read())
+            except Exception as e:
+                logger.warning(f"[VisualSearch] Không thể tải ảnh sản phẩm {pid} ({img_url}): {e}")
 
-        # Tăng trọng số vùng màu phù hợp theo môn thể thao để tạo phân cụ tự nhiên
-        sport = (product.sport_type or "").lower()
-        if "dã ngoại" in sport or "outdoor" in sport:
-            base_features[0:8] += 0.35  # Xanh rêu / đất
-        elif "bóng chuyền" in sport:
-            base_features[8:16] += 0.40  # Vàng xanh thể thao
-        elif "cầu lông" in sport:
-            base_features[16:24] += 0.35  # Sáng neon
-        elif "đá bóng" in sport:
-            base_features[24:32] += 0.40  # Đỏ đen năng động
-        elif "chạy bộ" in sport:
-            base_features[32:40] += 0.35  # Tương phản cao
-        elif "pickleball" in sport:
-            base_features[40:48] += 0.35  # Trẻ trung tươi sáng
+        if feat_vec is None:
+            # Ảnh nền trung tính nếu URL ảnh mới bị hỏng
+            neutral_img = Image.new("RGB", (64, 64), color=(128, 128, 128))
+            feat_vec = extract_visual_features(neutral_img)
 
-        # Tăng cường phân cụ theo nhóm sản phẩm (giày, quần áo, vợt, bóng, vớ, lều...)
-        ptype = (product.product_type or "").lower()
-        pname = (product.name or "").lower()
-        if "giày" in ptype or "giày" in pname or "shoe" in pname:
-            base_features[0:12] += 0.45
-        elif "áo" in ptype or "quần" in ptype or "áo" in pname or "quần" in pname:
-            base_features[12:24] += 0.45
-        elif "vợt" in ptype or "vợt" in pname or "racket" in pname or "paddle" in pname:
-            base_features[24:36] += 0.45
-        elif "vớ" in pname or "tất" in pname or "sock" in pname:
-            base_features[36:44] += 0.50
-        elif "balo" in pname or "túi" in pname or "bag" in pname:
-            base_features[44:48] += 0.45
-
-        norm = np.linalg.norm(base_features) + 1e-8
-        feat_vec = (base_features / norm).astype(np.float32)
         self._product_features_cache[pid] = feat_vec
         return feat_vec
 
@@ -392,10 +414,12 @@ class VisualSearchService:
                 "strategy": "visual_ncf_fusion",
                 "cosine_score": round(fused_sim, 3),
                 "ncf_score": round(norm_ncf_sim, 3),
+                "visual_score": round(0.60 * norm_vis_sim, 3),
                 "context_boost": round(type_boost + sport_boost, 3),
                 "rating_score": rating_score,
                 "final_score": final_score,
                 "match_percent": 96,
+                "is_cross_sport_discovery": bool(target_sport_type and not is_same_sport),
                 "reason": reason
             }
             scored_candidates.append((final_score, p))

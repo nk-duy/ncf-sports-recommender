@@ -58,11 +58,30 @@ async def get_my_orders(
 
 
 @router.get("/{order_id}")
-async def get_order(order_id: str):
-    """Lấy chi tiết đơn hàng theo ID (hỗ trợ cả ObjectId và mã ORD-...)"""
+async def get_order(
+    order_id: str,
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Lấy chi tiết đơn hàng theo ID (hỗ trợ cả ObjectId và mã ORD-...) với kiểm tra phân quyền an toàn"""
     order = await order_service.get_order_by_id(order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Đơn hàng không tồn tại hoặc mã đơn không hợp lệ")
+
+    # Nếu đơn hàng gắn với tài khoản thành viên (user_id): Chỉ cho phép Admin hoặc chính chủ xem
+    if order.user_id:
+        if not current_user:
+            raise HTTPException(
+                status_code=403,
+                detail="Vui lòng đăng nhập để xem thông tin chi tiết của đơn hàng này"
+            )
+        is_admin = getattr(current_user, "role", "") == "admin"
+        is_owner = str(current_user.id) == str(order.user_id)
+        if not is_admin and not is_owner:
+            raise HTTPException(
+                status_code=403,
+                detail="Bạn không có quyền xem thông tin đơn hàng này"
+            )
+
     return order
 
 

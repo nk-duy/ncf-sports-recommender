@@ -1,3 +1,5 @@
+import type { AIExplanation } from "@/shared/types/aiExplanation";
+
 export interface RecProduct {
   product_id: string;
   name: string;
@@ -15,6 +17,16 @@ export interface RecProduct {
   stock?: number;
   is_hidden?: boolean;
   is_deleted?: boolean;
+  ai_explanation?: AIExplanation;
+}
+
+export interface LatentRadarAxis {
+  sport_type: string;
+  ncf_affinity: number;
+  visual_affinity: number;
+  combined_affinity: number;
+  sample_count?: number;
+  is_interested?: boolean;
 }
 
 export interface FilterTab {

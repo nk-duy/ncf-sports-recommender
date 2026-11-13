@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Check } from 'lucide-react';
 import { notifications } from '@mantine/notifications';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import { useAdminAuthStore } from '@/shared/store/adminAuthStore';
 import type {
   AiModelInfo,
   AiOnlineMetrics,
@@ -61,10 +63,11 @@ export function useDashboardData() {
 
   const fetchAiModelInfo = useCallback(async () => {
     try {
+      const apiUrl = resolveApiBaseUrl();
       const [infoRes, metricsRes, evalRes] = await Promise.all([
-        fetch('http://localhost:8000/api/v1/recommendations/model-info'),
-        fetch('http://localhost:8000/api/v1/recommendations/metrics'),
-        fetch('http://localhost:8000/api/v1/recommendations/evaluation-metrics'),
+        fetch(`${apiUrl}/recommendations/model-info`),
+        fetch(`${apiUrl}/recommendations/metrics`),
+        fetch(`${apiUrl}/recommendations/evaluation-metrics`),
       ]);
 
       if (infoRes.ok) {
@@ -100,7 +103,8 @@ export function useDashboardData() {
 
     pollIntervalRef.current = setInterval(async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/v1/recommendations/training-status');
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/recommendations/training-status`);
         if (res.ok) {
           const status = (await res.json()) as AiTrainingStatus;
           setTrainingStatus(status);
@@ -153,8 +157,10 @@ export function useDashboardData() {
     hasNotifiedCompletionRef.current = false;
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/recommendations/retrain', {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/recommendations/retrain`, {
         method: 'POST',
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data = (await res.json()) as RetrainTriggerResponse;
@@ -197,16 +203,28 @@ export function useDashboardData() {
 
     const fetchData = async () => {
       try {
+        const apiUrl = resolveApiBaseUrl();
         const authHeaders = getAuthHeaders();
         const [infoRes, metricsRes, evalRes, productsRes, ordersRes] = await Promise.all([
-          fetch('http://localhost:8000/api/v1/recommendations/model-info').catch(() => null),
-          fetch('http://localhost:8000/api/v1/recommendations/metrics').catch(() => null),
-          fetch('http://localhost:8000/api/v1/recommendations/evaluation-metrics').catch(() => null),
-          fetch('http://localhost:8000/api/v1/products?limit=1000'),
-          fetch('http://localhost:8000/api/v1/orders?limit=1000', {
+          fetch(`${apiUrl}/recommendations/model-info`).catch(() => null),
+          fetch(`${apiUrl}/recommendations/metrics`).catch(() => null),
+          fetch(`${apiUrl}/recommendations/evaluation-metrics`).catch(() => null),
+          fetch(`${apiUrl}/products?limit=1000`),
+          fetch(`${apiUrl}/orders?limit=1000`, {
             headers: authHeaders,
           }),
         ]);
+
+        if (ordersRes?.status === 401) {
+          useAdminAuthStore.getState().logout();
+          notifications.show({
+            title: 'Phiên đăng nhập hết hạn',
+            message: 'Vui lòng đăng nhập lại tài khoản Quản trị viên để tiếp tục',
+            color: 'red',
+          });
+          window.location.href = `/dang-nhap?redirect=${encodeURIComponent(window.location.pathname)}`;
+          return;
+        }
 
         if (isCancelled) return;
 
@@ -232,7 +250,7 @@ export function useDashboardData() {
 
         let usersCount = 0;
         try {
-          const customersRes = await fetch('http://localhost:8000/api/v1/customers/?limit=1', {
+          const customersRes = await fetch(`${apiUrl}/customers/?limit=1`, {
             headers: authHeaders,
           });
           if (customersRes.ok) {

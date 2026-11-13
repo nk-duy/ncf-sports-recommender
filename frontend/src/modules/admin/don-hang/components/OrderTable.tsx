@@ -3,6 +3,7 @@
 import React from 'react';
 import { Copy, Truck, Eye, Printer, CheckCircle2, Clock } from 'lucide-react';
 import type { OrderItem } from '../types';
+import { getPaymentActionRule } from '../utils/orderHelpers';
 
 interface OrderTableProps {
   orders: OrderItem[];
@@ -169,18 +170,36 @@ export default function OrderTable({
                           >
                             <CheckCircle2 size={14} />
                           </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleUpdatePaymentStatus(order._id, 'paid')}
-                            className="h-8 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-xs transition-colors duration-150 flex items-center gap-1 cursor-pointer"
-                            title="Xác nhận đã nhận tiền"
-                            aria-label="Xác nhận đã nhận tiền"
-                          >
-                            <CheckCircle2 size={12} className="text-emerald-600" />
-                            <span>Thu tiền</span>
-                          </button>
-                        ))}
+                        ) : (() => {
+                          const rule = getPaymentActionRule(order);
+                          if (rule.isHidden) return null;
+                          if (!rule.canCollect) {
+                            return (
+                              <button
+                                type="button"
+                                disabled
+                                className="h-8 px-2.5 bg-gray-100 text-gray-400 border border-gray-200 font-semibold rounded-lg text-xs opacity-50 cursor-not-allowed flex items-center gap-1"
+                                title={rule.tooltipReason}
+                                aria-label="Nút thu tiền bị khóa"
+                              >
+                                <CheckCircle2 size={12} className="text-gray-400" />
+                                <span>Thu tiền</span>
+                              </button>
+                            );
+                          }
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePaymentStatus(order._id, 'paid')}
+                              className="h-8 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold rounded-lg text-xs transition-colors duration-150 flex items-center gap-1 cursor-pointer"
+                              title="Xác nhận đã nhận tiền"
+                              aria-label="Xác nhận đã nhận tiền"
+                            >
+                              <CheckCircle2 size={12} className="text-emerald-600" />
+                              <span>Thu tiền</span>
+                            </button>
+                          );
+                        })())}
 
                       {order.status === 'pending' && (
                         <button

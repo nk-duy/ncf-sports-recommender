@@ -1,0 +1,168 @@
+<mxfile host="Electron" agent="Mozilla/5.0">
+  <diagram id="fusion-neumf-visual" name="Sơ đồ Khối Kiến trúc Dung hợp Đa phương thức NeuMF 32D và Thị giác 48D">
+    <mxGraphModel dx="1600" dy="1100" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1640" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Outer Frame -->
+        <mxCell id="main_frame" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#1e293b;strokeWidth=2;shadow=0;" value="" vertex="1">
+          <mxGeometry x="20" y="20" width="1580" height="1140" as="geometry" />
+        </mxCell>
+
+        <!-- Title Box -->
+        <mxCell id="title_box" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontColor=#0f172a;html=1;" value="&lt;div style=&quot;font-size:23px; font-weight:bold; letter-spacing:0.5px; text-transform:uppercase;&quot;&gt;SƠ ĐỒ KIẾN TRÚC DUNG HỢP ĐA PHƯƠNG THỨC NEUMF 32D VÀ ĐẶC TRƯNG THỊ GIÁC 48D&lt;/div&gt;&lt;div style=&quot;font-size:15px; color:#475569; margin-top:6px; font-style:italic;&quot;&gt;Mô hình khuyến nghị thích ứng kết hợp học biểu diễn hành vi người dùng và mô-men màu - cạnh Sobel 3 vùng không gian (KADY Sports Engine)&lt;/div&gt;" vertex="1">
+          <mxGeometry x="40" y="36" width="1540" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="title_divider" parent="1" style="line;strokeColor=#cbd5e1;strokeWidth=1.5;" value="" vertex="1">
+          <mxGeometry x="40" y="104" width="1540" height="10" as="geometry" />
+        </mxCell>
+
+
+        <!-- ==================== NHÁNH 1: HÀNH VI NEUMF (LEFT) ==================== -->
+        <mxCell id="branch1_card" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=2;fillColor=#f8fafc;strokeColor=#3b82f6;strokeWidth=1.6;" value="" vertex="1">
+          <mxGeometry x="46" y="124" width="736" height="520" as="geometry" />
+        </mxCell>
+        
+        <!-- Branch 1 Header -->
+        <mxCell id="branch1_header" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontFamily=Times New Roman;html=1;" value="&lt;table width=&quot;100%&quot; style=&quot;border:none;&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot; style=&quot;font-size:17.5px; font-weight:bold; color:#1d4ed8;&quot;&gt;⚡ NHÁNH 1: HÀNH VI TƯƠNG TÁC (NEUMF 32D)&lt;/td&gt;&lt;td align=&quot;right&quot;&gt;&lt;span style=&quot;background:#eff6ff; color:#1d4ed8; border:1px solid #93c5fd; padding:3px 10px; border-radius:12px; font-size:12.5px; font-weight:600; font-family:Arial,sans-serif;&quot;&gt;Collaborative Deep Learning&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry x="60" y="132" width="708" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="branch1_hdivider" parent="1" style="line;strokeColor=#cbd5e1;strokeWidth=1.2;" value="" vertex="1">
+          <mxGeometry x="60" y="168" width="708" height="8" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 1 Step 1 -->
+        <mxCell id="b1_s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#1e293b; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;1. Đầu vào ma trận tương tác ngầm&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#64748b; font-weight:normal; font-family:Arial,sans-serif;&quot;&gt;Implicit Feedback&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;Ma trận tương tác ngầm &lt;b&gt;R&lt;/b&gt; &amp;isin; {0, 1}&lt;sup&gt;|U| &amp;times; |I|&lt;/sup&gt; tổng hợp từ 4 sự kiện hành vi: Lượt xem, Thêm giỏ hàng, Đơn mua thành công và Đánh giá sao. Biểu diễn User ID &lt;i&gt;u&lt;/i&gt; và Item ID &lt;i&gt;i&lt;/i&gt; qua One-Hot Vectors &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;U&lt;/sup&gt;, &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;I&lt;/sup&gt;.&lt;/div&gt;" vertex="1">
+          <mxGeometry x="60" y="180" width="708" height="74" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_arr1" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=15;fontStyle=1;" value="▼" vertex="1">
+          <mxGeometry x="390" y="254" width="40" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 1 Step 2 -->
+        <mxCell id="b1_s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#1e293b; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;2. Tầng nhúng đôi (GMF 16D &amp;amp; MLP 16D)&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#1d4ed8; font-weight:normal; font-family:Arial,sans-serif;&quot;&gt;Dual Latent Embeddings&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;• &lt;b&gt;GMF Embedding:&lt;/b&gt; &lt;b&gt;p&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;G&lt;/sup&gt; &amp;isin; &#8477;&lt;sup&gt;16&lt;/sup&gt;, &lt;b&gt;q&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;G&lt;/sup&gt; &amp;isin; &#8477;&lt;sup&gt;16&lt;/sup&gt; &amp;implies; &lt;b&gt;&amp;phi;&lt;/b&gt;&lt;sup&gt;GMF&lt;/sup&gt; = &lt;b&gt;p&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;G&lt;/sup&gt; &amp;odot; &lt;b&gt;q&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;G&lt;/sup&gt; (Tích Hadamard tuyến tính 16 chiều)&lt;br&gt;• &lt;b&gt;MLP Embedding:&lt;/b&gt; &lt;b&gt;p&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;M&lt;/sup&gt; &amp;isin; &#8477;&lt;sup&gt;16&lt;/sup&gt;, &lt;b&gt;q&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;M&lt;/sup&gt; &amp;isin; &#8477;&lt;sup&gt;16&lt;/sup&gt; &amp;implies; &lt;b&gt;z&lt;/b&gt;&lt;sub&gt;0&lt;/sub&gt; = [&lt;b&gt;p&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;M&lt;/sup&gt;, &lt;b&gt;q&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;M&lt;/sup&gt;] &amp;isin; &#8477;&lt;sup&gt;32&lt;/sup&gt; (Vector ghép phi tuyến 32 chiều)&lt;/div&gt;" vertex="1">
+          <mxGeometry x="60" y="270" width="708" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_arr2" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=15;fontStyle=1;" value="▼" vertex="1">
+          <mxGeometry x="390" y="354" width="40" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 1 Step 3 -->
+        <mxCell id="b1_s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#1e293b; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;3. Lan truyền tiến mạng học sâu MLP&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#1d4ed8; font-weight:normal; font-family:Arial,sans-serif;&quot;&gt;Tower Layers [32 &amp;rarr; 16 &amp;rarr; 8]&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;Triển khai 3 tầng ẩn phi tuyến với hàm kích hoạt ReLU &amp;amp; Dropout 0.1:&lt;br&gt;&lt;div style=&quot;background:#f1f5f9; padding:4px 8px; border-radius:4px; margin:4px 0; font-family:Cambria Math,serif; border-left:3px solid #64748b;&quot;&gt;&lt;b&gt;z&lt;/b&gt;&lt;sub&gt;1&lt;/sub&gt; = ReLU(&lt;b&gt;W&lt;/b&gt;&lt;sub&gt;1&lt;/sub&gt;&lt;b&gt;z&lt;/b&gt;&lt;sub&gt;0&lt;/sub&gt; + &lt;b&gt;b&lt;/b&gt;&lt;sub&gt;1&lt;/sub&gt;) &amp;isin; &#8477;&lt;sup&gt;32&lt;/sup&gt; &amp;nbsp;&amp;rarr;&amp;nbsp; &lt;b&gt;z&lt;/b&gt;&lt;sub&gt;2&lt;/sub&gt; = ReLU(&lt;b&gt;W&lt;/b&gt;&lt;sub&gt;2&lt;/sub&gt;&lt;b&gt;z&lt;/b&gt;&lt;sub&gt;1&lt;/sub&gt; + &lt;b&gt;b&lt;/b&gt;&lt;sub&gt;2&lt;/sub&gt;) &amp;isin; &#8477;&lt;sup&gt;16&lt;/sup&gt; &amp;nbsp;&amp;rarr;&amp;nbsp; &lt;b&gt;&amp;phi;&lt;/b&gt;&lt;sup&gt;MLP&lt;/sup&gt; = ReLU(&lt;b&gt;W&lt;/b&gt;&lt;sub&gt;3&lt;/sub&gt;&lt;b&gt;z&lt;/b&gt;&lt;sub&gt;2&lt;/sub&gt; + &lt;b&gt;b&lt;/b&gt;&lt;sub&gt;3&lt;/sub&gt;) &amp;isin; &#8477;&lt;sup&gt;8&lt;/sup&gt;&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry x="60" y="370" width="708" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="b1_arr3" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=15;fontStyle=1;" value="▼" vertex="1">
+          <mxGeometry x="390" y="460" width="40" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 1 Step 4 -->
+        <mxCell id="b1_s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#eff6ff;strokeColor=#93c5fd;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#1e40af; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;4. Điểm xác suất hành vi &amp;amp; Vector nhúng NeuMF&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#1e40af; font-family:Arial,sans-serif;&quot;&gt;Output: Score_NCF&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;&lt;div style=&quot;background:#ffffff; padding:4px 8px; border-radius:4px; margin:4px 0; font-family:Cambria Math,serif; border-left:3px solid #3b82f6;&quot;&gt;&lt;i&gt;y&amp;#770;&lt;/i&gt;&lt;sub&gt;ui&lt;/sub&gt; = &amp;sigma;(&lt;b&gt;h&lt;/b&gt;&lt;sup&gt;T&lt;/sup&gt; [&lt;b&gt;&amp;phi;&lt;/b&gt;&lt;sup&gt;GMF&lt;/sup&gt;, &lt;b&gt;&amp;phi;&lt;/b&gt;&lt;sup&gt;MLP&lt;/sup&gt;]) &amp;isin; [0.0, 1.0] &amp;implies; S&lt;sub&gt;NCF&lt;/sub&gt;(u, i)&lt;/div&gt;Trích xuất vector nhúng &lt;b&gt;e&lt;/b&gt;&lt;sub&gt;ui&lt;/sub&gt; &amp;isin; &#8477;&lt;sup&gt;32&lt;/sup&gt; phục vụ phân tích cụm sở thích không gian tiềm ẩn.&lt;/div&gt;" vertex="1">
+          <mxGeometry x="60" y="476" width="708" height="96" as="geometry" />
+        </mxCell>
+
+
+        <!-- ==================== NHÁNH 2: THỊ GIÁC 48D (RIGHT) ==================== -->
+        <mxCell id="branch2_card" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=2;fillColor=#f8fafc;strokeColor=#10b981;strokeWidth=1.6;" value="" vertex="1">
+          <mxGeometry x="836" y="124" width="736" height="520" as="geometry" />
+        </mxCell>
+        
+        <!-- Branch 2 Header -->
+        <mxCell id="branch2_header" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontFamily=Times New Roman;html=1;" value="&lt;table width=&quot;100%&quot; style=&quot;border:none;&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot; style=&quot;font-size:17.5px; font-weight:bold; color:#047857;&quot;&gt;👁️ NHÁNH 2: NỘI DUNG THỊ GIÁC (VISUAL 48D)&lt;/td&gt;&lt;td align=&quot;right&quot;&gt;&lt;span style=&quot;background:#f0fdf4; color:#15803d; border:1px solid #86efac; padding:3px 10px; border-radius:12px; font-size:12.5px; font-weight:600; font-family:Arial,sans-serif;&quot;&gt;Multi-Zone Computer Vision&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry x="850" y="132" width="708" height="36" as="geometry" />
+        </mxCell>
+        <mxCell id="branch2_hdivider" parent="1" style="line;strokeColor=#cbd5e1;strokeWidth=1.2;" value="" vertex="1">
+          <mxGeometry x="850" y="168" width="708" height="8" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 2 Step 1 -->
+        <mxCell id="b2_s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#1e293b; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;1. Phân tách không gian 3 vùng cấu trúc&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#64748b; font-family:Arial,sans-serif;&quot;&gt;Spatial Partitioning&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;Ảnh sản phẩm thể thao được chuẩn hóa và chia thành 3 lát cắt giải phẫu:&lt;br&gt;• &lt;b&gt;Vùng Đỉnh (0% – 35%):&lt;/b&gt; Cổ giày, cổ áo, mũ lưỡi trai, quai ba lô.&lt;br&gt;• &lt;b&gt;Vùng Thân (35% – 75%):&lt;/b&gt; Thân giày, họa tiết logo thương hiệu, sọc thể thao.&lt;br&gt;• &lt;b&gt;Vùng Đế (75% – 100%):&lt;/b&gt; Đế giày đệm khí/gai cao su, gấu quần, đế vợt.&lt;/div&gt;" vertex="1">
+          <mxGeometry x="850" y="180" width="708" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_arr1" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=15;fontStyle=1;" value="▼" vertex="1">
+          <mxGeometry x="1180" y="264" width="40" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 2 Step 2 -->
+        <mxCell id="b2_s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#047857; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;2. Trích xuất đặc trưng Mô-men màu &amp;amp; Cạnh Sobel&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#047857; font-family:Arial,sans-serif;&quot;&gt;16 Chiều / Mỗi Vùng&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;Trong mỗi phân vùng không gian, tính toán 16 chiều đặc trưng thị giác cốt lõi:&lt;br&gt;• &lt;b&gt;Mô-men màu (9D):&lt;/b&gt; Kỳ vọng (&amp;mu;), Độ lệch chuẩn (&amp;sigma;), Độ lệch (&amp;gamma;) trên 3 kênh R, G, B.&lt;br&gt;• &lt;b&gt;Cạnh Sobel (7D):&lt;/b&gt; Vi phân hướng gradient G&lt;sub&gt;x&lt;/sub&gt;, G&lt;sub&gt;y&lt;/sub&gt; và lược đồ phân bố cạnh theo &lt;code&gt;ITU-R BT.601&lt;/code&gt;.&lt;br&gt;&lt;div style=&quot;background:#f1f5f9; padding:4px 8px; border-radius:4px; margin:4px 0; font-family:Cambria Math,serif; border-left:3px solid #10b981;&quot;&gt;&lt;b&gt;v&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;vis&lt;/sup&gt; = [&lt;b&gt;v&lt;/b&gt;&lt;sub&gt;đỉnh&lt;/sub&gt;&lt;sup&gt;(16)&lt;/sup&gt;, &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;thân&lt;/sub&gt;&lt;sup&gt;(16)&lt;/sup&gt;, &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;đế&lt;/sub&gt;&lt;sup&gt;(16)&lt;/sup&gt;] &amp;isin; &#8477;&lt;sup&gt;48&lt;/sup&gt; &amp;nbsp;với&amp;nbsp; ||&lt;b&gt;v&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;vis&lt;/sup&gt;||&lt;sub&gt;2&lt;/sub&gt; = 1.0&lt;/div&gt;&lt;/div&gt;" vertex="1">
+          <mxGeometry x="850" y="280" width="708" height="94" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_arr2" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=15;fontStyle=1;" value="▼" vertex="1">
+          <mxGeometry x="1180" y="374" width="40" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 2 Step 3 -->
+        <mxCell id="b2_s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#cbd5e1;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#047857; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;3. Xây dựng Hồ sơ Thị giác Người dùng&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#047857; font-family:Arial,sans-serif;&quot;&gt;User Visual Taste Profile 48D&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;Tổng hợp có trọng số từ lịch sử tương tác tích cực của người dùng &lt;i&gt;u&lt;/i&gt;:&lt;br&gt;&lt;div style=&quot;background:#f1f5f9; padding:4px 8px; border-radius:4px; margin:4px 0; font-family:Cambria Math,serif; border-left:3px solid #10b981;&quot;&gt;&lt;b&gt;v&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;taste&lt;/sup&gt; = (&amp;sum;&lt;sub&gt;j &amp;isin; H&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;+&lt;/sup&gt;&lt;/sub&gt; r&lt;sub&gt;uj&lt;/sub&gt; &amp;middot; &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;j&lt;/sub&gt;&lt;sup&gt;vis&lt;/sup&gt;) / ||&amp;sum;&lt;sub&gt;j &amp;isin; H&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;+&lt;/sup&gt;&lt;/sub&gt; r&lt;sub&gt;uj&lt;/sub&gt; &amp;middot; &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;j&lt;/sub&gt;&lt;sup&gt;vis&lt;/sup&gt;||&lt;sub&gt;2&lt;/sub&gt; &amp;isin; &#8477;&lt;sup&gt;48&lt;/sup&gt;&lt;/div&gt;Phản ánh gu thẩm mỹ thị giác (màu sắc, phom dáng thể thao) của người dùng.&lt;/div&gt;" vertex="1">
+          <mxGeometry x="850" y="390" width="708" height="82" as="geometry" />
+        </mxCell>
+        <mxCell id="b2_arr3" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=center;verticalAlign=middle;fontColor=#64748b;fontSize=15;fontStyle=1;" value="▼" vertex="1">
+          <mxGeometry x="1180" y="472" width="40" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Branch 2 Step 4 -->
+        <mxCell id="b2_s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#f0fdf4;strokeColor=#86efac;strokeWidth=1.2;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-weight:bold; font-size:14.5px; color:#065f46; display:flex; justify-content:space-between;&quot;&gt;&lt;span&gt;4. Điểm tương đồng thẩm mỹ thị giác&lt;/span&gt; &lt;span style=&quot;font-size:12px; color:#065f46; font-family:Arial,sans-serif;&quot;&gt;Output: Score_Visual&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:4px; line-height:1.45;&quot;&gt;&lt;div style=&quot;background:#ffffff; padding:4px 8px; border-radius:4px; margin:4px 0; font-family:Cambria Math,serif; border-left:3px solid #10b981;&quot;&gt;S&lt;sub&gt;Vis&lt;/sub&gt;(u, i) = [1 + cos(&lt;b&gt;v&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;taste&lt;/sup&gt;, &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;vis&lt;/sup&gt;)] / 2 = [1 + (&lt;b&gt;v&lt;/b&gt;&lt;sub&gt;u&lt;/sub&gt;&lt;sup&gt;taste&lt;/sup&gt; &amp;middot; &lt;b&gt;v&lt;/b&gt;&lt;sub&gt;i&lt;/sub&gt;&lt;sup&gt;vis&lt;/sup&gt;)] / 2 &amp;isin; [0.0, 1.0]&lt;/div&gt;Đánh giá mức độ đồng điệu thị giác giữa sản phẩm ứng viên &lt;i&gt;i&lt;/i&gt; với gu thẩm mỹ của &lt;i&gt;u&lt;/i&gt;.&lt;/div&gt;" vertex="1">
+          <mxGeometry x="850" y="488" width="708" height="84" as="geometry" />
+        </mxCell>
+
+
+        <!-- ==================== TẦNG HỢP NHẤT VÀ KHÁM PHÁ (MIDDLE) ==================== -->
+        <mxCell id="fusion_card" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=2;fillColor=#fbfbfe;strokeColor=#6366f1;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry x="46" y="660" width="1526" height="236" as="geometry" />
+        </mxCell>
+        
+        <!-- Fusion Header -->
+        <mxCell id="fusion_header" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=left;verticalAlign=middle;fontFamily=Times New Roman;html=1;" value="&lt;table width=&quot;100%&quot; style=&quot;border:none;&quot;&gt;&lt;tr&gt;&lt;td align=&quot;left&quot; style=&quot;font-size:18px; font-weight:bold; color:#3730a3;&quot;&gt;🎛️ TẦNG DUNG HỢP THÍCH ỨNG &amp;amp; CHẾ ĐỘ KHÁM PHÁ LIÊN BỘ MÔN (FUSION &amp;amp; SERENDIPITY)&lt;/td&gt;&lt;td align=&quot;right&quot;&gt;&lt;span style=&quot;background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd; padding:3px 12px; border-radius:12px; font-size:12.5px; font-weight:bold; font-family:Arial,sans-serif;&quot;&gt;Adaptive Ranking Core&lt;/span&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;" vertex="1">
+          <mxGeometry x="60" y="668" width="1498" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="fusion_hdivider" parent="1" style="line;strokeColor=#c7d2fe;strokeWidth=1.2;" value="" vertex="1">
+          <mxGeometry x="60" y="702" width="1498" height="8" as="geometry" />
+        </mxCell>
+
+        <!-- Fusion Left: Formula & Weights -->
+        <mxCell id="fusion_left" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=left;verticalAlign=top;fontFamily=Times New Roman;html=1;" value="&lt;div style=&quot;font-size:15px; font-weight:bold; color:#1e1b4b; margin-bottom:6px;&quot;&gt;Công thức xếp hạng dung hợp đa mục tiêu thích ứng:&lt;/div&gt;&lt;div style=&quot;background:#ffffff; border-left:4px solid #6366f1; padding:8px 12px; border-radius:4px; font-size:14.5px; font-family:Cambria Math,serif;&quot;&gt;&lt;b&gt;Score(u, i) = w&lt;sub&gt;NCF&lt;/sub&gt; &amp;middot; S&lt;sub&gt;NCF&lt;/sub&gt;(u, i) + w&lt;sub&gt;Vis&lt;/sub&gt; &amp;middot; S&lt;sub&gt;Vis&lt;/sub&gt;(u, i) + w&lt;sub&gt;Ctx&lt;/sub&gt; &amp;middot; B&lt;sub&gt;Ctx&lt;/sub&gt;(u, i) + [R&lt;sub&gt;avg&lt;/sub&gt;(i) / 5.0] &amp;times; 0.1&lt;/b&gt;&lt;/div&gt;&lt;div style=&quot;font-size:13.5px; color:#334155; margin-top:8px; line-height:1.5;&quot;&gt;• &lt;b&gt;w&lt;sub&gt;NCF&lt;/sub&gt; &amp;isin; [0.0, 2.0]:&lt;/b&gt; Trọng số học sâu hành vi NeuMF 32D (Mặc định: 1.00).&lt;br&gt;• &lt;b&gt;w&lt;sub&gt;Vis&lt;/sub&gt; &amp;isin; [0.0, 2.0]:&lt;/b&gt; Trọng số nội dung thị giác Sobel-RGB 48 chiều (Mặc định: 0.35).&lt;br&gt;• &lt;b&gt;w&lt;sub&gt;Ctx&lt;/sub&gt; &amp;isin; [0.0, 2.0]:&lt;/b&gt; Trọng số ngữ cảnh bộ môn thể thao (Mặc định: 1.00).&lt;br&gt;• &lt;b&gt;R&lt;sub&gt;avg&lt;/sub&gt;(i):&lt;/b&gt; Điểm chất lượng uy tín trung bình từ cộng đồng đánh giá thực tế (1 - 5 sao).&lt;/div&gt;" vertex="1">
+          <mxGeometry x="60" y="714" width="760" height="170" as="geometry" />
+        </mxCell>
+
+        <!-- Fusion Right: Serendipity Discovery -->
+        <mxCell id="fusion_right" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#ffffff;strokeColor=#c7d2fe;strokeWidth=1;align=left;verticalAlign=top;spacing=10;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-size:14.5px; font-weight:bold; color:#4338ca; margin-bottom:6px;&quot;&gt;🌟 Cơ chế Chống Bong bóng Lọc (Cross-Sport Serendipity):&lt;/div&gt;&lt;div style=&quot;font-size:13px; color:#1e293b; line-height:1.45;&quot;&gt;• &lt;b&gt;Chế độ chuẩn (&lt;code&gt;discovery_mode = False&lt;/code&gt;):&lt;/b&gt; Cộng điểm khuyến khích B&lt;sub&gt;Ctx&lt;/sub&gt; = +0.15 &amp;times; w&lt;sub&gt;Ctx&lt;/sub&gt; cho sản phẩm thuộc danh sách quan tâm S&lt;sub&gt;u&lt;/sub&gt; hoặc ngữ cảnh trang.&lt;br&gt;• &lt;b&gt;Chế độ khám phá (&lt;code&gt;discovery_mode = True&lt;/code&gt;):&lt;/b&gt; Triệt tiêu thiên kiến bộ môn quen thuộc; kích hoạt cơ chế cộng thưởng serendipity:&lt;br&gt;&lt;div style=&quot;background:#f8fafc; padding:4px 8px; border-radius:4px; margin:4px 0; font-family:Cambria Math,serif;&quot;&gt;Nếu i.sport &amp;notin; S&lt;sub&gt;u&lt;/sub&gt; và (w&lt;sub&gt;NCF&lt;/sub&gt;S&lt;sub&gt;NCF&lt;/sub&gt; + w&lt;sub&gt;Vis&lt;/sub&gt;S&lt;sub&gt;Vis&lt;/sub&gt;) &amp;ge; 0.65 &amp;implies; B&lt;sub&gt;Ctx&lt;/sub&gt; = +0.55 &amp;times; w&lt;sub&gt;Ctx&lt;/sub&gt;&lt;/div&gt;Gán nhãn huy hiệu &lt;code&gt;is_cross_sport_discovery = True&lt;/code&gt; giúp người dùng mở rộng chân trời thể thao.&lt;/div&gt;" vertex="1">
+          <mxGeometry x="840" y="714" width="716" height="170" as="geometry" />
+        </mxCell>
+
+
+        <!-- ==================== DEDUPLICATION & OUTPUT (BOTTOM) ==================== -->
+        
+        <!-- Left: Deduplication 3-Tier -->
+        <mxCell id="card_dedup" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#f0f9ff;strokeColor=#0284c7;strokeWidth=1.5;align=left;verticalAlign=top;spacing=12;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-size:15.5px; font-weight:bold; color:#0369a1; border-bottom:1px solid #bae6fd; padding-bottom:5px; margin-bottom:8px;&quot;&gt;🛡️ BỘ LỌC ĐỘC BẢN 3 TẦNG (NCF DEDUPLICATION INVARIANT)&lt;/div&gt;&lt;ul style=&quot;margin:0; padding-left:18px; font-size:13.5px; color:#334155; line-height:1.48;&quot;&gt;&lt;li&gt;&lt;b&gt;Tầng 1 (Danh mục &amp;amp; Tên gọi chuẩn tắc):&lt;/b&gt; Chuẩn hóa slug danh mục và họ sản phẩm để loại bỏ tuyệt đối các bản sao dữ liệu (Cloned Products).&lt;/li&gt;&lt;li&gt;&lt;b&gt;Tầng 2 (Perceptual Image Hash &amp;amp; URL):&lt;/b&gt; Ngăn chặn các sản phẩm khác ID nhưng sử dụng cùng URL hình ảnh Unsplash hoặc có độ tương đồng thị giác &amp;gt; 0.985.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Tầng 3 (Tồn kho thực &amp;amp; Lịch sử mua):&lt;/b&gt; Lọc bỏ các sản phẩm đã hết hàng (Stock &amp;le; 0) và các sản phẩm người dùng đã mua trong 30 ngày gần nhất.&lt;/li&gt;&lt;/ul&gt;" vertex="1">
+          <mxGeometry x="46" y="912" width="736" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Right: System Output & XAI -->
+        <mxCell id="card_output" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillColor=#faf5ff;strokeColor=#7c3aed;strokeWidth=1.5;align=left;verticalAlign=top;spacing=12;fontFamily=Times New Roman;" value="&lt;div style=&quot;font-size:15.5px; font-weight:bold; color:#6d28d9; border-bottom:1px solid #ddd6fe; padding-bottom:5px; margin-bottom:8px;&quot;&gt;🎯 ĐẦU RA HỆ THỐNG &amp;amp; MINH BẠCH HÓA (AI X-RAY &amp;amp; RADAR LAB)&lt;/div&gt;&lt;ul style=&quot;margin:0; padding-left:18px; font-size:13.5px; color:#334155; line-height:1.48;&quot;&gt;&lt;li&gt;&lt;b&gt;Danh sách Top-K Cá nhân hóa:&lt;/b&gt; Trả về danh sách sản phẩm tối ưu qua endpoint &lt;code&gt;/api/v1/recommendations/personal&lt;/code&gt;.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Hộp thanh tra AI X-Ray trực quan:&lt;/b&gt; Hiển thị minh bạch 4 chỉ số điểm thành phần trên từng thẻ sản phẩm: Xác suất NeuMF 32D, Độ tương đồng Thị giác 48D, Ngữ cảnh môn và Đánh giá cộng đồng.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Biểu đồ Radar Tiềm ẩn 8 Bộ môn:&lt;/b&gt; Phân tích mức độ tương thích đa chiều (Chạy bộ, Bóng đá, Bóng rổ, Gym, Tennis, Cầu lông, Bơi lội, Đạp xe) ngay tại phòng thí nghiệm giao diện &lt;code&gt;/goi-y&lt;/code&gt;.&lt;/li&gt;&lt;/ul&gt;" vertex="1">
+          <mxGeometry x="836" y="912" width="736" height="190" as="geometry" />
+        </mxCell>
+
+        <!-- Connecting Arrows into Fusion Layer -->
+        <mxCell id="conn_b1_fusion" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#3b82f6;strokeWidth=2;" edge="1" source="b1_s4" target="fusion_card">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_b2_fusion" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#10b981;strokeWidth=2;" edge="1" source="b2_s4" target="fusion_card">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Connecting Arrows from Fusion to Bottom -->
+        <mxCell id="conn_fusion_dedup" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6366f1;strokeWidth=2;" edge="1" source="fusion_card" target="card_dedup">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_fusion_output" parent="1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6366f1;strokeWidth=2;" edge="1" source="fusion_card" target="card_output">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Footer Caption -->
+        <mxCell id="footer_caption" parent="1" style="shape=rect;fillColor=none;strokeColor=none;align=right;verticalAlign=middle;fontFamily=Times New Roman;fontColor=#64748b;fontSize=13.5;fontStyle=2;html=1;" value="Hình 2.7: Sơ đồ khối chi tiết kiến trúc Dung hợp Đa phương thức NeuMF 32D và Thị giác 48D trong Hệ thống KADY Sports" vertex="1">
+          <mxGeometry x="60" y="1110" width="1512" height="26" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

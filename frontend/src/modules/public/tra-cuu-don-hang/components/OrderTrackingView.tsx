@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { AlertCircle, HelpCircle, PackageSearch } from 'lucide-react';
 import Breadcrumb from '@/shared/components/Breadcrumb';
 import { useAuthStore } from '@/shared/store/authStore';
+import { getCustomerAuthHeaders } from '@/shared/lib/authHeader';
 import type { TrackedOrder } from '../types';
 import OrderTrackingForm from './OrderTrackingForm';
 import OrderDetailsCard from './OrderDetailsCard';
@@ -50,7 +51,9 @@ export default function OrderTrackingView() {
       setSearchedCode(codeToSearch.trim());
 
       try {
-        const res = await fetch(`${apiEndpoint}/orders/${encodeURIComponent(clean)}`);
+        const res = await fetch(`${apiEndpoint}/orders/${encodeURIComponent(clean)}`, {
+          headers: getCustomerAuthHeaders(),
+        });
         if (res.ok) {
           const data: TrackedOrder = await res.json();
           setOrder(data);
@@ -102,7 +105,9 @@ export default function OrderTrackingView() {
 
     const fetchInitialOrder = async () => {
       try {
-        const res = await fetch(`${apiEndpoint}/orders/${encodeURIComponent(clean)}`);
+        const res = await fetch(`${apiEndpoint}/orders/${encodeURIComponent(clean)}`, {
+          headers: getCustomerAuthHeaders(),
+        });
         if (cancelled) return;
         setOrderId(urlQueryCode.startsWith('#') ? urlQueryCode : `#${urlQueryCode}`);
         setSearchedCode(urlQueryCode);

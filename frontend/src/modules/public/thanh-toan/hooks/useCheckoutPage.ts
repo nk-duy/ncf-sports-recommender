@@ -8,6 +8,7 @@ import { useCartStore, cartKey } from '@/shared/store/cartStore';
 import { useCheckoutStore } from '@/shared/store/checkoutStore';
 import { useAuthStore } from '@/shared/store/authStore';
 import { calcEffectiveShippingFee, calcVoucherDiscount, getShippingOption } from '@/shared/lib/cart';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 function parseUserAddress(raw?: string): { province: string; ward: string; street: string } {
   if (!raw) return { province: '', ward: '', street: '' };
@@ -82,7 +83,7 @@ export function useCheckoutPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/orders/', {
+      const res = await fetch(`${resolveApiBaseUrl()}/orders/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

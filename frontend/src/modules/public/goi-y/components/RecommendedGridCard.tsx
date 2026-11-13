@@ -2,7 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, Star } from "lucide-react";
+import { Heart, Sparkles, Star } from "lucide-react";
+import { useAiXRayStore } from "@/shared/store/aiXRayStore";
+import AiXRayInspector from "@/shared/components/AiXRayInspector";
 import { DEFAULT_SPORTS_IMAGE, type RecProduct } from "../types";
 
 interface RecommendedGridCardProps {
@@ -22,6 +24,7 @@ export default function RecommendedGridCard({
   const pid = product.product_id;
   const discount = product.discount_percent || 0;
   const salePrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+  const { isXRayActive } = useAiXRayStore();
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-200/80 hover:border-blue-400 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col overflow-hidden relative">
@@ -38,14 +41,25 @@ export default function RecommendedGridCard({
           }}
         />
 
-        {/* Standard E-commerce Discount Badge */}
-        {discount > 0 && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-red-600 text-white text-[11px] font-black uppercase shadow-sm">
+        {/* Top-left AI Match, Cross-Sport Discovery & Discount Badges */}
+        <div className="absolute top-2.5 left-2.5 z-10 flex flex-col gap-1 items-start">
+          {product.ai_explanation?.match_percent ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-md tabular-nums">
+              <Sparkles size={10} className="text-yellow-300" />
+              {product.ai_explanation.match_percent}% Phù hợp
+            </span>
+          ) : null}
+          {product.ai_explanation?.is_cross_sport_discovery && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[10px] font-bold shadow-md">
+              🌟 Khám phá Liên bộ môn
+            </span>
+          )}
+          {discount > 0 && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-black uppercase shadow-sm">
               -{discount}%
             </span>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Wishlist Button */}
         {mounted && (
@@ -79,10 +93,30 @@ export default function RecommendedGridCard({
         {/* Product Name */}
         <Link
           href={`/san-pham/${pid}`}
-          className="font-bold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors mb-3"
+          className="font-bold text-slate-800 text-sm line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors mb-2"
         >
           {product.name}
         </Link>
+
+        {/* AI Explanation Reason */}
+        {product.ai_explanation?.reason && (
+          <div className="mb-2">
+            <span
+              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
+              title={product.ai_explanation.reason}
+            >
+              <Sparkles size={10} className="shrink-0 text-blue-500" />
+              <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
+            </span>
+          </div>
+        )}
+
+        {/* AI X-Ray Inspector Box */}
+        {mounted && isXRayActive && product.ai_explanation && (
+          <div className="mb-2.5">
+            <AiXRayInspector explanation={product.ai_explanation} />
+          </div>
+        )}
 
         {/* Price */}
         <div className="mt-auto pt-2 border-t border-slate-100">

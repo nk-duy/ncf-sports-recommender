@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, User, Mail, Phone, MapPin } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import type { CustomerItem } from "../types";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import CustomerPreferenceFields from "./CustomerPreferenceFields";
 
 interface CustomerFormModalProps {
@@ -72,10 +73,11 @@ function CustomerFormModalInner({
         localStorage.getItem("kady_admin_token") ||
         localStorage.getItem("admin_token") ||
         localStorage.getItem("token");
+      const apiUrl = resolveApiBaseUrl();
       const url =
         isEdit && customer
-          ? `http://localhost:8000/api/v1/customers/${customer.id}`
-          : "http://localhost:8000/api/v1/customers/";
+          ? `${apiUrl}/customers/${customer.id}`
+          : `${apiUrl}/customers/`;
       const method = isEdit ? "PUT" : "POST";
 
       const payload = {

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import type { RawReviewResponse } from '../types';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 export interface ReviewItem {
   id: string;
@@ -34,7 +35,7 @@ export function useProductReviews(productId: string) {
     let active = true;
     const fetchReviews = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/reviews/product/${productId}`);
+        const res = await fetch(`${resolveApiBaseUrl()}/reviews/product/${productId}`);
         if (res.ok) {
           const data: unknown = await res.json();
           if (active && Array.isArray(data)) {
@@ -78,7 +79,7 @@ export function useProductReviews(productId: string) {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await fetch('http://localhost:8000/api/v1/uploads/', {
+      const res = await fetch(`${resolveApiBaseUrl()}/uploads/`, {
         method: 'POST',
         body: formData,
       });
@@ -113,7 +114,7 @@ export function useProductReviews(productId: string) {
         images: reviewImages,
       };
 
-      const res = await fetch('http://localhost:8000/api/v1/reviews/', {
+      const res = await fetch(`${resolveApiBaseUrl()}/reviews/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

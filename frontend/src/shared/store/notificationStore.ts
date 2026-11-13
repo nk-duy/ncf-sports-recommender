@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 export interface NotificationItem {
   id: string;
@@ -52,7 +53,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         params.append('user_id', userIdOrEmail);
       }
 
-      const url = `http://localhost:8000/api/v1/notifications${params.toString() ? `?${params.toString()}` : ''}`;
+      const apiUrl = resolveApiBaseUrl();
+      const url = `${apiUrl}/notifications${params.toString() ? `?${params.toString()}` : ''}`;
       const res = await fetch(url, { headers });
 
       if (res.ok) {
@@ -81,7 +83,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const newUnread = updatedList.filter(n => !n.is_read).length;
       set({ notifications: updatedList, unreadCount: newUnread });
 
-      await fetch(`http://localhost:8000/api/v1/notifications/${notificationId}/read`, {
+      const apiUrl = resolveApiBaseUrl();
+      await fetch(`${apiUrl}/notifications/${notificationId}/read`, {
         method: 'PUT'
       });
     } catch (err) {
@@ -104,7 +107,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      await fetch(`http://localhost:8000/api/v1/notifications/read-all${params.toString() ? `?${params.toString()}` : ''}`, {
+      const apiUrl = resolveApiBaseUrl();
+      await fetch(`${apiUrl}/notifications/read-all${params.toString() ? `?${params.toString()}` : ''}`, {
         method: 'PUT',
         headers
       });

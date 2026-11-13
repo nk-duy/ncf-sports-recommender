@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 export interface WishlistItem {
   product_id: string;
@@ -102,8 +103,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     // Đồng bộ lên MongoDB và ghi nhận Interaction ngầm (event_type="wishlist", rating=4.0)
     const token = getCustomerToken();
     if (token) {
-      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+      const apiUrl = resolveApiBaseUrl();
       fetch(`${apiUrl}/users/wishlist/${item.product_id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -121,8 +121,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     // Đồng bộ xóa khỏi MongoDB
     const token = getCustomerToken();
     if (token) {
-      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+      const apiUrl = resolveApiBaseUrl();
       fetch(`${apiUrl}/users/wishlist/${product_id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
@@ -173,8 +172,7 @@ export const useWishlistStore = create<WishlistStore>((set, get) => ({
     if (!token) return;
 
     try {
-      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+      const apiUrl = resolveApiBaseUrl();
       const res = await fetch(`${apiUrl}/users/wishlist`, {
         headers: { Authorization: `Bearer ${token}` },
       });

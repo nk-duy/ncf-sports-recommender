@@ -14,6 +14,7 @@ import {
   Star,
 } from 'lucide-react';
 import type { AIExplanation } from '@/shared/types/aiExplanation';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 const SPORTS_FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80';
@@ -41,6 +42,7 @@ interface VisualSearchMetadata {
 
 interface DemoSportSample {
   id: string;
+  productId: string;
   title: string;
   sport: string;
   imageUrl: string;
@@ -49,39 +51,45 @@ interface DemoSportSample {
 const DEMO_SPORT_SAMPLES: DemoSportSample[] = [
   {
     id: 'sample-volleyball',
-    title: 'Bóng Chuyền Mikasa V200W',
+    productId: 'B0009J155Q',
+    title: 'Băng Bảo Vệ Gối Bóng Chuyền ASICS Unisex',
     sport: 'Bóng chuyền',
-    imageUrl: 'https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=500&q=80',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/41FMP-IiCnL.jpg',
   },
   {
     id: 'sample-badminton',
-    title: 'Vợt Cầu Lông Yonex Astrox',
+    productId: 'B0027G8A70',
+    title: 'Ống Cầu Lông Yonex Mavis 2000',
     sport: 'Cầu lông',
-    imageUrl: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500&q=80',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/51RusfidHYL.jpg',
   },
   {
     id: 'sample-football',
-    title: 'Bóng Đá Thi Đấu FIFA Pro',
+    productId: 'B000067R1G',
+    title: 'Quả Bóng Đá Franklin F100',
     sport: 'Đá bóng',
-    imageUrl: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=500&q=80',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/51n7mAIyTpL.jpg',
   },
   {
     id: 'sample-running',
-    title: 'Giày Chạy Bộ Marathon Carbon',
+    productId: 'B000EN292A',
+    title: 'Mũ Chạy Bộ Headsweats Chuyên Dụng',
     sport: 'Chạy bộ',
-    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&q=80',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/41-gyiZ7%2BWL.jpg',
   },
   {
     id: 'sample-pickleball',
-    title: 'Vợt Pickleball T700 Pro',
+    productId: 'B000YGGQL2',
+    title: 'Vợt Pickleball Diller Tournament',
     sport: 'Pickleball',
-    imageUrl: 'https://images.unsplash.com/photo-1599474924187-334a4ae5bd3c?w=500&q=80',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/41KdrVAzxWL.jpg',
   },
   {
     id: 'sample-outdoor',
-    title: 'Lều Dã Ngoại Chống Mưa NatureHike',
+    productId: 'B00005BAIB',
+    title: 'Đệm Hơi Dã Ngoại Intex Fabric Camping',
     sport: 'Dã ngoại',
-    imageUrl: 'https://images.unsplash.com/photo-1525811902-f2342640856e?w=500&q=80',
+    imageUrl: 'https://images-na.ssl-images-amazon.com/images/I/41fFoZYr98L.jpg',
   },
 ];
 
@@ -109,7 +117,7 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
   const streamRef = useRef<MediaStream | null>(null);
   const lastPasteTimeRef = useRef<number>(0);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  const API_URL = resolveApiBaseUrl();
 
   // Dừng luồng Camera và giải phóng thiết bị
   const stopCamera = useCallback(() => {
@@ -513,6 +521,7 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
     setActiveSampleTitle(sample.title);
     setSelectedSport(sample.sport);
     executeVisualSearch({
+      reference_product_id: sample.productId,
       sport_type: sample.sport,
       filename: sample.title,
       top_k: 8,

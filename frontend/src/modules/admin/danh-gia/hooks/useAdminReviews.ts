@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { notifications } from '@mantine/notifications';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import { useAdminAuthStore } from '@/shared/store/adminAuthStore';
 import { HiddenFilterType, ReviewItem } from '../types';
 
 export function useAdminReviews() {
@@ -22,7 +24,7 @@ export function useAdminReviews() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  const API_URL = resolveApiBaseUrl();
 
   const fetchReviews = useCallback(
     async (currentPage: number) => {
@@ -63,6 +65,16 @@ export function useAdminReviews() {
           setPage(data.page || 1);
           setPages(data.pages || 1);
         } else {
+          if (res.status === 401) {
+            useAdminAuthStore.getState().logout();
+            notifications.show({
+              title: 'Phiên đăng nhập hết hạn',
+              message: 'Vui lòng đăng nhập lại tài khoản Quản trị viên để tiếp tục',
+              color: 'red',
+            });
+            window.location.href = `/dang-nhap?redirect=${encodeURIComponent(window.location.pathname)}`;
+            return;
+          }
           const err: { detail?: string } | null = await res.json().catch(() => null);
           notifications.show({
             title: 'Lỗi tải dữ liệu',

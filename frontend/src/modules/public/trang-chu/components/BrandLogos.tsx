@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 interface BrandItem {
   name: string;
@@ -57,7 +58,7 @@ export default function BrandLogos() {
   const marqueeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/products/brands')
+    fetch(`${resolveApiBaseUrl()}/products/brands`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch');
         return res.json();

@@ -7,6 +7,7 @@ import { Printer, Search, ShoppingBag, Store, Truck } from 'lucide-react';
 import CheckoutProgress from '../../flow/components/CheckoutProgress';
 import TrustStrip from '../../shared/components/TrustStrip';
 import type { PublicOrderData } from '../../types';
+import { getCustomerAuthHeaders } from '@/shared/lib/authHeader';
 import OrderSuccessHero from './OrderSuccessHero';
 import OrderTimeline from './OrderTimeline';
 import OrderSummary from './OrderSummary';
@@ -30,7 +31,9 @@ export default function CheckoutSuccessView() {
     const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     const apiUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
 
-    fetch(`${apiUrl}/orders/${encodeURIComponent(orderId)}`)
+    fetch(`${apiUrl}/orders/${encodeURIComponent(orderId)}`, {
+      headers: getCustomerAuthHeaders(),
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: PublicOrderData | null) => {
         if (!cancelled) setFetched({ id: orderId, data });

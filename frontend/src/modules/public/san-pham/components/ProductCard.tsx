@@ -97,14 +97,21 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
             e.currentTarget.src = FALLBACK_IMG;
           }}
         />
-        {product.ai_explanation?.match_percent ? (
-          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-md tabular-nums">
-            <Sparkles size={9} className="text-yellow-300" />
-            {product.ai_explanation.match_percent}% Phù hợp
-          </span>
-        ) : product.discountLabel ? (
-          <span className={styles.badgePrimary}>{product.discountLabel}</span>
-        ) : null}
+        <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
+          {product.ai_explanation?.match_percent ? (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-md tabular-nums">
+              <Sparkles size={9} className="text-yellow-300" />
+              {product.ai_explanation.match_percent}% Phù hợp
+            </span>
+          ) : product.discountLabel ? (
+            <span className={styles.badgePrimary}>{product.discountLabel}</span>
+          ) : null}
+          {product.ai_explanation?.is_cross_sport_discovery && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] sm:text-[10px] font-bold shadow-md">
+              🌟 Khám phá Liên bộ môn
+            </span>
+          )}
+        </div>
         {/* Wishlist heart button */}
         {mounted && displayId && (
           <button

@@ -122,3 +122,16 @@ Khắc phục hạn chế của việc tìm kiếm `$regex` thông thường, ti
 2. **Biểu thức chính quy dung sai dấu (Accent-Tolerant Regex):** Tự động mở rộng nguyên âm không dấu thành nhóm ký tự có dấu tương ứng (ví dụ: `a` $\rightarrow$ `[aàáảãạăằắẳẵặâầấẩẫậ]`).
 3. **Mở rộng từ đồng nghĩa thể thao (Synonym Expansion):** Tự động liên kết các thuật ngữ địa phương (`banh` $\leftrightarrow$ `bóng`, `tất` $\leftrightarrow$ `vớ`, `balo` $\leftrightarrow$ `túi`). Do đó gõ *"giay da banh"* vẫn tìm chính xác sản phẩm mang tên *"Giày Đá Bóng"*.
 4. **Không phụ thuộc thứ tự từ (Out-of-order Matching):** Sử dụng các biểu thức Positive Lookahead `(?=.*word1)(?=.*word2)` giúp truy vấn như *"yonex vot"* khớp chính xác sản phẩm *"Vợt Cầu Lông Yonex"*.
+
+---
+
+## 8. Dung hợp Thị giác Thích ứng 48D, Khám phá Liên bộ môn & Biểu đồ Radar 8 Bộ môn
+
+1. **Hồ sơ Thị hiếu Thị giác 48 chiều (`_compute_user_visual_profile`):**
+   - Nạp một lần từ điển đặc trưng thị giác 48 chiều (`visual_features.json` - RGB & Sobel 3 vùng không gian) vào bộ nhớ RAM.
+   - Tổng hợp có trọng số theo điểm `rating` của các sản phẩm mà người dùng đã tương tác dương (hoặc sản phẩm ngữ cảnh đang xem) và chuẩn hóa $L_2$ thu được $\mathbf{v}_{\text{user}} \in \mathbb{R}^{48}$.
+2. **Trọng số Dung hợp Thích ứng (`w_ncf`, `w_visual`, `w_context`) & Chế độ Khám phá Liên bộ môn (`discovery_mode`):**
+   $$\text{Score}_i = w_{\text{ncf}} \cdot s_{\text{ncf}}(u, i) + w_{\text{visual}} \cdot s_{\text{visual}}(\mathbf{v}_{\text{user}}, \mathbf{v}_i) + w_{\text{context}} \cdot b_{\text{ctx}}(i) + s_{\text{rating}}(i)$$
+   - Khi `discovery_mode = True`: Phá vỡ bong bóng lọc (Filter Bubble) bằng cách khuyến khích ($+0.35 \times w_{\text{context}}$) các sản phẩm thuộc bộ môn thể thao khác có tổng điểm hành vi NCF và thị giác 48D cao, gắn cờ `is_cross_sport_discovery = True`.
+3. **Biểu đồ Radar Sở thích Tiềm ẩn 8 Bộ môn (`GET /api/v1/recommendations/latent-radar`):**
+   - Tính toán `ncf_affinity`, `visual_affinity` và `combined_affinity` (thang $0\text{--}100$) trên 8 bộ môn thể thao (`Đá bóng`, `Cầu lông`, `Chạy bộ`, `Pickleball`, `Bóng chuyền`, `Gym & Fitness`, `Dã ngoại`, `Phụ kiện chung`).

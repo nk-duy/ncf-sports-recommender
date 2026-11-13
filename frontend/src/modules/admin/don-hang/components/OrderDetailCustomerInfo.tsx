@@ -2,6 +2,7 @@
 
 import { Users, Truck, CheckCircle2, Clock } from 'lucide-react';
 import type { OrderItem } from '../types';
+import { getPaymentActionRule } from '../utils/orderHelpers';
 
 interface OrderDetailCustomerInfoProps {
   order: OrderItem;
@@ -87,16 +88,33 @@ export default function OrderDetailCustomerInfo({
                   >
                     Chuyển về Chưa thu tiền
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleUpdatePaymentStatus(order._id, 'paid')}
-                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-                  >
-                    <CheckCircle2 size={13} />
-                    <span>Xác nhận Đã nhận tiền (Thu tiền)</span>
-                  </button>
-                )}
+                ) : (() => {
+                  const rule = getPaymentActionRule(order);
+                  if (rule.isHidden) return null;
+                  if (!rule.canCollect) {
+                    return (
+                      <button
+                        type="button"
+                        disabled
+                        className="px-3 py-1 bg-gray-100 text-gray-400 border border-gray-200 font-bold rounded-lg text-xs flex items-center gap-1.5 opacity-50 cursor-not-allowed"
+                        title={rule.tooltipReason}
+                      >
+                        <CheckCircle2 size={13} className="text-gray-400" />
+                        <span>Xác nhận Đã nhận tiền (Thu tiền)</span>
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdatePaymentStatus(order._id, 'paid')}
+                      className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                    >
+                      <CheckCircle2 size={13} />
+                      <span>Xác nhận Đã nhận tiền (Thu tiền)</span>
+                    </button>
+                  );
+                })()}
               </div>
             )}
           </div>

@@ -15,15 +15,17 @@ export default function AiXRayInspector({ explanation, className = "" }: AiXRayI
   const {
     strategy,
     ncf_score = 0,
+    visual_score = 0,
     context_boost = 0,
     cosine_score = 0,
     rating_score = 0,
     final_score = 0,
     match_percent = 85,
+    is_cross_sport_discovery = false,
   } = explanation;
 
-  // Normalized percentage for progress bar (scale roughly 0.0 -> 1.85)
-  const progressPercent = Math.min(100, Math.max(15, Math.round((final_score / 1.85) * 100)));
+  // Normalized percentage for progress bar (scale roughly 0.0 -> 2.15)
+  const progressPercent = Math.min(100, Math.max(15, Math.round((final_score / 2.15) * 100)));
 
   const getStrategyLabel = () => {
     switch (strategy) {
@@ -99,7 +101,13 @@ export default function AiXRayInspector({ explanation, className = "" }: AiXRayI
         </span>
       </div>
 
-      {/* Numerical Metrics Matrix - Exact 3 Addition Components */}
+      {is_cross_sport_discovery && (
+        <div className="flex items-center justify-center px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500/20 via-purple-500/20 to-pink-500/20 border border-amber-400/50 text-amber-300 text-[8.5px] sm:text-[9px] font-bold tracking-wide">
+          🌟 Khám phá Liên bộ môn
+        </div>
+      )}
+
+      {/* Numerical Metrics Matrix - Addition Components */}
       <div className="space-y-1 text-slate-300">
         {/* Row 1: Model probability / Cosine similarity / Trend score */}
         <div className="flex items-center justify-between gap-1">
@@ -109,7 +117,15 @@ export default function AiXRayInspector({ explanation, className = "" }: AiXRayI
           </span>
         </div>
 
-        {/* Row 2: Context / Complementary Boost */}
+        {/* Row 2: Visual 48D (RGB-Sobel) */}
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-slate-400 text-[9px] sm:text-[9.5px] shrink-0">Thị giác 48D (RGB-Sobel):</span>
+          <span className="font-bold text-purple-300 tabular-nums text-[9.5px] sm:text-[10px] shrink-0">
+            +{Number(visual_score || 0).toFixed(3)}
+          </span>
+        </div>
+
+        {/* Row 3: Context / Complementary Boost */}
         <div className="flex items-center justify-between gap-1">
           <span className="text-slate-400 text-[9px] sm:text-[9.5px] shrink-0">{row2.label}</span>
           <span className={`font-bold tabular-nums text-[9.5px] sm:text-[10px] shrink-0 ${row2.color}`}>
@@ -117,7 +133,7 @@ export default function AiXRayInspector({ explanation, className = "" }: AiXRayI
           </span>
         </div>
 
-        {/* Row 3: Rating Score */}
+        {/* Row 4: Rating Score */}
         <div className="flex items-center justify-between gap-1">
           <span className="text-slate-400 text-[9px] sm:text-[9.5px] shrink-0">Điểm đánh giá:</span>
           <span className="font-bold text-amber-300 tabular-nums text-[9.5px] sm:text-[10px] shrink-0">

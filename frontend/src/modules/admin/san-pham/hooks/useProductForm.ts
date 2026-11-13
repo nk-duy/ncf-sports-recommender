@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import type {
   AdminProductItem,
   ColorOption,
@@ -159,7 +160,7 @@ export function useProductForm({
 
   const fetchMenuData = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/menu');
+      const res = await fetch(`${resolveApiBaseUrl()}/menu`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -173,7 +174,7 @@ export function useProductForm({
 
   const fetchAttributes = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/attributes');
+      const res = await fetch(`${resolveApiBaseUrl()}/attributes`);
       if (res.ok) {
         const data = await res.json();
         setAvailableBrands(data.brands || DEFAULT_BRANDS);

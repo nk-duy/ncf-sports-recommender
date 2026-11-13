@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { PromoProductItem } from '../types';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import { getAuthHeaders } from '@/shared/lib/authHeader';
 
 export function useAdminPromoProducts() {
   const [promoProducts, setPromoProducts] = useState<PromoProductItem[]>([]);
@@ -21,7 +23,8 @@ export function useAdminPromoProducts() {
     setLoading(true);
     try {
       const res = await fetch(
-        'http://localhost:8000/api/v1/products?limit=100&is_promotion=true&include_hidden=true'
+        `${resolveApiBaseUrl()}/products?limit=100&is_promotion=true&include_hidden=true`,
+        { headers: getAuthHeaders() }
       );
       const data: unknown = await res.json();
       setPromoProducts(Array.isArray(data) ? (data as PromoProductItem[]) : []);
@@ -35,7 +38,8 @@ export function useAdminPromoProducts() {
   const fetchAllProducts = useCallback(async () => {
     try {
       const res = await fetch(
-        'http://localhost:8000/api/v1/products?limit=100&include_hidden=true'
+        `${resolveApiBaseUrl()}/products?limit=100&include_hidden=true`,
+        { headers: getAuthHeaders() }
       );
       const data: unknown = await res.json();
       setAllProducts(Array.isArray(data) ? (data as PromoProductItem[]) : []);
@@ -88,9 +92,9 @@ export function useAdminPromoProducts() {
   const handleRemovePromotion = async (id: string) => {
     if (!confirm('Bạn có chắc chắn muốn xóa khuyến mãi của sản phẩm này?')) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/products/${id}`, {
+      const res = await fetch(`${resolveApiBaseUrl()}/products/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ discount_percent: 0 }),
       });
       if (res.ok) {
@@ -114,10 +118,10 @@ export function useAdminPromoProducts() {
     if (!editingProduct) return;
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/products/${editingProduct.product_id}`,
+        `${resolveApiBaseUrl()}/products/${editingProduct.product_id}`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ discount_percent: Number(discountValue) }),
         }
       );
@@ -143,10 +147,10 @@ export function useAdminPromoProducts() {
     }
     try {
       const res = await fetch(
-        `http://localhost:8000/api/v1/products/${selectedProductId}`,
+        `${resolveApiBaseUrl()}/products/${selectedProductId}`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ discount_percent: Number(discountValue) }),
         }
       );

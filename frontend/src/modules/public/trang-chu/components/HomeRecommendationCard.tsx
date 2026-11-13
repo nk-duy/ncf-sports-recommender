@@ -55,6 +55,11 @@ export default function HomeRecommendationCard({
               {product.ai_explanation.match_percent}% Phù hợp
             </span>
           ) : null}
+          {product.ai_explanation?.is_cross_sport_discovery && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] sm:text-[10px] font-bold shadow-md">
+              🌟 Khám phá Liên bộ môn
+            </span>
+          )}
           {discount > 0 && (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-red-600 text-white text-[9.5px] sm:text-[10px] font-black uppercase shadow-sm tabular-nums">
               -{discount}%

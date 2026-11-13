@@ -31,7 +31,8 @@
 
 | Method | Endpoint | Quyền | Mô tả | Request Body / Params | Response |
 |---|---|---|---|---|---|
-| `GET` | `/recommendations/` | Public / User | Gợi ý sản phẩm cá nhân hóa hoặc theo ngữ cảnh | `top_k=8/12, current_product_id?, sport_type?`. *(Nếu có Authorization Bearer, dùng NCF user vector)* | `Product[]` *(Đã lọc độc bản)* |
+| `GET` | `/recommendations/` | Public / User | Gợi ý sản phẩm cá nhân hóa, dung hợp Thị giác 48D & Khám phá liên bộ môn | `top_k=8/12, current_product_id?, sport_type?, w_ncf=1.0, w_visual=0.35, w_context=1.0, discovery_mode=false`. *(Nếu có Authorization Bearer, dùng NCF user vector & User Visual Profile 48D)* | `Product[]` *(Đã lọc độc bản)* |
+| `GET` | `/recommendations/latent-radar` | Public / User | Biểu đồ Radar sở thích tiềm ẩn 8 bộ môn thể thao (NCF 32D & Thị giác 48D) | `user_id?, w_ncf=1.0, w_visual=0.35` | `LatentRadarAxis[]` *(8 bộ môn, thang 0-100)* |
 | `POST` | `/recommendations/cross-sell` | Public | Gợi ý bán kèm theo giỏ hàng (Basket Cross-sell) | `top_k=8`, Body: `string[]` (mảng các `product_id` trong giỏ) | `Product[]` *(Phụ kiện liên quan)* |
 | `GET` | `/recommendations/model-info`| Admin | Lấy thông tin siêu dữ liệu & metrics mô hình NCF | Không | `{ has_model, num_users, num_items, metrics, last_trained }` |
 | `GET` | `/recommendations/training-status` | Admin | Theo dõi tiến độ huấn luyện thời gian thực | Không | `{ is_training, progress, current_epoch, current_loss, message }` |

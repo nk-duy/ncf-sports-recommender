@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, ChevronLeft, ChevronRight, Quote, ShoppingBag, Star } from 'lucide-react';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 interface FeaturedReview {
   id: string;
@@ -67,7 +68,7 @@ export default function Testimonials() {
   const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/reviews/featured?limit=8')
+    fetch(`${resolveApiBaseUrl()}/reviews/featured?limit=8`)
       .then((res) => {
         if (!res.ok) throw new Error('Network error');
         return res.json();

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Flame, Sparkles, Star } from "lucide-react";
 import ProductCard from "@/modules/public/san-pham/components/ProductCard";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 
 interface ProductAPI {
   product_id: string;
@@ -73,7 +74,7 @@ export default function TrendingProducts() {
     const fetchTabProducts = async () => {
       setLoading(true);
       try {
-        let endpoint = "http://localhost:8000/api/v1/products?limit=10";
+        let endpoint = `${resolveApiBaseUrl()}/products?limit=10`;
         if (activeTab === "bestseller") {
           endpoint += "&sort_by=sold_desc";
         } else if (activeTab === "newest") {

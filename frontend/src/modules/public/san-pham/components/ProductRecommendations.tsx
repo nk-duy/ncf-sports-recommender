@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import ProductCard, { type Product } from '@/modules/public/san-pham/components/ProductCard';
 import AiXRayToggle from '@/shared/components/AiXRayToggle';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import { Sparkles } from 'lucide-react';
 import type { RawRecommendationItem } from '../types';
 
 interface ProductRecommendationsProps {
@@ -36,8 +38,8 @@ export default function ProductRecommendations({ productId, sportType }: Product
           params.append('sport_type', sportType);
         }
 
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/api/v1/recommendations/?${params.toString()}`, {
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/recommendations/?${params.toString()}`, {
           headers,
         });
         if (res.ok) {
@@ -68,7 +70,7 @@ export default function ProductRecommendations({ productId, sportType }: Product
 
           // Ghi nhận lượt hiển thị trực tuyến (Impression Logging)
           if (processedRecs.length > 0) {
-            fetch(`${apiUrl}/api/v1/recommendations/log-impression`, {
+            fetch(`${apiUrl}/recommendations/log-impression`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -102,8 +104,8 @@ export default function ProductRecommendations({ productId, sportType }: Product
 
   const handleProductClick = (id: string) => {
     if (impressionId) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      fetch(`${apiUrl}/api/v1/recommendations/track-click`, {
+      const apiUrl = resolveApiBaseUrl();
+      fetch(`${apiUrl}/recommendations/track-click`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,16 +117,16 @@ export default function ProductRecommendations({ productId, sportType }: Product
   };
 
   return (
-    <div className="mt-12 mb-8">
+    <div className="mt-12 mb-8 w-full max-w-full overflow-x-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
             Gợi ý dành riêng cho bạn
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             {sportType
               ? `Các sản phẩm phù hợp và tương thích nhất với bộ môn ${sportType}`
               : 'Đề xuất thông minh theo sở thích và xu hướng mua sắm'}
@@ -138,7 +140,7 @@ export default function ProductRecommendations({ productId, sportType }: Product
       <div className="grid grid-cols-2 gap-2.5 sm:gap-4 md:grid-cols-4 md:gap-6">
         {loadingRecs ? (
           Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-gray-100 rounded-xl h-80 animate-pulse" />
+            <div key={i} className="bg-gray-100 rounded-xl h-72 sm:h-80 animate-pulse" />
           ))
         ) : recommendations.length > 0 ? (
           recommendations.map((product) => {
@@ -150,7 +152,13 @@ export default function ProductRecommendations({ productId, sportType }: Product
             );
           })
         ) : (
-          <p className="text-gray-500 col-span-full">Chưa có gợi ý nào vào lúc này.</p>
+          <div className="col-span-full py-12 px-4 text-center bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
+            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-1">
+              <Sparkles size={20} />
+            </div>
+            <p className="text-sm font-semibold text-gray-700">Chưa có gợi ý phù hợp vào lúc này</p>
+            <p className="text-xs text-gray-400">Các sản phẩm được cá nhân hóa sẽ xuất hiện thêm khi bạn tương tác.</p>
+          </div>
         )}
       </div>
     </div>

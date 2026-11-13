@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { X, ShoppingBag, Check, ArrowRight } from 'lucide-react';
 import { notifications } from '@mantine/notifications';
 import { useCartStore } from '@/shared/store/cartStore';
+import { getMatchingVariantStock } from '@/shared/lib/cart';
 import {
   SPORTS_FALLBACK_IMAGE,
   computeAvailableColors,
@@ -25,6 +26,7 @@ export interface QuickAddProduct {
   category?: string[];
   product_type?: string;
   sport_type?: string;
+  variants?: Array<{ size?: string; color?: string; stock?: number; sku?: string }>;
 }
 
 interface QuickAddToCartModalProps {
@@ -81,6 +83,13 @@ function QuickAddModalDialog({
     const finalSize = selectedSize || (availableSizes.length === 1 ? availableSizes[0] : 'Tiêu chuẩn');
     const finalColor = selectedColor || (availableColors.length === 1 ? availableColors[0] : '');
 
+    const variantStock = getMatchingVariantStock(
+      product.variants,
+      finalSize,
+      finalColor,
+      product.stock || 100
+    );
+
     addItem({
       product_id: product.product_id,
       name: product.name,
@@ -90,7 +99,8 @@ function QuickAddModalDialog({
       quantity,
       size: finalSize,
       color: finalColor,
-      stock: product.stock || 100,
+      stock: variantStock,
+      total_stock: product.stock || 100,
     });
 
     notifications.show({

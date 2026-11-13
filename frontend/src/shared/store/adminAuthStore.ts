@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 export interface AdminUser {
   id: string;
@@ -81,8 +82,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set) => ({
     }
 
     try {
-      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+      const apiUrl = resolveApiBaseUrl();
 
       const res = await fetch(`${apiUrl}/auth/me`, {
         headers: {

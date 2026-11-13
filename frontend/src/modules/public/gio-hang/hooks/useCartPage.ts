@@ -11,6 +11,7 @@ import {
   calcEffectiveShippingFee,
   calcOriginalPrice,
   calcVoucherDiscount,
+  getMatchingVariantStock,
 } from '@/shared/lib/cart';
 import type { ConfirmState } from '../components/CartConfirmModal';
 import type { LiveInfo } from '../types';
@@ -20,6 +21,7 @@ interface BackendProductDetail {
   stock?: number;
   sizes?: string[];
   colors?: string[];
+  variants?: Array<{ size?: string; color?: string; stock?: number; sku?: string }>;
   discount_percent?: number;
   is_hidden?: boolean;
 }
@@ -76,6 +78,7 @@ export function useCartPage() {
               stock: typeof p.stock === 'number' ? p.stock : 100,
               sizes: p.sizes || [],
               colors: p.colors || [],
+              variants: p.variants || [],
               discount_percent: p.discount_percent || 0,
               hidden: Boolean(p.is_hidden),
             },
@@ -91,10 +94,10 @@ export function useCartPage() {
         if (r) next[r[0]] = r[1];
       });
       setLiveInfo((prev) => ({ ...prev, ...next }));
-      // Tự động đồng bộ tồn kho và giá mới nhất từ server vào giỏ hàng
+      // Tự động đồng bộ tồn kho biến thể và giá mới nhất từ server vào giỏ hàng
       Object.entries(next).forEach(([id, info]) => {
         if (!info.missing) {
-          syncProduct(id, { stock: info.stock, price: info.price });
+          syncProduct(id, { stock: info.stock, price: info.price, variants: info.variants });
         }
       });
     });
@@ -209,7 +212,35 @@ export function useCartPage() {
   const handleVariantChange = (item: CartItem, newSize: string, newColor: string | undefined) => {
     const oldKey = cartKey(item);
     const newKey = cartKey({ product_id: item.product_id, size: newSize, color: newColor });
-    updateVariant(item.product_id, item.size, item.color, newSize, newColor);
+    const live = liveInfo[item.product_id];
+
+    // Lấy chính xác tồn kho biến thể mới từ liveInfo
+    const targetVariantStock = getMatchingVariantStock(
+      live?.variants,
+      newSize,
+      newColor,
+      live?.stock ?? item.total_stock ?? item.stock
+    );
+    const targetTotalStock = live?.stock ?? item.total_stock ?? item.stock;
+
+    updateVariant(
+      item.product_id,
+      item.size,
+      item.color,
+      newSize,
+      newColor,
+      targetVariantStock,
+      targetTotalStock
+    );
+
+    if (item.quantity > targetVariantStock) {
+      notifications.show({
+        title: 'Đã điều chỉnh số lượng theo tồn kho',
+        message: `Phân loại ${newSize}${newColor ? ` - ${newColor}` : ''} chỉ còn ${targetVariantStock} sản phẩm. Số lượng đã được tự động điều chỉnh.`,
+        color: 'blue',
+      });
+    }
+
     if (selectedKeys.includes(oldKey)) {
       setSelectedKeys(Array.from(new Set(selectedKeys.map((k) => (k === oldKey ? newKey : k)))));
     }

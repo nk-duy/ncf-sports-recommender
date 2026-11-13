@@ -5,13 +5,14 @@ import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight, Flame, Ticket, Zap } from "lucide-react";
 import { DEFAULT_SLIDES, QUICK_ACTIONS } from "../constants/heroBannerData";
 import { HOME_FALLBACK_SPORT_IMG, type BannerItem } from "../types";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 
 export default function HeroBanner() {
   const [banners, setBanners] = useState<BannerItem[]>(DEFAULT_SLIDES);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/banners?active_only=true")
+    fetch(`${resolveApiBaseUrl()}/banners?active_only=true`)
       .then((res) => res.json())
       .then((data: unknown) => {
         if (Array.isArray(data) && data.length > 0) {

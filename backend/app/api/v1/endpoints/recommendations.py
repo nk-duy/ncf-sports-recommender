@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, Body, Request, HTTPException
 
 from app.models.user import User
 from app.schemas.product import ProductResponse
-from app.api.deps import get_current_user_optional
+from app.api.deps import get_current_user_optional, get_current_admin_user
 from app.services.recommendation_service import recommendation_service
 from app.services.product_service import ProductService
 from app.core.limiter import limiter
@@ -18,19 +18,61 @@ async def get_recommendations(
     top_k: int = Query(8, ge=1, le=100, description="Số lượng gợi ý"),
     current_product_id: Optional[str] = Query(None, description="ID sản phẩm hiện tại đang xem"),
     sport_type: Optional[str] = Query(None, description="Môn thể thao của sản phẩm đang xem"),
+    w_ncf: float = Query(1.0, ge=0.0, le=2.0, description="Hệ số trọng số hành vi NeuMF 32D"),
+    w_visual: float = Query(0.35, ge=0.0, le=2.0, description="Hệ số trọng số thị giác Sobel-RGB 48D"),
+    w_context: float = Query(1.0, ge=0.0, le=2.0, description="Hệ số trọng số ngữ cảnh bộ môn"),
+    discovery_mode: bool = Query(False, description="Chế độ Khám phá Liên bộ môn chống Filter Bubble"),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lấy danh sách sản phẩm gợi ý cá nhân hóa dựa trên NCF Model"""
-    user_id_str = str(current_user.id) if current_user else ""
-    products = await recommendation_service.get_recommendations_for_user(
-        user_id=user_id_str,
-        top_k=top_k,
-        current_product_id=current_product_id,
-        sport_type=sport_type
-    )
-    for p in products:
-        ProductService._enforce_discount(p)
-    return products
+    """Lấy danh sách sản phẩm gợi ý cá nhân hóa dựa trên NCF Model & Visual 48D Fusion"""
+    try:
+        user_id_str = str(current_user.id) if current_user else ""
+        products = await recommendation_service.get_recommendations_for_user(
+            user_id=user_id_str,
+            top_k=top_k,
+            current_product_id=current_product_id,
+            sport_type=sport_type,
+            w_ncf=w_ncf,
+            w_visual=w_visual,
+            w_context=w_context,
+            discovery_mode=discovery_mode
+        )
+        for p in products:
+            ProductService._enforce_discount(p)
+        return products
+    except Exception as exc:
+        logger.error(f"[Recommendation Error] Failed to generate recommendations: {exc}", exc_info=True)
+        try:
+            fallback_products = await recommendation_service._get_popular_fallback(
+                top_k=top_k,
+                exclude_ids=[current_product_id] if current_product_id else []
+            )
+            for p in fallback_products:
+                ProductService._enforce_discount(p)
+            return fallback_products
+        except Exception as fb_exc:
+            logger.error(f"[Recommendation Fallback Error]: {fb_exc}")
+            return []
+
+
+@router.get("/latent-radar")
+async def get_latent_radar(
+    user_id: Optional[str] = Query(None, description="ID người dùng tùy chọn"),
+    w_ncf: float = Query(1.0, ge=0.0, le=2.0, description="Hệ số trọng số hành vi NCF 32D"),
+    w_visual: float = Query(0.35, ge=0.0, le=2.0, description="Hệ số trọng số thị giác 48D"),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Tính điểm tương thích tiềm ẩn 8 bộ môn thể thao (ncf_affinity, visual_affinity, combined_affinity) phục vụ Biểu đồ Radar"""
+    try:
+        resolved_uid = user_id or (str(current_user.id) if current_user else "")
+        return await recommendation_service.get_latent_radar_affinities(
+            user_id=resolved_uid,
+            w_ncf=w_ncf,
+            w_visual=w_visual
+        )
+    except Exception as exc:
+        logger.error(f"[Latent Radar Error]: {exc}", exc_info=True)
+        return []
 
 
 @router.post("/cross-sell", response_model=List[ProductResponse])
@@ -39,10 +81,20 @@ async def get_cross_sell(
     top_k: int = Query(3, ge=1, le=10)
 ):
     """Lấy danh sách gợi ý bán chéo dựa trên giỏ hàng hiện tại (Sử dụng Item Embeddings)"""
-    products = await recommendation_service.get_cross_sell_recommendations(cart_item_ids, top_k)
-    for p in products:
-        ProductService._enforce_discount(p)
-    return products
+    try:
+        products = await recommendation_service.get_cross_sell_recommendations(cart_item_ids, top_k)
+        for p in products:
+            ProductService._enforce_discount(p)
+        return products
+    except Exception as exc:
+        logger.error(f"[Cross-sell Error]: {exc}", exc_info=True)
+        try:
+            fallback = await recommendation_service._get_fallback_cross_sell(cart_item_ids, top_k)
+            for p in fallback:
+                ProductService._enforce_discount(p)
+            return fallback
+        except Exception:
+            return []
 
 
 @router.get("/model-info")
@@ -65,8 +117,11 @@ async def get_ai_training_status():
 
 @router.post("/retrain")
 @limiter.limit("5/minute")
-async def retrain_ai_model(request: Request):
-    """Kích hoạt huấn luyện lại mô hình NCF ngầm (Non-blocking) với Negative Sampling & Leave-One-Out Evaluation"""
+async def retrain_ai_model(
+    request: Request,
+    current_admin: User = Depends(get_current_admin_user)
+):
+    """Kích hoạt huấn luyện lại mô hình NCF ngầm (Dành riêng cho Quản trị viên)"""
     res = await recommendation_service.start_background_training()
     return res
 

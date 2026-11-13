@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { notifications } from "@mantine/notifications";
 import { VoucherItem } from "../types";
 import { exportVouchersToExcel } from "../utils/exportVouchersExcel";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
+import { getAuthHeaders } from "@/shared/lib/authHeader";
 
 export function useAdminVouchers() {
   const [vouchers, setVouchers] = useState<VoucherItem[]>([]);
@@ -13,7 +15,10 @@ export function useAdminVouchers() {
 
   const fetchVouchers = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/v1/vouchers");
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/vouchers`, {
+        headers: getAuthHeaders(),
+      });
       const data: unknown = await res.json();
       setVouchers(Array.isArray(data) ? (data as VoucherItem[]) : []);
     } catch {
@@ -43,9 +48,10 @@ export function useAdminVouchers() {
 
   const handleStatusToggle = async (id: string, currentStatus: boolean) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/vouchers/${id}`, {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/vouchers/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ is_active: !currentStatus }),
       });
       if (res.ok) {

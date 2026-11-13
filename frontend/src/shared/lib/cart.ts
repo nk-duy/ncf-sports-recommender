@@ -1,7 +1,9 @@
 // Tiện ích dùng chung cho Giỏ hàng & Thanh toán.
 // Giá `product.price` trong DB là GIÁ ĐÃ GIẢM, giá gốc = price / (1 - discount_percent/100).
 
-export const API_BASE = 'http://localhost:8000/api/v1';
+import { resolveApiBaseUrl } from './apiUrl';
+
+export const API_BASE = resolveApiBaseUrl();
 
 export const formatVND = (price: number): string =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price || 0);
@@ -115,3 +117,45 @@ export async function fetchVoucherByCode(code: string): Promise<Voucher> {
   if (!res.ok) throw new Error('Mã voucher không hợp lệ.');
   return res.json();
 }
+
+/**
+ * Trích xuất chính xác tồn kho của phân loại biến thể (Size & Màu)
+ * Nếu không tìm thấy hoặc sản phẩm không chia variants thì dùng fallbackStock (tồn kho tổng)
+ */
+export function getMatchingVariantStock(
+  variants?: Array<{ size?: string; color?: string; stock?: number; sku?: string }>,
+  size?: string,
+  color?: string,
+  fallbackStock: number = 0
+): number {
+  if (!variants || variants.length === 0) return fallbackStock;
+  const norm = (s?: string) => (s || '').trim().toLowerCase();
+  const targetSize = norm(size);
+  const targetColor = norm(color);
+
+  const matched = variants.find((v) => {
+    const sizeMatch = !v.size || !targetSize || norm(v.size) === targetSize;
+    const colorMatch = !v.color || !targetColor || norm(v.color) === targetColor;
+    return sizeMatch && colorMatch;
+  });
+
+  if (matched && typeof matched.stock === 'number') {
+    return matched.stock;
+  }
+  return fallbackStock;
+}
+
+/**
+ * Tính số lượng tối đa có thể chọn cho 1 dòng sản phẩm trong giỏ:
+ * - Không vượt quá tồn kho biến thể đó (variantStock)
+ * - Tổng số lượng các dòng cùng product_id không vượt quá tổng tồn kho sản phẩm (productTotalStock)
+ */
+export function calcItemMaxAllowed(
+  targetVariantStock: number,
+  productTotalStock: number,
+  otherSameProductQtyInCart: number = 0
+): number {
+  const remainingTotal = Math.max(0, productTotalStock - otherSameProductQtyInCart);
+  return Math.min(targetVariantStock, remainingTotal);
+}
+

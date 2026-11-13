@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { X, ShoppingBag, Calendar } from "lucide-react";
 import type { CustomerItem, CustomerOrderSummary } from "../types";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
+import { getAuthHeaders } from "@/shared/lib/authHeader";
 
 interface CustomerOrdersModalProps {
   opened: boolean;
@@ -24,7 +26,10 @@ function CustomerOrdersModalInner({
     let cancelled = false;
     const fetchOrders = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/customers/${customer.id}/orders`);
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/customers/${customer.id}/orders`, {
+          headers: getAuthHeaders(),
+        });
         if (res.ok && !cancelled) {
           const data = await res.json();
           setOrders(Array.isArray(data) ? data : []);

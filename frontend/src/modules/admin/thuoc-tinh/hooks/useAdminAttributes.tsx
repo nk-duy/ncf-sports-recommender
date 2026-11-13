@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { Check } from 'lucide-react';
 import { notifications } from '@mantine/notifications';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import { getAuthHeaders } from '@/shared/lib/authHeader';
 import {
   AttributesApiData,
   CLOTHING_SIZE_ORDER,
@@ -65,7 +67,7 @@ export function useAdminAttributes() {
 
   const fetchAttributes = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/attributes');
+      const res = await fetch(`${resolveApiBaseUrl()}/attributes`);
       if (res.ok) {
         const data: AttributesApiData = await res.json();
         const b = data.brands || DEFAULT_BRANDS;
@@ -117,9 +119,9 @@ export function useAdminAttributes() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/attributes', {
+      const res = await fetch(`${resolveApiBaseUrl()}/attributes`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           brands,
           colors,
@@ -169,8 +171,9 @@ export function useAdminAttributes() {
     }
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/attributes/reset', {
+      const res = await fetch(`${resolveApiBaseUrl()}/attributes/reset`, {
         method: 'POST',
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data: { data?: AttributesApiData } = await res.json();

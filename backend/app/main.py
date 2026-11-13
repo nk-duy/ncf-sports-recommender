@@ -23,6 +23,23 @@ async def lifespan(app: FastAPI):
     # Startup: connect to database
     await init_db()
     logger.info("Successfully connected to MongoDB.")
+
+    # Warm load mô hình NCF, Vector nhúng Item 32D và Đặc trưng Hình ảnh 48D vào bộ nhớ RAM ngay khi khởi động
+    try:
+        from app.services.recommendation_service import recommendation_service
+        from app.services.visual_search_service import visual_search_service
+        is_loaded = recommendation_service._load_model()
+        if is_loaded:
+            logger.info("Mô hình NCF và Pre-computed Item Embeddings 32D đã được nạp nóng (Warm Load) vào RAM thành công.")
+        else:
+            logger.warning("Không tìm thấy trọng số ncf_weights.pth hoặc mappings.json khi nạp nóng mô hình NCF.")
+
+        vis_count = visual_search_service.load_visual_features()
+        recommendation_service._load_visual_features()
+        logger.info(f"Đã nạp nóng {vis_count} vector đặc trưng hình ảnh 48D từ visual_features.json vào RAM.")
+    except Exception as e:
+        logger.error(f"Lỗi khi nạp nóng mô hình NCF / Visual Features trong lifespan startup: {e}", exc_info=True)
+
     yield
     # Shutdown: cleanup resources if needed
     logger.info("Shutting down and cleaning up resources.")

@@ -147,34 +147,34 @@ export default function ProductVariantSelector({
       </div>
 
       {/* Tùy chọn Số lượng & Tồn kho chung 1 hàng */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
           <span className="text-xs font-bold text-slate-900">Số lượng:</span>
-          <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden h-9">
+          <div className="flex items-center border border-slate-200 rounded-lg bg-slate-50 overflow-hidden h-8 sm:h-9">
             <button
               type="button"
               onClick={onDecrementQuantity}
-              className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-200 font-bold transition-colors cursor-pointer"
+              className="w-7 sm:w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-200 font-bold transition-colors cursor-pointer"
             >
               -
             </button>
-            <span className="w-9 text-center font-bold text-xs text-slate-900">{quantity}</span>
+            <span className="w-8 sm:w-9 text-center font-bold text-xs text-slate-900">{quantity}</span>
             <button
               type="button"
               onClick={onIncrementQuantity}
-              className="w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-200 font-bold transition-colors cursor-pointer"
+              className="w-7 sm:w-8 h-full flex items-center justify-center text-slate-600 hover:bg-slate-200 font-bold transition-colors cursor-pointer"
             >
               +
             </button>
           </div>
         </div>
 
-        <div className="text-xs">
+        <div className="text-[11px] sm:text-xs shrink-0">
           {effectiveStock <= 0 ? (
             <span className="text-rose-500 font-bold bg-rose-50 px-2 py-1 rounded">Hết hàng</span>
           ) : (
             <span className="text-slate-500 font-medium">
-              Còn <strong className="text-slate-800">{effectiveStock}</strong> sản phẩm có sẵn
+              Còn <strong className="text-slate-800">{effectiveStock}</strong> có sẵn
             </span>
           )}
         </div>

@@ -2,6 +2,7 @@
 
 import { Truck, Eye, Printer, CheckCircle, CheckCircle2 } from 'lucide-react';
 import type { OrderItem } from '../types';
+import { getPaymentActionRule } from '../utils/orderHelpers';
 
 interface OrderCardItemFooterProps {
   order: OrderItem;
@@ -62,17 +63,34 @@ export default function OrderCardItemFooter({
               <CheckCircle2 size={13} className="text-emerald-600" />
               <span className="hidden sm:inline">Đã thu</span>
             </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => handleUpdatePaymentStatus(order._id, 'paid')}
-              className="py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
-              title="Xác nhận đã thu tiền đơn hàng"
-            >
-              <CheckCircle2 size={13} />
-              <span>Thu tiền</span>
-            </button>
-          ))}
+          ) : (() => {
+            const rule = getPaymentActionRule(order);
+            if (rule.isHidden) return null;
+            if (!rule.canCollect) {
+              return (
+                <button
+                  type="button"
+                  disabled
+                  className="py-1.5 px-2.5 bg-gray-100 text-gray-400 border border-gray-200 font-bold rounded-lg text-xs flex items-center justify-center gap-1 opacity-50 cursor-not-allowed"
+                  title={rule.tooltipReason}
+                >
+                  <CheckCircle2 size={13} className="text-gray-400" />
+                  <span>Thu tiền</span>
+                </button>
+              );
+            }
+            return (
+              <button
+                type="button"
+                onClick={() => handleUpdatePaymentStatus(order._id, 'paid')}
+                className="py-1.5 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition shadow-2xs cursor-pointer"
+                title="Xác nhận đã thu tiền đơn hàng"
+              >
+                <CheckCircle2 size={13} />
+                <span>Thu tiền</span>
+              </button>
+            );
+          })())}
 
         {/* Status switcher select */}
         <div className="relative">

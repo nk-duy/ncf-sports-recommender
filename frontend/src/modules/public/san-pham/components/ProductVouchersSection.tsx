@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { RawVoucherResponse } from '../types';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 interface VoucherItem {
   code: string;
@@ -17,7 +18,7 @@ export default function ProductVouchersSection() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/v1/vouchers')
+    fetch(`${resolveApiBaseUrl()}/vouchers`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data: RawVoucherResponse[] | null) => {
         if (Array.isArray(data) && data.length > 0) {

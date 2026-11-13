@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { useCartStore } from './cartStore';
 import { useWishlistStore } from './wishlistStore';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 export interface User {
   id: string;
@@ -119,8 +120,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     try {
-      const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const apiUrl = rawApiUrl.endsWith('/api/v1') ? rawApiUrl : `${rawApiUrl}/api/v1`;
+      const apiUrl = resolveApiBaseUrl();
 
       const res = await fetch(`${apiUrl}/auth/me`, {
         headers: {

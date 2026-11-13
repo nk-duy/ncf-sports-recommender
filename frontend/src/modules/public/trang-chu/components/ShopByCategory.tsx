@@ -6,6 +6,7 @@ import { ArrowRight, Compass } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
 import QuickAddToCartModal, { QuickAddProduct } from "@/shared/components/QuickAddToCartModal";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import { SPORTS_CONFIG } from "../constants/sportsCategoryConfig";
 import SportSpotlightBanner from "./SportSpotlightBanner";
 import SportCategoryProductCard from "./SportCategoryProductCard";
@@ -41,7 +42,7 @@ export default function ShopByCategory() {
       setLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:8000/api/v1/products?sport_type=${encodeURIComponent(sportKey)}&limit=4`
+          `${resolveApiBaseUrl()}/products?sport_type=${encodeURIComponent(sportKey)}&limit=4`
         );
         if (res.ok && active) {
           const data: SportProduct[] = await res.json();

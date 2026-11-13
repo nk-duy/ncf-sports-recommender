@@ -7,6 +7,7 @@ import QuickAddToCartModal from "@/shared/components/QuickAddToCartModal";
 import { useRecommendedPage } from "../hooks/useRecommendedPage";
 import RecommendedFilterToolbar from "./RecommendedFilterToolbar";
 import RecommendedGridCard from "./RecommendedGridCard";
+import AiFusionRadarLab from "./AiFusionRadarLab";
 
 const BREADCRUMB_ITEMS = [
   { label: "Home", href: "/" },
@@ -28,6 +29,18 @@ export default function RecommendedPageContent() {
     setActiveTypeTab,
     sortBy,
     setSortBy,
+    wNcf,
+    setWNcf,
+    wVisual,
+    setWVisual,
+    wContext,
+    setWContext,
+    discoveryMode,
+    setDiscoveryMode,
+    handleResetOptimal,
+    latencyMs,
+    isTuning,
+    radarAxes,
     mounted,
     isWishlisted,
     modalProduct,
@@ -58,6 +71,21 @@ export default function RecommendedPageContent() {
           onChangeTypeTab={setActiveTypeTab}
           sortBy={sortBy}
           onChangeSortBy={setSortBy}
+        />
+
+        <AiFusionRadarLab
+          wNcf={wNcf}
+          onChangeWNcf={setWNcf}
+          wVisual={wVisual}
+          onChangeWVisual={setWVisual}
+          wContext={wContext}
+          onChangeWContext={setWContext}
+          discoveryMode={discoveryMode}
+          onChangeDiscoveryMode={setDiscoveryMode}
+          onResetOptimal={handleResetOptimal}
+          latencyMs={latencyMs}
+          isTuning={isTuning}
+          radarAxes={radarAxes}
         />
 
         {/* Product Grid */}

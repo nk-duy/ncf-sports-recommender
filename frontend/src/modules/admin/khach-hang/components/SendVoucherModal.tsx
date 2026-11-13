@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { X, Megaphone, Gift, Users, Send, Check } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import type { VoucherOptionItem } from "../types";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
+import { getAuthHeaders } from "@/shared/lib/authHeader";
 
 interface SendVoucherModalProps {
   opened: boolean;
@@ -35,7 +37,10 @@ function SendVoucherModalInner({
     let cancelled = false;
     const fetchVouchers = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/v1/vouchers");
+        const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/vouchers`, {
+        headers: getAuthHeaders(),
+      });
         if (res.ok && !cancelled) {
           const data = await res.json();
           const list: VoucherOptionItem[] = Array.isArray(data) ? data : [];
@@ -76,11 +81,12 @@ function SendVoucherModalInner({
     try {
       setSending(true);
       // Gửi thông báo loại promotion kèm voucher_code vào hệ thống thông báo hai chiều
-      const res = await fetch("http://localhost:8000/api/v1/notifications/send", {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/notifications/send`, {
         method: "POST",
-        headers: {
+        headers: getAuthHeaders({
           "Content-Type": "application/json",
-        },
+        }),
         body: JSON.stringify({
           user_id:
             selectedCustomerIds.length === 1

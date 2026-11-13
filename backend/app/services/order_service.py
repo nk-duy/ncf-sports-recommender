@@ -21,40 +21,132 @@ CANCELLED_STATUSES = {"cancelled", "rejected", "đã hủy", "từ chối"}
 class OrderService:
     @staticmethod
     async def _validate_and_deduct_inventory(items: List[Any], session=None) -> None:
-        """Kiểm tra và trừ tồn kho sản phẩm & biến thể an toàn (Defensive Check chống âm kho)"""
-        for item in items:
-            product = await Product.find_one(Product.product_id == item.product_id, session=session)
-            if not product:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Sản phẩm có mã '{item.product_id}' không tồn tại hoặc đã ngừng kinh doanh."
-                )
+        """Kiểm tra và trừ tồn kho sản phẩm & biến thể nguyên tử (Atomic Update chống Race Condition & Overselling)"""
+        collection = Product.get_pymongo_collection()
+        deducted_records = []
 
-            current_stock = product.stock if product.stock is not None else 100
-            if current_stock < item.quantity:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Sản phẩm '{product.name}' chỉ còn {current_stock} sản phẩm trong kho (bạn đặt {item.quantity})."
-                )
+        try:
+            for item in items:
+                product = await Product.find_one(Product.product_id == item.product_id, session=session)
+                if not product:
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Sản phẩm có mã '{item.product_id}' không tồn tại hoặc đã ngừng kinh doanh."
+                    )
 
-            product.stock = max(0, current_stock - item.quantity)
+                # Tìm phân loại biến thể phù hợp nếu khách có chọn size hoặc color
+                matching_variant = None
+                variants = product.variants or []
+                if variants and (item.size or item.color):
+                    for v in variants:
+                        size_match = not v.size or not item.size or v.size.strip().lower() == item.size.strip().lower()
+                        color_match = not v.color or not item.color or v.color.strip().lower() == item.color.strip().lower()
+                        if size_match and color_match:
+                            matching_variant = v
+                            break
 
-            # Khấu trừ phân loại SKU cụ thể (Xử lý an toàn nếu mảng variants rỗng hoặc None)
-            variants = product.variants or []
-            if variants and (item.size or item.color):
-                for v in variants:
-                    size_match = not v.size or not item.size or v.size.strip().lower() == item.size.strip().lower()
-                    color_match = not v.color or not item.color or v.color.strip().lower() == item.color.strip().lower()
-                    if size_match and color_match:
-                        v_stock = v.stock if v.stock is not None else 0
-                        if v_stock < item.quantity:
+                # Thực hiện truy vấn cập nhật nguyên tử (Atomic Update)
+                if matching_variant:
+                    # Kiểm tra đồng thời cả tồn kho tổng và tồn kho của phân loại biến thể
+                    variant_elem = {"stock": {"$gte": item.quantity}}
+                    variant_filter = {"elem.stock": {"$gte": item.quantity}}
+                    if matching_variant.sku:
+                        variant_elem["sku"] = matching_variant.sku
+                        variant_filter["elem.sku"] = matching_variant.sku
+                    else:
+                        if matching_variant.size:
+                            variant_elem["size"] = matching_variant.size
+                            variant_filter["elem.size"] = matching_variant.size
+                        if matching_variant.color:
+                            variant_elem["color"] = matching_variant.color
+                            variant_filter["elem.color"] = matching_variant.color
+
+                    filter_query = {
+                        "product_id": item.product_id,
+                        "stock": {"$gte": item.quantity},
+                        "variants": {"$elemMatch": variant_elem}
+                    }
+                    update_op = {
+                        "$inc": {
+                            "stock": -item.quantity,
+                            "variants.$[elem].stock": -item.quantity
+                        }
+                    }
+                    update_kwargs: dict = {"array_filters": [variant_filter]}
+                    if session:
+                        update_kwargs["session"] = session
+
+                    res = await collection.update_one(filter_query, update_op, **update_kwargs)
+                    if res.modified_count == 0:
+                        # Kiểm tra xem do tổng kho hay do biến thể hết hàng để báo lỗi chi tiết
+                        latest_prod = await Product.find_one(Product.product_id == item.product_id, session=session)
+                        latest_stock = latest_prod.stock if latest_prod and latest_prod.stock is not None else 0
+                        if latest_stock < item.quantity:
                             raise HTTPException(
                                 status_code=400,
-                                detail=f"Phân loại {v.color or ''} - {v.size or ''} của '{product.name}' chỉ còn {v_stock} sản phẩm."
+                                detail=f"Sản phẩm '{product.name}' chỉ còn {latest_stock} sản phẩm trong kho (bạn đặt {item.quantity})."
                             )
-                        v.stock = max(0, v_stock - item.quantity)
+                        else:
+                            raise HTTPException(
+                                status_code=400,
+                                detail=f"Phân loại '{matching_variant.color or ''} - {matching_variant.size or ''}' của '{product.name}' không đủ số lượng trong kho."
+                            )
+                else:
+                    # Sản phẩm không có biến thể: Trừ kho tổng nguyên tử
+                    filter_query = {
+                        "product_id": item.product_id,
+                        "stock": {"$gte": item.quantity}
+                    }
+                    update_op = {
+                        "$inc": {"stock": -item.quantity}
+                    }
+                    update_kwargs = {}
+                    if session:
+                        update_kwargs["session"] = session
 
-            await product.save(session=session)
+                    res = await collection.update_one(filter_query, update_op, **update_kwargs)
+                    if res.modified_count == 0:
+                        latest_prod = await Product.find_one(Product.product_id == item.product_id, session=session)
+                        latest_stock = latest_prod.stock if latest_prod and latest_prod.stock is not None else 0
+                        raise HTTPException(
+                            status_code=400,
+                            detail=f"Sản phẩm '{product.name}' chỉ còn {latest_stock} sản phẩm trong kho (bạn đặt {item.quantity})."
+                        )
+
+                deducted_records.append((item, matching_variant))
+
+        except Exception as exc:
+            # Cơ chế bồi hoàn kho (Compensating Rollback) nếu xảy ra lỗi giữa chừng ở chế độ Standalone (không có replica set)
+            if session is None and deducted_records:
+                for d_item, d_var in deducted_records:
+                    try:
+                        if d_var:
+                            rb_filter = {}
+                            if d_var.sku:
+                                rb_filter["elem.sku"] = d_var.sku
+                            else:
+                                if d_var.size:
+                                    rb_filter["elem.size"] = d_var.size
+                                if d_var.color:
+                                    rb_filter["elem.color"] = d_var.color
+                            await collection.update_one(
+                                {"product_id": d_item.product_id},
+                                {
+                                    "$inc": {
+                                        "stock": d_item.quantity,
+                                        "variants.$[elem].stock": d_item.quantity
+                                    }
+                                },
+                                array_filters=[rb_filter]
+                            )
+                        else:
+                            await collection.update_one(
+                                {"product_id": d_item.product_id},
+                                {"$inc": {"stock": d_item.quantity}}
+                            )
+                    except Exception as rb_err:
+                        logger.error(f"[OrderService] Rollback stock error for {d_item.product_id}: {rb_err}")
+            raise exc
 
     @staticmethod
     async def _validate_and_apply_voucher(voucher_code: Optional[str], session=None) -> None:
@@ -99,7 +191,7 @@ class OrderService:
 
     @staticmethod
     async def _post_order_creation_actions(order: Order) -> None:
-        """Hủy bộ đệm thống kê và phát thông báo xác nhận đặt hàng thành công"""
+        """Hủy bộ đệm thống kê, phát thông báo và ghi nhận tương tác mua hàng cho MLOps NCF"""
         try:
             await admin_service.invalidate_dashboard_cache()
         except Exception:
@@ -110,6 +202,37 @@ class OrderService:
             await notification_service.notify_order_placed(order)
         except Exception as e:
             logger.warning(f"[OrderService] Notification trigger error: {e}")
+
+        # Bổ sung ghi nhận tương tác Purchase cho MLOps NCF Re-train
+        if order.user_id and order.items:
+            try:
+                from app.models.interaction import Interaction
+                user_id_str = str(order.user_id)
+                now_utc = datetime.utcnow()
+                interactions_to_create = []
+                seen_product_ids = set()
+
+                for item in order.items:
+                    pid = str(item.product_id)
+                    if pid and pid not in seen_product_ids:
+                        seen_product_ids.add(pid)
+                        interactions_to_create.append(
+                            Interaction(
+                                user_id=user_id_str,
+                                product_id=pid,
+                                interaction_type="purchase",
+                                rating=5.0,
+                                timestamp=now_utc
+                            )
+                        )
+
+                if interactions_to_create:
+                    await Interaction.insert_many(interactions_to_create)
+                    logger.info(
+                        f"[MLOps] Đã tự động ghi nhận {len(interactions_to_create)} tương tác 'purchase' (rating=5.0) cho User '{user_id_str}' từ Đơn hàng {order.id}"
+                    )
+            except Exception as ml_err:
+                logger.warning(f"[OrderService] Lỗi ghi nhận tương tác purchase MLOps: {ml_err}")
 
     @staticmethod
     async def create_order(order_data: OrderCreate, user_id: Optional[str] = None) -> Order:
@@ -364,6 +487,22 @@ class OrderService:
         order = await OrderService.get_order_by_id(str(order_id))
         if not order:
             return None
+
+        if payment_status == "paid":
+            st = (order.status or "").lower()
+            if st in ["cancelled", "rejected", "đã hủy", "từ chối"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Không thể thu tiền đơn hàng đã bị từ chối hoặc hủy."
+                )
+
+            method = (order.payment_method or "").lower()
+            is_cod = any(term in method for term in ["cod", "tiền mặt", "thu hộ"])
+            if is_cod and st in ["pending", "confirmed", "chờ duyệt", "chờ xác nhận", "đã xác nhận"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Đơn hàng Thu hộ (COD) chỉ có thể thu tiền khi đơn đang giao hoặc đã giao hàng thành công."
+                )
 
         order.payment_status = payment_status
         if payment_status == "paid":

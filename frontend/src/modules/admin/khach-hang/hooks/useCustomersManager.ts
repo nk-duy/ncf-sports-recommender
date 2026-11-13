@@ -12,6 +12,9 @@ import type {
 } from "../types";
 import { mapCustomerWithTier } from "../utils/customerTierConfig";
 import { exportCustomersToExcel } from "../utils/exportCustomersExcel";
+import { getAuthHeaders } from "@/shared/lib/authHeader";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
+import { useAdminAuthStore } from "@/shared/store/adminAuthStore";
 
 interface CustomersApiResponse {
   customers?: RawCustomerApiItem[];
@@ -100,10 +103,9 @@ export function useCustomersManager() {
         if (sportFilter) params.append("sport", sportFilter);
         if (regionFilter) params.append("region", regionFilter);
 
-        const res = await fetch(`http://localhost:8000/api/v1/customers/?${params.toString()}`, {
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/customers/?${params.toString()}`, {
+          headers: getAuthHeaders(),
         });
 
         if (res.ok) {
@@ -125,9 +127,29 @@ export function useCustomersManager() {
             }
             return prevId;
           });
+        } else if (res.status === 401) {
+          useAdminAuthStore.getState().logout();
+          notifications.show({
+            title: 'Phiên đăng nhập hết hạn',
+            message: 'Vui lòng đăng nhập lại tài khoản Quản trị viên để tiếp tục',
+            color: 'red',
+          });
+          window.location.href = `/dang-nhap?redirect=${encodeURIComponent(window.location.pathname)}`;
+          return;
+        } else {
+          const err: { detail?: string } | null = await res.json().catch(() => null);
+          notifications.show({
+            title: 'Lỗi tải danh sách khách hàng',
+            message: err?.detail || 'Không thể tải dữ liệu khách hàng từ máy chủ',
+            color: 'red',
+          });
         }
       } catch {
-        // Bỏ qua lỗi mạng tạm thời khi tải danh sách khách hàng
+        notifications.show({
+          title: 'Lỗi kết nối',
+          message: 'Không thể kết nối đến máy chủ quản trị khách hàng',
+          color: 'red',
+        });
       } finally {
         setLoading(false);
       }
@@ -147,7 +169,10 @@ export function useCustomersManager() {
     const fetchOrders = async () => {
       try {
         setLoadingActiveOrders(true);
-        const res = await fetch(`http://localhost:8000/api/v1/customers/${activeCustomerId}/orders`);
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/customers/${activeCustomerId}/orders`, {
+          headers: getAuthHeaders(),
+        });
         if (res.ok && !cancelled) {
           const data = await res.json();
           setFetchedCustomerOrders(Array.isArray(data) ? data : []);
@@ -214,8 +239,10 @@ export function useCustomersManager() {
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/customers/${id}`, {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/customers/${id}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         notifications.show({

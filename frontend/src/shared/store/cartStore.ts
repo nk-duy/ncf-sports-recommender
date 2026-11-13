@@ -10,7 +10,10 @@ export interface CartItem {
   quantity: number;
   size: string;
   color?: string;
+  /** Tồn kho riêng của biến thể này (Size & Màu) */
   stock: number;
+  /** Tổng tồn kho của sản phẩm (dùng để khống chế tổng các phân loại trong giỏ) */
+  total_stock?: number;
 }
 
 /** Khóa duy nhất của một dòng trong giỏ hàng (sản phẩm + size + màu) */
@@ -32,10 +35,20 @@ interface CartState {
     size: string,
     color: string | undefined,
     newSize: string,
-    newColor: string | undefined
+    newColor: string | undefined,
+    newVariantStock?: number,
+    newTotalStock?: number
   ) => void;
   /** Đồng bộ tồn kho / giá mới nhất từ server cho mọi dòng của một sản phẩm */
-  syncProduct: (product_id: string, data: { stock?: number; price?: number; original_price?: number }) => void;
+  syncProduct: (
+    product_id: string,
+    data: {
+      stock?: number;
+      price?: number;
+      original_price?: number;
+      variants?: Array<{ size?: string; color?: string; stock?: number; sku?: string }>;
+    }
+  ) => void;
   saveForLater: (key: string) => void;
   moveSavedToCart: (key: string) => void;
   removeSaved: (key: string) => void;
@@ -153,17 +166,40 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   addItem: (item) => set((state) => {
+    const norm = (s?: string) => (s || '').trim().toLowerCase();
+    const curSize = norm(item.size);
+    const curColor = norm(item.color);
+
+    // 1. Tính tổng số lượng của các biến thể khác cùng product_id đã có trong giỏ
+    const otherLinesQty = state.items
+      .filter(i => i.product_id === item.product_id && !(norm(i.size) === curSize && norm(i.color) === curColor))
+      .reduce((sum, i) => sum + i.quantity, 0);
+
+    const productTotal = item.total_stock ?? item.stock ?? 100;
+    const remainingForProduct = Math.max(0, productTotal - otherLinesQty);
+    const variantMax = typeof item.stock === 'number' ? item.stock : remainingForProduct;
+    // Giới hạn tối đa tuyệt đối cho dòng này: không vượt quá tồn kho biến thể VÀ không làm tổng vượt quá tồn kho sản phẩm
+    const maxAllowed = Math.min(variantMax, remainingForProduct);
+
     const existingItemIndex = state.items.findIndex(
-      i => i.product_id === item.product_id && i.size === item.size && i.color === item.color
+      i => i.product_id === item.product_id && norm(i.size) === curSize && norm(i.color) === curColor
     );
+
     let newItems: CartItem[];
     if (existingItemIndex >= 0) {
       newItems = [...state.items];
-      const newQuantity = newItems[existingItemIndex].quantity + item.quantity;
-      const currentStock = item.stock || 100;
-      newItems[existingItemIndex].quantity = newQuantity > currentStock ? currentStock : newQuantity;
+      const existing = newItems[existingItemIndex];
+      const desired = existing.quantity + item.quantity;
+      const finalQty = Math.max(1, Math.min(desired, maxAllowed > 0 ? maxAllowed : 1));
+      newItems[existingItemIndex] = {
+        ...existing,
+        stock: variantMax,
+        total_stock: productTotal,
+        quantity: finalQty,
+      };
     } else {
-      newItems = [...state.items, item];
+      const initialQty = Math.max(1, Math.min(item.quantity, maxAllowed > 0 ? maxAllowed : 1));
+      newItems = [...state.items, { ...item, stock: variantMax, total_stock: productTotal, quantity: initialQty }];
     }
     saveCartToStorage(state.userId, newItems, state.savedItems);
     return { items: newItems };
@@ -182,41 +218,88 @@ export const useCartStore = create<CartState>((set, get) => ({
   }),
 
   updateQuantity: (product_id, size, color, quantity) => set((state) => {
-    const newItems = state.items.map(i => 
-      (i.product_id === product_id && i.size === size && i.color === color)
-        ? { ...i, quantity: Math.min(Math.max(1, quantity), i.stock || 100) }
-        : i
-    );
+    const norm = (s?: string) => (s || '').trim().toLowerCase();
+    const targetSize = norm(size);
+    const targetColor = norm(color);
+
+    const otherLinesQty = state.items
+      .filter(i => i.product_id === product_id && !(norm(i.size) === targetSize && norm(i.color) === targetColor))
+      .reduce((sum, i) => sum + i.quantity, 0);
+
+    const newItems = state.items.map(i => {
+      if (i.product_id === product_id && norm(i.size) === targetSize && norm(i.color) === targetColor) {
+        const productTotal = i.total_stock ?? i.stock ?? 100;
+        const remainingForProduct = Math.max(0, productTotal - otherLinesQty);
+        const maxAllowed = Math.min(i.stock ?? remainingForProduct, remainingForProduct);
+        const safeMax = maxAllowed > 0 ? maxAllowed : 1;
+        const clamped = Math.min(Math.max(1, quantity), safeMax);
+        return { ...i, quantity: clamped };
+      }
+      return i;
+    });
     saveCartToStorage(state.userId, newItems, state.savedItems);
     return { items: newItems };
   }),
 
-  updateVariant: (product_id, size, color, newSize, newColor) => set((state) => {
-    const normColor = (c?: string) => (c ? c.trim() : undefined);
-    const curColor = normColor(color);
-    const targetColor = normColor(newColor);
-    const targetSize = (newSize || '').trim();
+  updateVariant: (product_id, size, color, newSize, newColor, newVariantStock, newTotalStock) => set((state) => {
+    const norm = (s?: string) => (s || '').trim().toLowerCase();
+    const curColor = norm(color);
+    const curSize = norm(size);
+    const targetColor = norm(newColor);
+    const targetSize = norm(newSize);
 
     const current = state.items.find(
-      i => i.product_id === product_id && (i.size || '').trim() === (size || '').trim() && normColor(i.color) === curColor
+      i => i.product_id === product_id && norm(i.size) === curSize && norm(i.color) === curColor
     );
     if (!current) return state;
-    if ((current.size || '').trim() === targetSize && normColor(current.color) === targetColor) return state;
+
+    const resolvedVariantStock = typeof newVariantStock === 'number' ? newVariantStock : current.stock;
+    const resolvedTotalStock = typeof newTotalStock === 'number' ? newTotalStock : (current.total_stock ?? current.stock);
+
+    if (curSize === targetSize && curColor === targetColor) {
+      if (current.stock !== resolvedVariantStock || current.quantity > resolvedVariantStock) {
+        const clamped = Math.max(1, Math.min(current.quantity, resolvedVariantStock));
+        const newItems = state.items.map(i => i === current ? { ...i, stock: resolvedVariantStock, total_stock: resolvedTotalStock, quantity: clamped } : i);
+        saveCartToStorage(state.userId, newItems, state.savedItems);
+        return { items: newItems };
+      }
+      return state;
+    }
 
     const duplicate = state.items.find(
-      i => i !== current && i.product_id === product_id && (i.size || '').trim() === targetSize && normColor(i.color) === targetColor
+      i => i !== current && i.product_id === product_id && norm(i.size) === targetSize && norm(i.color) === targetColor
     );
+
+    // Tính tổng các dòng khác cùng product_id (không tính current và duplicate)
+    const otherLinesQty = state.items
+      .filter(i => i.product_id === product_id && i !== current && i !== duplicate)
+      .reduce((sum, i) => sum + i.quantity, 0);
+
+    const remainingForProduct = Math.max(0, resolvedTotalStock - otherLinesQty);
+    const maxAllowed = Math.min(resolvedVariantStock, remainingForProduct);
+    const safeMax = maxAllowed > 0 ? maxAllowed : 1;
 
     let newItems: CartItem[];
     if (duplicate) {
-      // Gộp vào dòng đã có
-      const merged = Math.min(duplicate.quantity + current.quantity, duplicate.stock || 100);
+      // Gộp vào dòng đã có và giới hạn không vượt quá maxAllowed
+      const mergedQty = Math.min(duplicate.quantity + current.quantity, safeMax);
       newItems = state.items
         .filter(i => i !== current)
-        .map(i => (i === duplicate ? { ...i, quantity: merged } : i));
+        .map(i => (i === duplicate ? { ...i, stock: resolvedVariantStock, total_stock: resolvedTotalStock, quantity: mergedQty } : i));
     } else {
+      // Đổi sang phân loại mới: tự động hạ số lượng xuống bằng tồn kho biến thể mới nếu đang chọn lớn hơn
+      const clampedQty = Math.max(1, Math.min(current.quantity, safeMax));
       newItems = state.items.map(i =>
-        i === current ? { ...i, size: targetSize, color: targetColor } : i
+        i === current
+          ? {
+              ...i,
+              size: (newSize || '').trim(),
+              color: newColor ? newColor.trim() : undefined,
+              stock: resolvedVariantStock,
+              total_stock: resolvedTotalStock,
+              quantity: clampedQty,
+            }
+          : i
       );
     }
     saveCartToStorage(state.userId, newItems, state.savedItems);
@@ -225,28 +308,55 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   syncProduct: (product_id, data) => set((state) => {
     let changed = false;
+    const norm = (s?: string) => (s || '').trim().toLowerCase();
+
     const newItems = state.items.map(i => {
       if (i.product_id !== product_id) return i;
       const next = { ...i };
-      if (typeof data.stock === 'number' && data.stock !== i.stock) {
-        next.stock = data.stock;
-        if (data.stock > 0 && next.quantity > data.stock) next.quantity = data.stock;
+
+      if (typeof data.stock === 'number') {
+        next.total_stock = data.stock;
       }
+
+      if (data.variants && data.variants.length > 0) {
+        const itemSize = norm(i.size);
+        const itemColor = norm(i.color);
+        const matchedV = data.variants.find(v => {
+          const sMatch = !v.size || !itemSize || norm(v.size) === itemSize;
+          const cMatch = !v.color || !itemColor || norm(v.color) === itemColor;
+          return sMatch && cMatch;
+        });
+        if (matchedV && typeof matchedV.stock === 'number') {
+          next.stock = matchedV.stock;
+        } else if (typeof data.stock === 'number') {
+          next.stock = data.stock;
+        }
+      } else if (typeof data.stock === 'number') {
+        next.stock = data.stock;
+      }
+
+      if (next.stock > 0 && next.quantity > next.stock) {
+        next.quantity = next.stock;
+      }
+
       if (typeof data.price === 'number' && data.price !== i.price) {
         next.price = data.price;
       }
       if (data.original_price !== undefined && data.original_price !== i.original_price) {
         next.original_price = data.original_price;
       }
+
       if (
         next.stock !== i.stock || next.quantity !== i.quantity ||
-        next.price !== i.price || next.original_price !== i.original_price
+        next.price !== i.price || next.original_price !== i.original_price ||
+        next.total_stock !== i.total_stock
       ) {
         changed = true;
         return next;
       }
       return i;
     });
+
     if (changed) {
       saveCartToStorage(state.userId, newItems, state.savedItems);
       return { items: newItems };

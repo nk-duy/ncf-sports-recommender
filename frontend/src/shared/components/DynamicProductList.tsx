@@ -5,6 +5,7 @@ import ProductCard from '@/modules/public/san-pham/components/ProductCard';
 import { Loader2 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Pagination from '@/shared/components/Pagination';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 
 interface DynamicProductListProps {
   initialCategory?: string;
@@ -47,7 +48,8 @@ export default function DynamicProductList({ initialCategory }: DynamicProductLi
       setLoading(true);
       try {
         const skip = (currentPage - 1) * ITEMS_PER_PAGE;
-        let url = `http://localhost:8000/api/v1/products?skip=${skip}&limit=${ITEMS_PER_PAGE}`;
+        const apiUrl = resolveApiBaseUrl();
+        let url = `${apiUrl}/products?skip=${skip}&limit=${ITEMS_PER_PAGE}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (category) url += `&category=${encodeURIComponent(category)}`;
         if (product_type) url += `&product_type=${encodeURIComponent(product_type)}`;

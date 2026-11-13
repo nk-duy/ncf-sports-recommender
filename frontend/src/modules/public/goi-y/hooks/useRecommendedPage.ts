@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { notifications } from "@mantine/notifications";
 import { useAuthStore } from "@/shared/store/authStore";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import type { QuickAddProduct } from "@/shared/components/QuickAddToCartModal";
-import type { RecProduct } from "../types";
+import type { LatentRadarAxis, RecProduct } from "../types";
 
 const emptySubscribe = () => () => {};
 
@@ -42,6 +43,17 @@ export function useRecommendedPage() {
   const [activeTypeTab, setActiveTypeTab] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("default");
 
+  // Adaptive Fusion Weights & Cross-Sport Discovery State
+  const [wNcf, setWNcf] = useState<number>(1.0);
+  const [wVisual, setWVisual] = useState<number>(0.35);
+  const [wContext, setWContext] = useState<number>(1.0);
+  const [discoveryMode, setDiscoveryMode] = useState<boolean>(false);
+  const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [isTuning, setIsTuning] = useState<boolean>(false);
+  const [radarAxes, setRadarAxes] = useState<LatentRadarAxis[]>([]);
+
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const mounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -51,7 +63,7 @@ export function useRecommendedPage() {
   const [modalProduct, setModalProduct] = useState<QuickAddProduct | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  const loadRecommendationsData = useCallback(async (currentToken: string | null): Promise<RecProduct[] | null> => {
+  const getAuthHeaders = useCallback((currentToken: string | null): Record<string, string> => {
     const authToken =
       currentToken ||
       (typeof window !== "undefined"
@@ -61,43 +73,129 @@ export function useRecommendedPage() {
     if (authToken) {
       headers["Authorization"] = `Bearer ${authToken}`;
     }
-
-    // Fetch 12 personalized recommended products
-    const res = await fetch("http://localhost:8000/api/v1/recommendations/?top_k=12", {
-      headers,
-    });
-
-    if (!res.ok) return null;
-    const data: RecProduct[] = await res.json();
-    return deduplicateRecommendations(data);
+    return headers;
   }, []);
 
+  const loadRecommendationsData = useCallback(
+    async (
+      currentToken: string | null,
+      params: {
+        w_ncf: number;
+        w_visual: number;
+        w_context: number;
+        discovery_mode: boolean;
+      }
+    ): Promise<RecProduct[] | null> => {
+      const headers = getAuthHeaders(currentToken);
+      const query = new URLSearchParams({
+        top_k: "12",
+        w_ncf: String(params.w_ncf),
+        w_visual: String(params.w_visual),
+        w_context: String(params.w_context),
+        discovery_mode: String(params.discovery_mode),
+      });
+
+      const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const res = await fetch(`${resolveApiBaseUrl()}/recommendations/?${query.toString()}`, {
+        headers,
+      });
+      const t1 = typeof performance !== "undefined" ? performance.now() : Date.now();
+      setLatencyMs(Math.max(1, Math.round(t1 - t0)));
+
+      if (!res.ok) return null;
+      const data: RecProduct[] = await res.json();
+      return deduplicateRecommendations(data);
+    },
+    [getAuthHeaders]
+  );
+
+  const loadLatentRadarData = useCallback(
+    async (currentToken: string | null, currWNcf: number, currWVisual: number) => {
+      try {
+        const headers = getAuthHeaders(currentToken);
+        const query = new URLSearchParams({
+          w_ncf: String(currWNcf),
+          w_visual: String(currWVisual),
+        });
+        const res = await fetch(`${resolveApiBaseUrl()}/recommendations/latent-radar?${query.toString()}`, {
+          headers,
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const axes: LatentRadarAxis[] = Array.isArray(data) ? data : data?.axes || [];
+        if (axes.length > 0) {
+          setRadarAxes(axes);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải biểu đồ Radar 8 bộ môn:", err);
+      }
+    },
+    [getAuthHeaders]
+  );
+
+  // Debounce 250ms khi thay đổi thanh trượt trọng số hoặc chế độ khám phá
   useEffect(() => {
     let active = true;
-    loadRecommendationsData(token)
-      .then((list) => {
-        if (active && list) {
-          setProducts(list);
-        }
-      })
-      .catch((err) => {
-        console.error("Lỗi khi tải danh sách gợi ý:", err);
-      })
-      .finally(() => {
-        if (active) {
-          setLoading(false);
-        }
-      });
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      if (active) {
+        setIsTuning(true);
+      }
+      Promise.all([
+        loadRecommendationsData(token, {
+          w_ncf: wNcf,
+          w_visual: wVisual,
+          w_context: wContext,
+          discovery_mode: discoveryMode,
+        }),
+        loadLatentRadarData(token, wNcf, wVisual),
+      ])
+        .then(([list]) => {
+          if (active && list) {
+            setProducts(list);
+          }
+        })
+        .catch((err) => {
+          console.error("Lỗi khi tải danh sách gợi ý:", err);
+        })
+        .finally(() => {
+          if (active) {
+            setLoading(false);
+            setIsTuning(false);
+          }
+        });
+    }, 250);
 
     return () => {
       active = false;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
-  }, [token, isAuthenticated, loadRecommendationsData]);
+  }, [token, isAuthenticated, wNcf, wVisual, wContext, discoveryMode, loadRecommendationsData, loadLatentRadarData]);
+
+  const handleResetOptimal = () => {
+    setWNcf(1.0);
+    setWVisual(0.35);
+    setWContext(1.0);
+    setDiscoveryMode(false);
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      const list = await loadRecommendationsData(token);
+      const [list] = await Promise.all([
+        loadRecommendationsData(token, {
+          w_ncf: wNcf,
+          w_visual: wVisual,
+          w_context: wContext,
+          discovery_mode: discoveryMode,
+        }),
+        loadLatentRadarData(token, wNcf, wVisual),
+      ]);
       if (list) {
         setProducts(list);
       }
@@ -210,6 +308,18 @@ export function useRecommendedPage() {
     setActiveTypeTab,
     sortBy,
     setSortBy,
+    wNcf,
+    setWNcf,
+    wVisual,
+    setWVisual,
+    wContext,
+    setWContext,
+    discoveryMode,
+    setDiscoveryMode,
+    handleResetOptimal,
+    latencyMs,
+    isTuning,
+    radarAxes,
     mounted,
     isWishlisted,
     modalProduct,

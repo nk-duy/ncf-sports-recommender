@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ShieldAlert } from 'lucide-react';
 import { useAdminAuthStore } from '@/shared/store/adminAuthStore';
 import { getAuthHeaders, getAdminToken } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import AdminSidebar from '@/modules/admin/cot-loi/components/AdminSidebar';
 import AdminTopbar from '@/modules/admin/cot-loi/components/AdminTopbar';
 
@@ -40,11 +41,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      let currentUser = useAdminAuthStore.getState().user;
-      if (!currentUser) {
-        await useAdminAuthStore.getState().checkAuth();
-        currentUser = useAdminAuthStore.getState().user;
-      }
+      // Luôn kiểm tra và làm mới tính hợp lệ của token với máy chủ Backend
+      await useAdminAuthStore.getState().checkAuth();
+      const currentUser = useAdminAuthStore.getState().user;
 
       if (!isMounted) return;
 
@@ -77,7 +76,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+        const apiUrl = resolveApiBaseUrl();
         const res = await fetch(`${apiUrl}/admin/dashboard-stats`, {
           headers: getAuthHeaders(),
         });

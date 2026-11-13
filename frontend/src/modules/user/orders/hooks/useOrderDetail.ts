@@ -37,7 +37,7 @@ export function useOrderDetail(id: string) {
       setLoading(true);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const customerToken =
-        (typeof window !== "undefined" ? localStorage.getItem("kady_customer_token") : null) ||
+        (typeof window !== "undefined" ? localStorage.getItem("kady_customer_token") || localStorage.getItem("kady_admin_token") : null) ||
         token;
       const res = await fetch(`${apiUrl}/api/v1/orders/${id}`, {
         headers: {
@@ -124,7 +124,7 @@ export function useOrderDetail(id: string) {
       formData.append("file", file);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const customerToken =
-        (typeof window !== "undefined" ? localStorage.getItem("kady_customer_token") : null) ||
+        (typeof window !== "undefined" ? localStorage.getItem("kady_customer_token") || localStorage.getItem("kady_admin_token") : null) ||
         token;
       const res = await fetch(`${apiUrl}/api/v1/uploads/`, {
         method: "POST",
@@ -229,7 +229,7 @@ export function useOrderDetail(id: string) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const customerToken =
-        (typeof window !== "undefined" ? localStorage.getItem("kady_customer_token") : null) ||
+        (typeof window !== "undefined" ? localStorage.getItem("kady_customer_token") || localStorage.getItem("kady_admin_token") : null) ||
         token;
 
       const orderParam = encodeURIComponent(ord._id);

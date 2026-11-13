@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import { getAuthHeaders } from "@/shared/lib/authHeader";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import { VoucherItem } from "../types";
 
 interface VoucherFormModalProps {
@@ -85,9 +86,10 @@ function VoucherFormModalInner({
     };
 
     try {
+      const apiUrl = resolveApiBaseUrl();
       const url = editingVoucher
-        ? `http://localhost:8000/api/v1/vouchers/${editingVoucher._id}`
-        : `http://localhost:8000/api/v1/vouchers`;
+        ? `${apiUrl}/vouchers/${editingVoucher._id}`
+        : `${apiUrl}/vouchers`;
       const method = editingVoucher ? "PUT" : "POST";
 
       const res = await fetch(url, {

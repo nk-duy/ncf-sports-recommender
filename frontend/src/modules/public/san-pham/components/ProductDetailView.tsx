@@ -13,6 +13,7 @@ import {
   detectProductSizeKind,
   normalizeProductVariants,
 } from '../utils/normalizeProductVariants';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import type { ProductDetail } from '../types';
 
 const FALLBACK_PRODUCT: ProductDetail = {
@@ -47,7 +48,8 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
     let active = true;
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/products/${id}`);
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/products/${id}`);
         const rawProduct: ProductDetail = res.ok ? await res.json() : FALLBACK_PRODUCT;
         // Bảo vệ dữ liệu biến thể: Giày dép luôn 38–44, Quần áo S–2XL, thiết bị không có size quần áo.
         const resolvedProduct = normalizeProductVariants(rawProduct);
@@ -75,7 +77,8 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
     if (!product) return;
     const token = localStorage.getItem('kady_customer_token') || localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:8000/api/v1/interactions/', {
+      const apiUrl = resolveApiBaseUrl();
+      fetch(`${apiUrl}/interactions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

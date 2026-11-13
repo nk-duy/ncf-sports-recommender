@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import type { OrderItem, OrderMetricsData, OrderViewMode } from '../types';
 import { printOrderInvoice } from '../utils/printInvoiceHelper';
 import {
   isDeliveredStatus,
   matchesDateAndPaymentFilter,
   matchOrderSearch,
+  getPaymentActionRule,
 } from '../utils/orderHelpers';
 import { exportOrdersToCsv } from '../utils/exportOrdersCsv';
 
@@ -62,7 +64,8 @@ export function useAdminOrders() {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/orders?limit=1000', {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/orders?limit=1000`, {
         headers: getAuthHeaders(),
       });
       if (res.ok) {
@@ -100,7 +103,8 @@ export function useAdminOrders() {
       if (trackingCode !== undefined) payload.tracking_code = trackingCode;
       if (carrier !== undefined) payload.carrier = carrier;
 
-      const res = await fetch(`http://localhost:8000/api/v1/orders/${id}/status`, {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/orders/${id}/status`, {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(payload),
@@ -175,7 +179,20 @@ export function useAdminOrders() {
       const targetOrder = orders.find((o) => o._id === id);
       const orderCode = `ORD-${(targetOrder?._id || id).slice(-6).toUpperCase()}`;
 
-      const res = await fetch(`http://localhost:8000/api/v1/orders/${id}/payment-status`, {
+      if (newPaymentStatus === 'paid' && targetOrder) {
+        const rule = getPaymentActionRule(targetOrder);
+        if (!rule.canCollect) {
+          notifications.show({
+            title: 'Thao tác không được phép',
+            message: rule.tooltipReason || 'Không thể thu tiền đơn hàng ở trạng thái hiện tại.',
+            color: 'orange',
+          });
+          return;
+        }
+      }
+
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/orders/${id}/payment-status`, {
         method: 'PUT',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ payment_status: newPaymentStatus }),
@@ -212,9 +229,10 @@ export function useAdminOrders() {
           });
         }
       } else {
+        const err = await res.json().catch(() => null);
         notifications.show({
           title: 'Cập nhật thất bại',
-          message: 'Không thể cập nhật trạng thái thanh toán trên máy chủ.',
+          message: err?.detail || 'Không thể cập nhật trạng thái thanh toán trên máy chủ.',
           color: 'red',
         });
       }

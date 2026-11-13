@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/shared/store/authStore';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import { AutocompleteProduct } from '../types';
 
 export const TRENDING_KEYWORDS = [
@@ -115,7 +116,7 @@ export function useSearchAutocomplete() {
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `http://localhost:8000/api/v1/products/?search=${encodeURIComponent(cleanQuery)}&limit=5`
+          `${resolveApiBaseUrl()}/products/?search=${encodeURIComponent(cleanQuery)}&limit=5`
         );
         if (!cancelled) {
           if (res.ok) {
@@ -197,7 +198,7 @@ export function useSearchAutocomplete() {
         ? localStorage.getItem('kady_customer_token') || localStorage.getItem('token')
         : null;
     if (token) {
-      fetch('http://localhost:8000/api/v1/interactions/', {
+      fetch(`${resolveApiBaseUrl()}/interactions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

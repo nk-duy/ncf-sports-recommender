@@ -9,6 +9,7 @@ import ProductSizeSelector from "./form/ProductSizeSelector";
 import ProductImageUploader from "./form/ProductImageUploader";
 import ProductVariantMatrix, { ProductVariantItem } from "./form/ProductVariantMatrix";
 import { getAuthHeaders } from "@/shared/lib/authHeader";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -75,7 +76,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
 
   const fetchMenuData = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/menu');
+      const res = await fetch(`${resolveApiBaseUrl()}/menu`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
@@ -90,7 +91,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
 
   const fetchAttributes = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/attributes');
+      const res = await fetch(`${resolveApiBaseUrl()}/attributes`);
       if (res.ok) {
         const data = await res.json();
         setAvailableBrands(data.brands || DEFAULT_BRANDS);

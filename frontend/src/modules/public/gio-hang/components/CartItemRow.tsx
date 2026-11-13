@@ -171,19 +171,24 @@ export function CartItemRow({
       </div>
 
       {/* Price / Quantity / Subtotal / Actions */}
-      <div className="w-full sm:w-[55%] flex items-center justify-between sm:justify-around gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
-        <div className="sm:w-[27%] text-left sm:text-center text-sm">
+      <div className="w-full sm:w-[55%] flex items-center justify-between sm:justify-around gap-2 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+        <div className="sm:w-[27%] text-left sm:text-center text-sm shrink-0">
           {originalPrice && (
-            <div className="text-xs text-gray-400 line-through font-normal tabular-nums">
+            <div className="text-[11px] sm:text-xs text-gray-400 line-through font-normal tabular-nums">
               {formatVND(originalPrice)}
             </div>
           )}
-          <div className={`font-semibold tabular-nums ${originalPrice ? 'text-red-600' : 'text-gray-900'}`}>
+          <div className={`font-semibold tabular-nums text-xs sm:text-sm ${originalPrice ? 'text-red-600' : 'text-gray-900'}`}>
             {formatVND(item.price)}
           </div>
+          {item.quantity > 1 && (
+            <div className="sm:hidden text-[10px] text-blue-600 font-semibold tabular-nums mt-0.5">
+              = {formatVND(item.price * item.quantity)}
+            </div>
+          )}
         </div>
 
-        <div className="sm:w-[27%] flex justify-center">
+        <div className="sm:w-[27%] flex justify-center shrink-0">
           <QuantityControl
             item={item}
             disabled={unavailable}
@@ -192,11 +197,11 @@ export function CartItemRow({
           />
         </div>
 
-        <div className="sm:w-[27%] text-right sm:text-center text-sm font-bold text-blue-600 tabular-nums">
+        <div className="hidden sm:block sm:w-[27%] text-right sm:text-center text-sm font-bold text-blue-600 tabular-nums">
           {formatVND(item.price * item.quantity)}
         </div>
 
-        <div className="sm:w-[19%] flex items-center justify-end sm:justify-center gap-2">
+        <div className="sm:w-[19%] flex items-center justify-end sm:justify-center gap-1 sm:gap-2 shrink-0">
           <button
             onClick={() => {
               saveForLater(id);
@@ -205,14 +210,14 @@ export function CartItemRow({
             title="Lưu để mua sau"
             className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
           >
-            <Bookmark size={16} />
+            <Bookmark size={15} />
           </button>
           <button
             onClick={() => setConfirm({ kind: 'single', item })}
             title="Xóa khỏi giỏ"
             className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
           >
-            <Trash2 size={16} />
+            <Trash2 size={15} />
           </button>
         </div>
       </div>

@@ -10,13 +10,15 @@ class ProductVariant(BaseModel):
     price: Optional[float] = None
 
 class AIExplanation(BaseModel):
-    strategy: str = "hybrid_ncf"  # "hybrid_ncf" | "cold_start" | "cosine_cross_sell"
+    strategy: str = "hybrid_ncf"  # "hybrid_ncf" | "cold_start" | "cosine_cross_sell" | "visual_ncf_fusion"
     ncf_score: Optional[float] = 0.0
+    visual_score: Optional[float] = 0.0
     context_boost: Optional[float] = 0.0
     cosine_score: Optional[float] = 0.0
     rating_score: Optional[float] = 0.0
     final_score: float = 0.0
     match_percent: int = 85
+    is_cross_sport_discovery: Optional[bool] = False
     reason: str = ""
 
 class ProductBase(BaseModel):

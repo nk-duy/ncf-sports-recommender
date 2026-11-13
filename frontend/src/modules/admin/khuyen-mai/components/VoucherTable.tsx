@@ -5,6 +5,7 @@ import { Plus, Search } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import Pagination from "@/shared/components/Pagination";
 import { getAuthHeaders } from "@/shared/lib/authHeader";
+import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 import { VoucherItem } from "../types";
 import VoucherTableRow from "./VoucherTableRow";
 
@@ -32,7 +33,8 @@ export default function VoucherTable({
   const handleDelete = async (id: string) => {
     if (confirm("Bạn có chắc chắn muốn xóa voucher này?")) {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/vouchers/${id}`, {
+        const apiUrl = resolveApiBaseUrl();
+        const res = await fetch(`${apiUrl}/vouchers/${id}`, {
           method: "DELETE",
           headers: getAuthHeaders(),
         });
@@ -61,8 +63,9 @@ export default function VoucherTable({
       onStatusToggle(voucher._id, voucher.is_active);
     } else {
       try {
+        const apiUrl = resolveApiBaseUrl();
         const res = await fetch(
-          `http://localhost:8000/api/v1/vouchers/${voucher._id}`,
+          `${apiUrl}/vouchers/${voucher._id}`,
           {
             method: "PUT",
             headers: getAuthHeaders({ "Content-Type": "application/json" }),
