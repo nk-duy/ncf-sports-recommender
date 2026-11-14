@@ -1,7 +1,7 @@
 # KADY Sports Store & NCF Recommendation System
 
 > **Đề tài:** Nền tảng thương mại điện tử chuyên đồ thể thao thông minh tích hợp hệ thống gợi ý mạng nơ-ron lọc cộng tác (Neural Collaborative Filtering - NCF).  
-> **Sinh viên thực hiện:** Thạch Lý Na (MSSV: B2205891)  
+> **Sinh viên thực hiện:** Nguyễn Khánh Duy (MSSV: DC22V7N506)  
 > **Kiến trúc:** Decoupled Monorepo (Next.js 16 App Router Frontend + FastAPI Python MongoDB Backend)
 
 ---
@@ -119,4 +119,4 @@ python scripts/train_ncf.py
 | **Lược đồ MongoDB** | [`.claude/reference/database-schema.md`](file:///d:/Projects/ncf-sports-recommender/.claude/reference/database-schema.md) |
 | **Thuật toán Gợi ý NCF** | [`.claude/reference/recommendation-pipeline.md`](file:///d:/Projects/ncf-sports-recommender/.claude/reference/recommendation-pipeline.md) |
 | **Quy trình Phát triển** | [`docs/guides/development-workflow.md`](file:///d:/Projects/ncf-sports-recommender/docs/guides/development-workflow.md) |
-| **Phạm vi Luận văn** | [`docs/requirements/thesis-scope.md`](file:///d:/Projects/ncf-sports-recommender/docs/requirements/thesis-scope.md) |
+| **Kiến trúc Hệ thống** | [`docs/architecture/overview.md`](file:///d:/Projects/ncf-sports-recommender/docs/architecture/overview.md) |

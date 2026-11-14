@@ -28,7 +28,7 @@ description: Keeps technical documentation, API contracts, database schema speci
    - Luôn sử dụng cú pháp link Markdown có thể nhấp được: `[CLAUDE.md](file:///d:/Projects/ncf-sports-recommender/CLAUDE.md)`.
 
 3. **Bảo tồn tài liệu đồ án & luận văn:**
-   - Không được xóa hoặc ghi đè các tài liệu học thuật gốc trong thư mục `docs/` (`Baocao.docx`, `in_B2205891_ThachLyNa_LuanVan.pdf`).
+   - Bảo tồn các sơ đồ kiến trúc và đặc tả kỹ thuật trong thư mục `docs/`.
    - Mọi tài liệu kỹ thuật bổ sung cho AI cần được lưu vào các thư mục con tương ứng (`docs/architecture/`, `docs/guides/`, `.claude/reference/`).
 
 4. **Kiểm tra tính toàn vẹn của liên kết (Link Integrity Check):**

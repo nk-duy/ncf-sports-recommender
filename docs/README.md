@@ -1,23 +1,22 @@
 # KADY Sports Project Documentation
 
-Thư mục tài liệu đồ án tốt nghiệp và đặc tả kỹ thuật hệ thống **KADY Sports Recommender System**.
+Thư mục tài liệu kỹ thuật và đặc tả hệ thống **KADY Sports Recommender System** (SV thực hiện: Nguyễn Khánh Duy - MSSV: DC22V7N506).
 
 ## Cấu trúc Thư mục
 
 ```text
 docs/
-├── Baocao.docx                       # Báo cáo đồ án tốt nghiệp gốc
-├── in_B2205891_ThachLyNa_LuanVan.pdf # Toàn văn luận văn tốt nghiệp (SV: Thạch Lý Na)
-├── kady-database-schema.html         # Sơ đồ trực quan tương tác thực thể cơ sở dữ liệu
+├── kady-database-schema.html               # Sơ đồ trực quan tương tác thực thể cơ sở dữ liệu
+├── so_do_erd_tong_quan_kady_sports.drawio  # Sơ đồ ERD 11 bộ sưu tập (draw.io)
+├── so_do_dung_hop_neumf_32d_visual_48d.drawio # Sơ đồ khối dung hợp đa phương thức (draw.io)
 │
 ├── architecture/
-│   └── overview.md                   # Tổng quan kiến trúc kỹ thuật hệ thống
+│   └── overview.md                         # Tổng quan kiến trúc kỹ thuật hệ thống
 │
-├── requirements/
-│   └── thesis-scope.md               # Phạm vi đề tài, nghiệp vụ và tiêu chuẩn đánh giá NCF
+├── thesis_figures/                         # Sơ đồ kiến trúc & ảnh chụp thực tế giao diện
 │
 └── guides/
-    └── development-workflow.md       # Hướng dẫn cài đặt môi trường và quy trình đóng góp
+    └── development-workflow.md             # Hướng dẫn cài đặt môi trường và quy trình đóng góp
 ```
 
 ---
