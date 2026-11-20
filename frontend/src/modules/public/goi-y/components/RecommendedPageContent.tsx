@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Compass, Package } from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
 import Breadcrumb from "@/shared/components/Breadcrumb";
 import QuickAddToCartModal from "@/shared/components/QuickAddToCartModal";
 import { useRecommendedPage } from "../hooks/useRecommendedPage";
@@ -51,7 +51,9 @@ export default function RecommendedPageContent() {
     handleToggleWishlist,
   } = useRecommendedPage();
 
-  const displayUserName = user ? user.full_name || user.username || "Khách hàng" : undefined;
+  const safeIsAuthenticated = mounted && isAuthenticated;
+  const displayUserName =
+    mounted && user ? user.full_name || user.username || "Khách hàng" : undefined;
 
   return (
     <div className="bg-gray-50 min-h-screen pb-14">
@@ -60,7 +62,7 @@ export default function RecommendedPageContent() {
 
         <RecommendedFilterToolbar
           productsCount={productsCount}
-          isAuthenticated={isAuthenticated}
+          isAuthenticated={safeIsAuthenticated}
           displayUserName={displayUserName}
           isRefreshing={isRefreshing}
           loading={loading}
@@ -132,17 +134,8 @@ export default function RecommendedPageContent() {
           </div>
         )}
 
-        {/* Informative Footer */}
-        <div className="mt-10 p-6 rounded-3xl bg-blue-50/60 border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
-              <Compass className="w-4 h-4" />
-            </div>
-            <span>
-              Danh sách 8 - 12 sản phẩm trên được tính toán và xếp hạng dựa trên mức độ yêu thích bộ môn thể thao và hành vi mua sắm của bạn.
-            </span>
-          </div>
-
+        {/* Clean Footer Link */}
+        <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-end text-xs">
           <Link
             href="/san-pham"
             className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-bold uppercase tracking-wider whitespace-nowrap"

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, CheckCircle2, Cpu } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Award } from 'lucide-react';
 import { CORE_VALUES, AI_ARCHITECTURE_HIGHLIGHTS } from '../data/aboutUsData';
 
 export default function AboutNcfShowcase() {
@@ -46,19 +46,17 @@ export default function AboutNcfShowcase() {
       </section>
 
       <section className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-8">
-        <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
+        <div className="bg-slate-900 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 shadow-xl relative overflow-hidden">
           <div className="relative z-10 max-w-3xl mb-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-400/30 mb-3">
-              <Cpu size={14} className="text-indigo-400" />
-              ĐIỂM NHẤN CÔNG NGHỆ ĐỒ ÁN
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-400/30 mb-3">
+              <Award size={14} className="text-blue-400" />
+              TRẢI NGHIỆM MUA SẮM CÁ NHÂN HÓA
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white text-balance tracking-tight">
-              Hệ Thống Gợi Ý Cá Nhân Hóa Neural Collaborative Filtering (NCF)
+              Chọn đúng trang bị thể thao theo bộ môn của bạn
             </h2>
             <p className="text-sm sm:text-base text-slate-300 mt-3 text-pretty leading-relaxed">
-              KADY tích hợp mô hình học sâu NeuMF (PyTorch) kết hợp song song giữa Generalized Matrix Factorization (GMF) và Multi-Layer Perceptron (MLP) để thấu hiểu nhu cầu của từng vận động viên theo thời gian thực.
+              KADY Sports luôn lắng nghe thói quen tập luyện, số đo và phong cách yêu thích để đồng hành cùng bạn từ sân tập tới giải đấu.
             </p>
           </div>
 
@@ -68,7 +66,7 @@ export default function AboutNcfShowcase() {
               return (
                 <div
                   key={arch.title}
-                  className="bg-slate-900/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-800 hover:border-indigo-500/40 transition-colors duration-200 flex flex-col justify-between"
+                  className="bg-slate-800/70 rounded-2xl p-6 border border-slate-700/80 hover:border-blue-500/40 transition-colors duration-200 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-4">
@@ -77,14 +75,14 @@ export default function AboutNcfShowcase() {
                       >
                         <Icon size={20} />
                       </div>
-                      <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700/60 uppercase tracking-wide">
+                      <span className="text-[10px] font-bold text-slate-300 px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 uppercase tracking-wide">
                         {arch.badge}
                       </span>
                     </div>
                     <h3 className="font-bold text-white text-base mb-2 text-balance">
                       {arch.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed text-pretty">
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed text-pretty">
                       {arch.desc}
                     </p>
                   </div>
@@ -93,18 +91,18 @@ export default function AboutNcfShowcase() {
             })}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div className="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
             <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+              <CheckCircle2 size={16} className="text-blue-400 shrink-0" />
               <span>
-                Dữ liệu huấn luyện được cập nhật liên tục từ tương tác thật của người dùng và đơn hàng.
+                Đội ngũ tư vấn thể thao chuyên môn hỗ trợ 7 ngày/tuần trên toàn quốc.
               </span>
             </div>
             <Link
-              href="/#ai-recommendations"
-              className="inline-flex items-center gap-1.5 font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
+              href="/goi-y"
+              className="inline-flex items-center gap-1.5 font-bold text-blue-400 hover:text-blue-300 transition-colors"
             >
-              Xem khối gợi ý NCF trên Trang chủ <ArrowRight size={14} />
+              Xem sản phẩm gợi ý trên KADY <ArrowRight size={14} />
             </Link>
           </div>
         </div>

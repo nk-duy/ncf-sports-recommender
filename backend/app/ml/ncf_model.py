@@ -51,7 +51,7 @@ class NCF(nn.Module):
         predict_vector = torch.cat([mf_vector, mlp_vector], dim=-1)
         prediction = self.predict_layer(predict_vector)
         
-        return self.sigmoid(prediction).squeeze()
+        return self.sigmoid(prediction).squeeze(-1)
 
     def get_combined_item_embeddings(self) -> torch.Tensor:
         """Trích xuất ma trận Vector nhúng sản phẩm 32D (16D GMF + 16D MLP) đã chuẩn hóa L2"""

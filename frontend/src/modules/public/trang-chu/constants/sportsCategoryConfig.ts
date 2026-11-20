@@ -82,8 +82,8 @@ export const SPORTS_CONFIG: SportMeta[] = [
       "Bộ quần áo tập gym co giãn 4 chiều, găng tay nâng tạ trợ lực cổ tay và bình lắc thể thao 750ml.",
     bannerImage:
       "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&auto=format&fit=crop&q=80",
-    colorGradient: "from-purple-600 via-violet-600 to-indigo-600",
-    accentColor: "text-purple-500",
+    colorGradient: "from-slate-800 via-slate-900 to-blue-900",
+    accentColor: "text-blue-500",
     icon: Dumbbell,
   },
 ];

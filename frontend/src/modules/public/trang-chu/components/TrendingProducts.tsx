@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Flame, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Flame, Package, Star } from "lucide-react";
 import ProductCard from "@/modules/public/san-pham/components/ProductCard";
 import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
 
@@ -44,17 +44,17 @@ const TABS: TabConfig[] = [
     id: "newest",
     label: "Hàng Mới Về",
     tag: "BỘ SƯU TẬP MỚI 2026",
-    icon: Sparkles,
-    colorClass: "text-emerald-500",
-    badgeBg: "bg-emerald-50 text-emerald-600 border-emerald-200",
+    icon: Package,
+    colorClass: "text-blue-600",
+    badgeBg: "bg-blue-50 text-blue-600 border-blue-200",
   },
   {
     id: "toprated",
     label: "Đánh Giá Cao",
     tag: "KHÁCH HÀNG KHUYÊN DÙNG",
     icon: Star,
-    colorClass: "text-amber-500",
-    badgeBg: "bg-amber-50 text-amber-600 border-amber-200",
+    colorClass: "text-slate-700",
+    badgeBg: "bg-slate-100 text-slate-800 border-slate-200",
   },
 ];
 

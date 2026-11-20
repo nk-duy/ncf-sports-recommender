@@ -1,6 +1,7 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Layers, CheckCircle2, AlertTriangle, XCircle, Sparkles, Hash } from 'lucide-react';
+import { COLOR_HEX_MAP } from '../../utils/variantMatrixHelpers';
 
 export interface ProductVariantItem {
   color?: string;
@@ -17,117 +18,16 @@ interface ProductVariantMatrixProps {
   onChangeVariants: (variants: ProductVariantItem[]) => void;
   productId?: string;
   targetTotalStock?: number;
-  onUpdateTargetStock?: (total: number) => void;
 }
-
-// Map color names to hex codes for UI display
-const COLOR_HEX_MAP: Record<string, string> = {
-  'Đen': '#111827',
-  'Trắng': '#FFFFFF',
-  'Đỏ': '#EF4444',
-  'Xanh Dương': '#2563EB',
-  'Xanh Navy': '#1E3A8A',
-  'Xanh Lá': '#10B981',
-  'Xám': '#6B7280',
-  'Vàng': '#F59E0B',
-  'Cam': '#F97316',
-  'Hồng': '#EC4899',
-  'Tím': '#8B5CF6',
-};
 
 export default function ProductVariantMatrix({
   colors,
   sizes,
   variants,
   onChangeVariants,
-  productId = 'PROD',
   targetTotalStock,
-  onUpdateTargetStock,
 }: ProductVariantMatrixProps) {
   const [bulkStock, setBulkStock] = useState<number | ''>('');
-  const [desiredTotal, setDesiredTotal] = useState<number | ''>(targetTotalStock ?? 50);
-
-  // Cập nhật desiredTotal khi targetTotalStock thay đổi từ cha
-  useEffect(() => {
-    if (targetTotalStock !== undefined && targetTotalStock > 0) {
-      setDesiredTotal(targetTotalStock);
-    }
-  }, [targetTotalStock]);
-
-  // Tự động đồng bộ ma trận tổ hợp (Colors x Sizes) khi colors hoặc sizes thay đổi
-  useEffect(() => {
-    const hasColors = colors.length > 0;
-    const hasSizes = sizes.length > 0;
-
-    if (!hasColors && !hasSizes) {
-      if (variants.length > 0) onChangeVariants([]);
-      return;
-    }
-
-    const newVariants: ProductVariantItem[] = [];
-
-    if (hasColors && hasSizes) {
-      colors.forEach(color => {
-        sizes.forEach(size => {
-          const existing = variants.find(v => v.color === color && v.size === size);
-          newVariants.push({
-            color,
-            size,
-            stock: existing !== undefined ? existing.stock : 0,
-            sku: existing?.sku || `${productId ? productId.slice(-6) : 'SKU'}-${color.slice(0, 2).toUpperCase()}-${size}`,
-            price: existing?.price,
-          });
-        });
-      });
-    } else if (hasColors) {
-      colors.forEach(color => {
-        const existing = variants.find(v => v.color === color && !v.size);
-        newVariants.push({
-          color,
-          size: '',
-          stock: existing !== undefined ? existing.stock : 0,
-          sku: existing?.sku || `${productId ? productId.slice(-6) : 'SKU'}-${color.slice(0, 2).toUpperCase()}`,
-          price: existing?.price,
-        });
-      });
-    } else if (hasSizes) {
-      sizes.forEach(size => {
-        const existing = variants.find(v => !v.color && v.size === size);
-        newVariants.push({
-          color: '',
-          size,
-          stock: existing !== undefined ? existing.stock : 0,
-          sku: existing?.sku || `${productId ? productId.slice(-6) : 'SKU'}-${size}`,
-          price: existing?.price,
-        });
-      });
-    }
-
-    // Nếu tất cả biến thể đều có stock = 0 và trước đó chưa có variant nào, tự động phân bổ targetTotalStock nếu có
-    const isFirstInit = variants.length === 0 && newVariants.length > 0;
-    if (isFirstInit && targetTotalStock && targetTotalStock > 0) {
-      const count = newVariants.length;
-      const base = Math.floor(targetTotalStock / count);
-      let remainder = targetTotalStock % count;
-      newVariants.forEach((nv) => {
-        nv.stock = base + (remainder > 0 ? 1 : 0);
-        if (remainder > 0) remainder--;
-      });
-    }
-
-    // Chỉ gọi update nếu có sự thay đổi thực sự về số lượng hoặc cấu trúc
-    const isDifferent =
-      newVariants.length !== variants.length ||
-      newVariants.some((nv, idx) => 
-        nv.color !== variants[idx]?.color || 
-        nv.size !== variants[idx]?.size ||
-        (isFirstInit && nv.stock !== variants[idx]?.stock)
-      );
-
-    if (isDifferent) {
-      onChangeVariants(newVariants);
-    }
-  }, [colors, sizes]);
 
   const handleStockChange = (index: number, newStock: number) => {
     const updated = [...variants];
@@ -148,14 +48,13 @@ export default function ProductVariantMatrix({
     onChangeVariants(updated);
   };
 
-  // Tính năng: Phân bổ đều tổng số lượng tồn kho (VD: 50 cái chia đều cho các phân loại)
-  const handleDistributeTotal = () => {
-    const target = typeof desiredTotal === 'number' ? desiredTotal : Number(desiredTotal);
-    if (isNaN(target) || target <= 0 || variants.length === 0) return;
+  // Tính năng: Phân bổ đều tổng số lượng tồn kho cho các phân loại
+  const handleDistributeTotal = (targetVal: number) => {
+    if (isNaN(targetVal) || targetVal <= 0 || variants.length === 0) return;
 
     const count = variants.length;
-    const base = Math.floor(target / count);
-    let remainder = target % count;
+    const base = Math.floor(targetVal / count);
+    let remainder = targetVal % count;
 
     const updated = variants.map(v => {
       const added = remainder > 0 ? 1 : 0;
@@ -232,7 +131,16 @@ export default function ProductVariantMatrix({
         </div>
 
         {/* Preset quick buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {targetTotalStock !== undefined && targetTotalStock > 0 && (
+            <button
+              type="button"
+              onClick={() => handleDistributeTotal(targetTotalStock)}
+              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md font-semibold text-[11px] cursor-pointer"
+            >
+              Chia đều {targetTotalStock}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => { onChangeVariants(variants.map(v => ({ ...v, stock: 10 }))); }}

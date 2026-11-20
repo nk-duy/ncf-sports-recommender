@@ -63,7 +63,7 @@ class CustomerService:
             "running": "Chạy bộ",
             "gym": "Gym",
             "camping": "Camping",
-            "football": "Bóng đá"
+            "football": "Đá bóng"
         }
         resolved_sport = sport_map.get(sport, sport)
         if resolved_sport:

@@ -24,12 +24,14 @@ export default function SportsProfileSection({
     <div id="ai-section" className="space-y-4">
       {/* Môn thể thao quan tâm (Multi-select) */}
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-semibold text-gray-900 flex items-center justify-between">
-          <span>Môn thể thao quan tâm (chọn nhiều)</span>
-          <span className="text-blue-600 text-xs font-medium">
-            Hệ thống AI sẽ ưu tiên gợi ý theo các môn này
+        <div className="flex flex-col gap-0.5">
+          <label className="text-sm font-semibold text-gray-900">
+            Môn thể thao quan tâm (chọn nhiều)
+          </label>
+          <span className="text-slate-500 text-xs">
+            Chọn bộ môn bạn thường tập luyện để cá nhân hóa trải nghiệm mua sắm
           </span>
-        </label>
+        </div>
         <div className="flex flex-wrap gap-2 pt-1">
           {SPORTS_OPTIONS.map((sport) => {
             const isSelected = interestedSports.includes(sport.name);

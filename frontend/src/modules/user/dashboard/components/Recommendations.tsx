@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { ThumbsUp, ArrowRight } from "lucide-react";
 import { useAuthStore } from "@/shared/store/authStore";
+import { useAiXRayStore } from "@/shared/store/aiXRayStore";
+import { useHydrated } from "@/shared/hooks/useHydrated";
 import {
   DEFAULT_RECOMMENDED_SPORT_IMG,
   type UserRecommendedProduct,
@@ -11,6 +13,8 @@ import {
 
 export default function AccountRecommendations() {
   const { token, isAuthenticated } = useAuthStore();
+  const isXRayActive = useAiXRayStore((s) => s.isXRayActive);
+  const mounted = useHydrated();
   const [recommendations, setRecommendations] = useState<UserRecommendedProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -76,9 +80,9 @@ export default function AccountRecommendations() {
             </div>
           ) : (
             recommendations.map((product, idx) => {
-              const matchPercentage = product.match_score
-                ? Math.round(product.match_score * 100)
-                : 98 - idx * 4;
+              const matchPercentage =
+                product.ai_explanation?.match_percent ??
+                (product.match_score ? Math.round(product.match_score * 100) : null);
               const imageUrl =
                 product.image_url || product.image || DEFAULT_RECOMMENDED_SPORT_IMG;
 
@@ -107,12 +111,14 @@ export default function AccountRecommendations() {
                       <div className="font-bold text-gray-900 text-sm mb-1">
                         {Number(product.price || 0).toLocaleString("vi-VN")} đ
                       </div>
-                      <div className="text-xs text-gray-500">
-                        Độ phù hợp:{" "}
-                        <span className="font-semibold text-green-600">
-                          {matchPercentage}%
-                        </span>
-                      </div>
+                      {mounted && isXRayActive && matchPercentage !== null && (
+                        <div className="text-xs text-slate-500">
+                          Độ phù hợp:{" "}
+                          <span className="font-semibold text-blue-600">
+                            {matchPercentage}%
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>

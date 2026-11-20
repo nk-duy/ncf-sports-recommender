@@ -84,8 +84,8 @@ const SPORTS_LIST: SportQuickItem[] = [
     name: 'Gym & Thể Hình',
     sportType: 'Gym & Fitness',
     icon: Dumbbell,
-    colorClass: 'text-purple-600',
-    bgGradient: 'from-purple-50 to-indigo-50 border-purple-200/80',
+    colorClass: 'text-slate-700',
+    bgGradient: 'from-slate-50 to-slate-100 border-slate-200',
     slogan: 'Đồ tập co giãn, dây kháng lực',
   },
   {

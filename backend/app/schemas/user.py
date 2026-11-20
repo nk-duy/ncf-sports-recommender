@@ -64,3 +64,22 @@ class SocialLoginRequest(BaseModel):
     full_name: Optional[str] = None
     avatar_url: Optional[str] = None
     interested_sports: Optional[list[str]] = []
+
+class SendOtpRequest(BaseModel):
+    email: EmailStr
+    full_name: Optional[str] = None
+    interested_sports: Optional[list[str]] = []
+
+class SendOtpResponse(BaseModel):
+    status: str
+    message: str
+    email: EmailStr
+    expires_in_seconds: int = 300
+    email_sent: bool = False
+    dev_otp: Optional[str] = None
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    full_name: Optional[str] = None
+    interested_sports: Optional[list[str]] = None

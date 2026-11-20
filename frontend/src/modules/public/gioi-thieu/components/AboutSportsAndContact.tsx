@@ -20,7 +20,7 @@ export default function AboutSportsAndContact() {
               href="/san-pham"
               className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer transition-colors"
             >
-              Xem toàn bộ 551+ sản phẩm <ArrowRight size={16} />
+              Xem toàn bộ 633+ sản phẩm <ArrowRight size={16} />
             </Link>
           </div>
 
@@ -93,7 +93,7 @@ export default function AboutSportsAndContact() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Mail size={18} className="text-purple-400 shrink-0" />
+                  <Mail size={18} className="text-blue-400 shrink-0" />
                   <span>
                     Email:{' '}
                     <a href="mailto:support@kady.vn" className="text-blue-300 hover:underline">

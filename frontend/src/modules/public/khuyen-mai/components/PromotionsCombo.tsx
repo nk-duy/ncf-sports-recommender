@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Gift, Sparkles } from "lucide-react";
+import { Check, Gift, Tag } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 import { PROMO_FALLBACK_IMG } from "../types";
 
@@ -36,7 +36,7 @@ const COMBOS = [
     comboPrice: "450.000đ",
     save: "Tiết kiệm 240k",
     badge: "GIÁ SỐC",
-    borderColor: "hover:border-purple-400",
+    borderColor: "hover:border-blue-400",
     image: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=80",
   },
 ];
@@ -64,7 +64,7 @@ export default function PromotionsCombo() {
 
         <div className="relative z-10 max-w-xl">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-50 text-red-600 text-xs font-bold uppercase tracking-wider mb-2 border border-red-100">
-            <Sparkles className="w-3.5 h-3.5 text-red-600" />
+            <Tag className="w-3.5 h-3.5 text-red-600" />
             Gói combo tiết kiệm đến 40%
           </div>
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-tight text-slate-900 leading-snug">

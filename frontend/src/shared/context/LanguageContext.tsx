@@ -36,14 +36,14 @@ export const dictionary: Translations = {
     en: 'Best Sports Gear For You'
   },
   'header.featured_desc': {
-    vi: 'Hệ thống phân tích nhu cầu và dáng vóc để đề xuất sản phẩm tối ưu hiệu suất.',
-    en: 'NCF AI analyzes your athletic needs and sizing for peak performance.'
+    vi: 'Tuyển chọn trang phục và dụng cụ phù hợp nhất với bộ môn của bạn.',
+    en: 'Curated apparel and equipment tailored to your sport.'
   },
   'header.view_for_you': { vi: 'Xem gợi ý dành riêng', en: 'View personalized gear' },
   'header.view_all_products': { vi: 'XEM TẤT CẢ SẢN PHẨM', en: 'VIEW ALL PRODUCTS' },
   'header.authentic_badge': {
-    vi: 'Hơn 570+ sản phẩm thể thao chính hãng sẵn sàng giao hỏa tốc',
-    en: 'Over 570+ authentic sports products ready for express delivery'
+    vi: 'Hơn 633+ sản phẩm thể thao chính hãng sẵn sàng giao hỏa tốc',
+    en: 'Over 633+ authentic sports products ready for express delivery'
   },
   'header.coupon_note': {
     vi: '🎁 Mã KADY10 giảm 10% đơn đầu',

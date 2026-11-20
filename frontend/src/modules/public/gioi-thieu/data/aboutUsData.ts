@@ -3,8 +3,8 @@ import {
   Truck,
   RefreshCw,
   PackageCheck,
-  BrainCircuit,
-  Zap,
+  Award,
+  Ruler,
   Layers,
 } from 'lucide-react';
 
@@ -21,31 +21,31 @@ export const BRAND_PARTNERS = [
 
 export const SYSTEM_METRICS = [
   {
-    value: '551+',
+    value: '633+',
     label: 'Sản Phẩm Thể Thao',
     sub: 'Đầy đủ size, màu sắc & chứng nhận chính hãng',
     color: 'text-slate-900',
     badge: 'Kho hàng thật',
   },
   {
-    value: '29',
-    label: 'Môn Thể Thao & Phụ Kiện',
-    sub: 'Pickleball, Cầu lông, Running, Bóng đá...',
+    value: '8',
+    label: 'Bộ Môn Trọng Điểm',
+    sub: 'Đá bóng, Cầu lông, Running, Pickleball, Gym...',
     color: 'text-blue-600',
-    badge: 'Phân loại chuyên sâu',
+    badge: 'Danh mục chuyên sâu',
   },
   {
-    value: 'NeuMF',
-    label: 'Gợi Ý AI Thông Minh',
-    sub: 'PyTorch Neural Collaborative Filtering (NCF)',
-    color: 'text-indigo-600',
-    badge: 'Học sâu thời gian thực',
+    value: '24/7',
+    label: 'Tư Vấn Chọn Size',
+    sub: 'Hỗ trợ chọn form dáng chuẩn thể trạng Việt Nam',
+    color: 'text-slate-800',
+    badge: 'Chăm sóc tận tâm',
   },
   {
     value: '500.000 ₫',
     label: 'Freeship Toàn Quốc',
     sub: 'Miễn phí giao hàng & Đồng kiểm khi nhận',
-    color: 'text-emerald-600',
+    color: 'text-slate-800',
     badge: 'Chính sách minh bạch',
   },
 ];
@@ -61,43 +61,43 @@ export const CORE_VALUES = [
     icon: RefreshCw,
     title: 'Đổi Trả Tận Nhà 30 Ngày',
     desc: 'Mua đồ thể thao quan trọng nhất là vừa vặn. Khách thử không vừa size, shipper mang size mới tới tận nơi đổi cho bạn, không cần mất công ra bưu cục.',
-    color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    color: 'text-slate-800 bg-slate-100 border-slate-200',
   },
   {
     icon: PackageCheck,
     title: 'Đồng Kiểm Khi Nhận Hàng',
     desc: 'Bạn luôn được quyền mở hộp kiểm tra đúng mẫu mã, đúng size và kiểm tra độ hoàn thiện chất liệu trước khi thanh toán tiền cho nhân viên giao vận.',
-    color: 'text-purple-600 bg-purple-50 border-purple-100',
+    color: 'text-blue-600 bg-blue-50 border-blue-100',
   },
   {
     icon: Truck,
     title: 'Giao Nhanh 24 - 48H Toàn Quốc',
     desc: 'Đơn hàng được đóng hộp chống sốc 3 lớp cẩn thận. Miễn phí vận chuyển cho mọi đơn hàng từ 500.000đ tới tất cả 63 tỉnh thành trên toàn quốc.',
-    color: 'text-amber-600 bg-amber-50 border-amber-100',
+    color: 'text-slate-800 bg-slate-100 border-slate-200',
   },
 ];
 
 export const AI_ARCHITECTURE_HIGHLIGHTS = [
   {
     icon: Layers,
-    title: 'Generalized Matrix Factorization (GMF)',
-    desc: 'Trích xuất và nhân chập các vector đặc trưng tiềm ẩn (latent vectors) giữa người dùng và sản phẩm thể thao, mô hình hóa mối quan hệ tương đồng tuyến tính.',
-    badge: 'Linear Interaction',
-    color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+    title: 'Tuyển Chọn Theo Bộ Môn',
+    desc: 'Phân loại rõ ràng trang phục, giày thi đấu và phụ kiện chuyên dụng cho từng bộ môn từ phong trào đến bán chuyên.',
+    badge: '8 Bộ Môn',
+    color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   },
   {
-    icon: BrainCircuit,
-    title: 'Multi-Layer Perceptron (MLP)',
-    desc: 'Học sâu qua mạng neuron nhiều tầng phi tuyến tính để nắm bắt sở thích thể thao phức tạp, thói quen vận động và mối liên kết giữa các dòng sản phẩm.',
-    badge: 'Deep Non-linear Modeling',
-    color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+    icon: Ruler,
+    title: 'Chuẩn Size & Form Dáng',
+    desc: 'Bảng quy đổi kích cỡ giày, quần áo và thông số vợt chi tiết giúp bạn tự tin đặt mua trực tuyến không lo chật hay rộng.',
+    badge: 'Tư Vấn Size',
+    color: 'text-slate-200 bg-slate-700/60 border-slate-600',
   },
   {
-    icon: Zap,
-    title: 'Suy Luận Thời Gian Thực (< 15ms)',
-    desc: 'Tích hợp trực tiếp với backend FastAPI bất đồng bộ và MongoDB, tự động xếp hạng danh mục sản phẩm phù hợp nhất ngay khi người dùng tương tác.',
-    badge: 'Real-time Async Inference',
-    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+    icon: Award,
+    title: 'Bảo Hành & Đổi Trả Linh Hoạt',
+    desc: 'Chế độ bảo hành sản phẩm rõ ràng lên đến 12 tháng cùng chính sách đổi size tận nhà miễn phí trong 30 ngày.',
+    badge: 'Cam Kết KADY',
+    color: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
   },
 ];
 
@@ -120,6 +120,6 @@ export const SPORT_CATEGORIES = [
   {
     name: 'Bóng đá & Thể thao đồng đội',
     desc: 'Giày sân cỏ nhân tạo, phụ kiện bảo hộ đầu gối, găng tay & bình nước',
-    path: '/san-pham?sport_type=Bóng đá',
+    path: '/san-pham?sport_type=Đá bóng',
   },
 ];

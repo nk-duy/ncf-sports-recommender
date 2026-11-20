@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Percent, Sparkles, Truck, Users } from "lucide-react";
+import { Check, Copy, Percent, Tag, Truck, Users } from "lucide-react";
 import type { VoucherItem } from "../types";
 
 function formatVoucherCurrency(val: number): string {
@@ -32,12 +32,12 @@ function getVoucherStyle(v: VoucherItem) {
   }
   if (v.code.includes("MEGA") || v.discount_value >= 100000) {
     return {
-      badgeBg: "bg-purple-100 text-purple-700 border-purple-200",
+      badgeBg: "bg-blue-100 text-blue-700 border-blue-200",
       tag: "SIÊU VOUCHER",
-      accent: "from-purple-600 to-indigo-600",
-      btnColor: "bg-purple-600 hover:bg-purple-700",
-      icon: Sparkles,
-      iconColor: "text-purple-500",
+      accent: "from-blue-600 to-slate-800",
+      btnColor: "bg-blue-600 hover:bg-blue-700",
+      icon: Tag,
+      iconColor: "text-blue-600",
     };
   }
   return {

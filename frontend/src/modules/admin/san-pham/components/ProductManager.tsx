@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import ProductFormModal from './ProductFormModal';
 import ProductToolbar from './ProductToolbar';
@@ -11,9 +11,11 @@ import BulkActionsBar from './BulkActionsBar';
 import BulkDiscountModal from './BulkDiscountModal';
 import ProductDetailModal from './ProductDetailModal';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import type { AdminProductItem } from '../types';
 
 export default function ProductManager() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<AdminProductItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Bulk selection states
@@ -22,24 +24,45 @@ export default function ProductManager() {
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   // Filter & Search states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
-  const [selectedStockStatus, setSelectedStockStatus] = useState<string>('');
+  const [searchQuery, setSearchQueryState] = useState('');
+  const [selectedCategory, setSelectedCategoryState] = useState<string>('');
+  const [selectedBrand, setSelectedBrandState] = useState<string>('');
+  const [selectedStockStatus, setSelectedStockStatusState] = useState<string>('');
   const [availableBrands, setAvailableBrands] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'all' | 'promo' | 'hidden' | 'trash'>('all');
+  const [activeTab, setActiveTabState] = useState<'all' | 'promo' | 'hidden' | 'trash'>('all');
 
   // Pagination & Sorting states
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const itemsPerPage = 10;
 
+  const setSearchQuery = (q: string) => {
+    setSearchQueryState(q);
+    setCurrentPage(1);
+  };
+  const setSelectedCategory = (cat: string) => {
+    setSelectedCategoryState(cat);
+    setCurrentPage(1);
+  };
+  const setSelectedBrand = (brand: string) => {
+    setSelectedBrandState(brand);
+    setCurrentPage(1);
+  };
+  const setSelectedStockStatus = (status: string) => {
+    setSelectedStockStatusState(status);
+    setCurrentPage(1);
+  };
+  const setActiveTab = (tab: 'all' | 'promo' | 'hidden' | 'trash') => {
+    setActiveTabState(tab);
+    setCurrentPage(1);
+  };
+
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any | null>(null);
-  const [viewingProduct, setViewingProduct] = useState<any | null>(null);
+  const [editingProduct, setEditingProduct] = useState<AdminProductItem | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<AdminProductItem | null>(null);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
-  const [selectedProductForDiscount, setSelectedProductForDiscount] = useState<any | null>(null);
+  const [selectedProductForDiscount, setSelectedProductForDiscount] = useState<AdminProductItem | null>(null);
   const [discountValue, setDiscountValue] = useState<number>(0);
   const [discountEndDate, setDiscountEndDate] = useState<string>('');
   const [confirmModal, setConfirmModal] = useState<{
@@ -54,18 +77,9 @@ export default function ProductManager() {
     onConfirm?: () => void;
   } | null>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  const API_URL = resolveApiBaseUrl();
 
-  useEffect(() => {
-    fetchProducts();
-    fetchBrands();
-  }, []);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory, selectedBrand, selectedStockStatus, activeTab]);
-
-  const fetchBrands = async () => {
+  const fetchBrands = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/attributes`);
       if (res.ok) {
@@ -78,20 +92,26 @@ export default function ProductManager() {
     } catch { }
     const saved = localStorage.getItem('admin_brands');
     if (saved) setAvailableBrands(JSON.parse(saved));
-  };
+  }, [API_URL]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/products?limit=1000&include_hidden=true&include_deleted=true`);
       const data = await res.json();
-      setProducts(data);
-    } catch (error) {
+      setProducts(Array.isArray(data) ? data : []);
+    } catch {
       notifications.show({ title: 'Lỗi', message: 'Lỗi tải danh sách sản phẩm', color: 'red' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProducts();
+    fetchBrands();
+  }, [fetchProducts, fetchBrands]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -135,17 +155,17 @@ export default function ProductManager() {
               const err = await res.json().catch(() => null);
               notifications.show({ title: 'Không thể xóa', message: err?.detail || 'Có lỗi xảy ra khi xóa', color: 'red' });
             }
-          } catch (error) {
+          } catch {
             notifications.show({ title: 'Lỗi', message: 'Lỗi kết nối máy chủ', color: 'red' });
           }
         }
       });
-    } catch (error) {
+    } catch {
       notifications.show({ title: 'Lỗi', message: 'Không thể kiểm tra ràng buộc dữ liệu sản phẩm', color: 'red' });
     }
   };
 
-  const handleToggleVisibility = async (product: any) => {
+  const handleToggleVisibility = async (product: AdminProductItem) => {
     try {
       const newStatus = !product.is_hidden;
       const res = await fetch(`${API_URL}/products/${product.product_id}`, {
@@ -162,7 +182,7 @@ export default function ProductManager() {
     }
   };
 
-  const handleSoftDelete = async (product: any) => {
+  const handleSoftDelete = async (product: AdminProductItem) => {
     try {
       const res = await fetch(`${API_URL}/products/${product.product_id}`, {
         method: 'PUT',
@@ -178,7 +198,7 @@ export default function ProductManager() {
     }
   };
 
-  const handleRestore = async (product: any) => {
+  const handleRestore = async (product: AdminProductItem) => {
     try {
       const res = await fetch(`${API_URL}/products/${product.product_id}`, {
         method: 'PUT',
@@ -219,7 +239,7 @@ export default function ProductManager() {
     }
   };
 
-  const openDiscountModal = (product: any) => {
+  const openDiscountModal = (product: AdminProductItem) => {
     setSelectedProductForDiscount(product);
     setDiscountValue(product.discount_percent || 0);
     setDiscountEndDate(product.discount_end_date ? product.discount_end_date.substring(0, 16) : '');
@@ -251,16 +271,18 @@ export default function ProductManager() {
   const allCategories = React.useMemo(() => {
     const cats = new Set<string>();
     products.forEach(p => {
-      const rawTags = [p.product_type, p.sport_type, ...(p.category || [])];
-      rawTags.filter(Boolean).forEach(t => cats.add(mapTag(t)));
+      const catArr = Array.isArray(p.category) ? p.category : p.category ? [p.category] : [];
+      const rawTags = [p.product_type, p.sport_type, ...catArr];
+      rawTags.filter((t): t is string => Boolean(t)).forEach(t => cats.add(mapTag(t)));
     });
     return Array.from(cats).sort();
   }, [products]);
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.product_id.toLowerCase().includes(searchQuery.toLowerCase());
-    const tags = [p.product_type, p.sport_type, ...(p.category || [])].filter(Boolean).map(mapTag);
+    const matchesSearch = (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.product_id || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const catArr = Array.isArray(p.category) ? p.category : p.category ? [p.category] : [];
+    const tags = [p.product_type, p.sport_type, ...catArr].filter((t): t is string => Boolean(t)).map(mapTag);
     const matchesCategory = selectedCategory === '' || tags.includes(selectedCategory);
     const matchesBrand = selectedBrand === '' 
       ? true 
@@ -276,18 +298,18 @@ export default function ProductManager() {
 
     let matchesTab = false;
     if (activeTab === 'all') matchesTab = !p.is_deleted && !p.is_hidden;
-    else if (activeTab === 'promo') matchesTab = !p.is_deleted && !p.is_hidden && p.discount_percent > 0;
-    else if (activeTab === 'hidden') matchesTab = !p.is_deleted && p.is_hidden;
-    else if (activeTab === 'trash') matchesTab = p.is_deleted;
+    else if (activeTab === 'promo') matchesTab = !p.is_deleted && !p.is_hidden && (p.discount_percent || 0) > 0;
+    else if (activeTab === 'hidden') matchesTab = !p.is_deleted && Boolean(p.is_hidden);
+    else if (activeTab === 'trash') matchesTab = Boolean(p.is_deleted);
 
     return matchesSearch && matchesCategory && matchesBrand && matchesStock && matchesTab;
   });
 
-  let sortableProducts = [...filteredProducts];
+  const sortableProducts = [...filteredProducts];
   if (sortConfig !== null) {
     sortableProducts.sort((a, b) => {
-      let aVal = a[sortConfig.key];
-      let bVal = b[sortConfig.key];
+      let aVal = (a as unknown as Record<string, unknown>)[sortConfig.key] as string | number;
+      let bVal = (b as unknown as Record<string, unknown>)[sortConfig.key] as string | number;
       if (sortConfig.key === 'stock') {
         aVal = a.stock !== undefined ? a.stock : 100;
         bVal = b.stock !== undefined ? b.stock : 100;
@@ -306,9 +328,10 @@ export default function ProductManager() {
     setSortConfig({ key, direction });
   };
 
-  const getDisplayTags = (product: any) => {
-    const rawTags = [product.product_type, product.sport_type, ...(product.category || [])];
-    const mappedTags = rawTags.filter(Boolean).map(mapTag);
+  const getDisplayTags = (product: AdminProductItem) => {
+    const catArr = Array.isArray(product.category) ? product.category : product.category ? [product.category] : [];
+    const rawTags = [product.product_type, product.sport_type, ...catArr];
+    const mappedTags = rawTags.filter((t): t is string => Boolean(t)).map(mapTag);
     return Array.from(new Set(mappedTags)).slice(0, 3);
   };
 
@@ -319,7 +342,7 @@ export default function ProductManager() {
     );
   };
 
-  const handleToggleSelectAll = (visibleProducts: any[]) => {
+  const handleToggleSelectAll = (visibleProducts: AdminProductItem[]) => {
     const visibleIds = visibleProducts.map(p => p.product_id);
     const allSelected = visibleIds.every(id => selectedProductIds.includes(id));
     if (allSelected) {
@@ -671,26 +694,6 @@ export default function ProductManager() {
     });
   };
 
-  if (isModalOpen) {
-    return (
-      <ProductFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={(savedProduct?: any) => {
-          if (savedProduct && !editingProduct) {
-            setProducts(prev => [savedProduct, ...prev.filter(p => p.product_id !== savedProduct.product_id)]);
-          }
-          fetchProducts();
-          setIsModalOpen(false);
-          setActiveTab('all');
-          setCurrentPage(1);
-          setSortConfig(null);
-        }}
-        editingProduct={editingProduct}
-      />
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* 1. Toolbar & Filters */}
@@ -762,7 +765,37 @@ export default function ProductManager() {
         setCurrentPage={setCurrentPage}
       />
 
-      {/* 4. Product Detail Modal (Khi click vào tên / ảnh sản phẩm) */}
+      {/* 4. Product Form Modal (Thêm / Chỉnh sửa sản phẩm) */}
+      <ProductFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={(savedProduct?: AdminProductItem) => {
+          if (savedProduct?.brand) {
+            const newBrand = savedProduct.brand.trim();
+            if (newBrand) {
+              setAvailableBrands(prev =>
+                prev.some(b => b.toLowerCase() === newBrand.toLowerCase()) ? prev : [...prev, newBrand]
+              );
+            }
+          }
+          if (!editingProduct) {
+            if (savedProduct) {
+              setProducts(prev => [savedProduct, ...prev.filter(p => p.product_id !== savedProduct.product_id)]);
+            }
+            handleResetFilters();
+            setActiveTab('all');
+            setCurrentPage(1);
+            setSortConfig(null);
+          } else if (savedProduct) {
+            setProducts(prev => prev.map(p => p.product_id === savedProduct.product_id ? savedProduct : p));
+          }
+          fetchProducts();
+          setIsModalOpen(false);
+        }}
+        editingProduct={editingProduct}
+      />
+
+      {/* 5. Product Detail Modal (Khi click vào tên / ảnh sản phẩm) */}
       <ProductDetailModal
         isOpen={!!viewingProduct}
         product={viewingProduct}
@@ -776,7 +809,7 @@ export default function ProductManager() {
         formatPrice={formatPrice}
       />
 
-      {/* 5. Discount Modal */}
+      {/* 6. Discount Modal */}
       <ProductDiscountModal
         isOpen={isDiscountModalOpen}
         onClose={() => setIsDiscountModalOpen(false)}
@@ -788,13 +821,13 @@ export default function ProductManager() {
         onSave={handleUpdateDiscount}
       />
 
-      {/* 6. Protection & Confirm Delete Modal */}
+      {/* 7. Protection & Confirm Delete Modal */}
       <ProductConfirmModal
         modal={confirmModal}
         onClose={() => setConfirmModal(null)}
       />
 
-      {/* 7. Bulk Discount Modal */}
+      {/* 8. Bulk Discount Modal */}
       <BulkDiscountModal
         isOpen={isBulkDiscountOpen}
         onClose={() => setIsBulkDiscountOpen(false)}

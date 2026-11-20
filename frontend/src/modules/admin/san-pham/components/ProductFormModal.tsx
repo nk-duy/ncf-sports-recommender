@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { X, Award, Tag } from "lucide-react";
 import { notifications } from "@mantine/notifications";
 
@@ -8,14 +8,17 @@ import ProductColorSelector, { ColorOption } from "./form/ProductColorSelector";
 import ProductSizeSelector from "./form/ProductSizeSelector";
 import ProductImageUploader from "./form/ProductImageUploader";
 import ProductVariantMatrix, { ProductVariantItem } from "./form/ProductVariantMatrix";
+import { defaultMenu } from "@/modules/admin/danh-muc/data/defaultMenu";
 import { getAuthHeaders } from "@/shared/lib/authHeader";
 import { resolveApiBaseUrl } from "@/shared/lib/apiUrl";
+import type { AdminProductItem, MenuCategoryOption, MenuProductTypeOption, MenuSportOption } from "../types";
+import { syncVariantsMatrix } from "../utils/variantMatrixHelpers";
 
 interface ProductFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (savedProduct?: any) => void;
-  editingProduct?: any | null;
+  onSuccess: (savedProduct?: AdminProductItem) => void;
+  editingProduct?: AdminProductItem | null;
 }
 
 const DEFAULT_BRANDS = [
@@ -36,6 +39,52 @@ const DEFAULT_COLORS: ColorOption[] = [
   { name: 'Tím', hex: '#8B5CF6' },
 ];
 
+const DEFAULT_SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
+const DEFAULT_CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+
+function getSubCategoriesFor(
+  menu: MenuSportOption[],
+  sportType: string,
+  productType: string
+): string[] {
+  const effectiveMenu = menu && menu.length > 0 ? menu : defaultMenu;
+  const sportObj = effectiveMenu.find((s) => s.sport_type === sportType);
+  const ptObj = sportObj?.product_types?.find(
+    (pt: MenuProductTypeOption) => pt.product_type === productType
+  );
+  const raw = ptObj?.categories || [];
+  return raw
+    .map((item: string | MenuCategoryOption) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object' && item.category && !item.is_hidden) {
+        return item.category;
+      }
+      return null;
+    })
+    .filter(Boolean) as string[];
+}
+
+function filterCompatibleSizes(
+  sizes: string[],
+  nextProductType: string,
+  shoeSizes: string[],
+  clothingSizes: string[]
+): string[] {
+  if (sizes.length === 0) return sizes;
+  const shoeSet = new Set(shoeSizes);
+  const clothingSet = new Set(clothingSizes);
+  if (nextProductType === 'Giày dép') {
+    return sizes.filter((s) => !clothingSet.has(s));
+  }
+  if (nextProductType === 'Quần áo') {
+    return sizes.filter((s) => clothingSet.has(s));
+  }
+  if (nextProductType === 'Thiết bị') {
+    return sizes.filter((s) => !shoeSet.has(s) && !clothingSet.has(s));
+  }
+  return sizes;
+}
+
 export default function ProductFormModal({ isOpen, onClose, onSuccess, editingProduct }: ProductFormModalProps) {
   const [formData, setFormData] = useState({
     product_id: "",
@@ -43,13 +92,13 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     price: 0,
     image_url: "",
     stock: 0,
-    rating: 0,
+    rating: 5.0,
     reviews_count: 0,
     category: [] as string[],
     brand: "",
     gender: "Unisex",
-    product_type: "",
-    sport_type: "",
+    product_type: "Quần áo",
+    sport_type: "Đá bóng",
     sizes: [] as string[],
     colors: [] as string[],
     variants: [] as ProductVariantItem[],
@@ -58,28 +107,26 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
   });
 
   const [selectedGenders, setSelectedGenders] = useState<string[]>(['Unisex']);
-  const [displayPrice, setDisplayPrice] = useState<string>('0');
   const [isPriceFocused, setIsPriceFocused] = useState<boolean>(false);
+  const [isStockFocused, setIsStockFocused] = useState<boolean>(false);
+  const [hasManualVariantEdit, setHasManualVariantEdit] = useState<boolean>(false);
   const [availableBrands, setAvailableBrands] = useState<string[]>(DEFAULT_BRANDS);
   const [availableColors, setAvailableColors] = useState<ColorOption[]>(DEFAULT_COLORS);
-  const [availableShoeSizes, setAvailableShoeSizes] = useState<string[]>([]);
-  const [availableClothingSizes, setAvailableClothingSizes] = useState<string[]>([]);
+  const [availableShoeSizes, setAvailableShoeSizes] = useState<string[]>(DEFAULT_SHOE_SIZES);
+  const [availableClothingSizes, setAvailableClothingSizes] = useState<string[]>(DEFAULT_CLOTHING_SIZES);
   const [availableSportSpecs, setAvailableSportSpecs] = useState<string[]>([]);
-  const [menuSports, setMenuSports] = useState<any[]>([]);
+  const [menuSports, setMenuSports] = useState<MenuSportOption[]>(defaultMenu);
+  const menuSportsRef = React.useRef<MenuSportOption[]>(defaultMenu);
   const [activeSizeCategory, setActiveSizeCategory] = useState<'shoe' | 'clothing' | 'spec'>('clothing');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchAttributes();
-    fetchMenuData();
-  }, []);
-
-  const fetchMenuData = async () => {
+  const fetchMenuData = useCallback(async () => {
     try {
       const res = await fetch(`${resolveApiBaseUrl()}/menu`);
       if (res.ok) {
         const data = await res.json();
-        if (data && data.length > 0) {
+        if (Array.isArray(data) && data.length > 0) {
+          menuSportsRef.current = data;
           setMenuSports(data);
           return;
         }
@@ -87,17 +134,32 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     } catch {
       console.warn("Could not fetch menu from API");
     }
-  };
+    const savedMenu = localStorage.getItem('admin_mega_menu');
+    if (savedMenu) {
+      try {
+        const parsed = JSON.parse(savedMenu);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          menuSportsRef.current = parsed;
+          setMenuSports(parsed);
+          return;
+        }
+      } catch {
+        // Fallback sang defaultMenu
+      }
+    }
+    menuSportsRef.current = defaultMenu;
+    setMenuSports(defaultMenu);
+  }, []);
 
-  const fetchAttributes = async () => {
+  const fetchAttributes = useCallback(async () => {
     try {
       const res = await fetch(`${resolveApiBaseUrl()}/attributes`);
       if (res.ok) {
         const data = await res.json();
         setAvailableBrands(data.brands || DEFAULT_BRANDS);
         setAvailableColors(data.colors || DEFAULT_COLORS);
-        setAvailableShoeSizes(data.shoe_sizes || ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']);
-        setAvailableClothingSizes(data.clothing_sizes || ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']);
+        setAvailableShoeSizes(data.shoe_sizes || DEFAULT_SHOE_SIZES);
+        setAvailableClothingSizes(data.clothing_sizes || DEFAULT_CLOTHING_SIZES);
         setAvailableSportSpecs(data.sport_specs || []);
         return;
       }
@@ -115,36 +177,69 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
     if (savedClothes) setAvailableClothingSizes(JSON.parse(savedClothes));
     const savedSpecs = localStorage.getItem('admin_sport_specs');
     if (savedSpecs) setAvailableSportSpecs(JSON.parse(savedSpecs));
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAttributes();
+    fetchMenuData();
+  }, [fetchAttributes, fetchMenuData]);
+
+  useEffect(() => {
+    if (!isOpen) return;
     if (editingProduct) {
       const rawGender = editingProduct.gender || "Unisex";
       const parsedGenders = typeof rawGender === 'string'
         ? rawGender.split(',').map(s => s.trim()).filter(Boolean)
         : (Array.isArray(rawGender) ? rawGender : ['Unisex']);
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedGenders(parsedGenders.length > 0 ? parsedGenders : ['Unisex']);
+      setIsPriceFocused(false);
+      setIsStockFocused(false);
 
       const initPrice = editingProduct.price || 0;
-      setDisplayPrice(initPrice > 0 ? initPrice.toLocaleString('vi-VN') : '0');
+      const initStock = editingProduct.stock !== undefined ? editingProduct.stock : 100;
+      const initColors = Array.isArray(editingProduct.colors)
+        ? editingProduct.colors
+        : (editingProduct.colors ? [editingProduct.colors] : []);
+      const initSizes = Array.isArray(editingProduct.sizes)
+        ? editingProduct.sizes
+        : (editingProduct.sizes ? [editingProduct.sizes] : []);
+      const rawVariants = Array.isArray(editingProduct.variants) ? editingProduct.variants : [];
+      const syncedVariants =
+        initColors.length > 0 || initSizes.length > 0
+          ? syncVariantsMatrix(initColors, initSizes, rawVariants, editingProduct.product_id, initStock)
+          : rawVariants;
+
+      setHasManualVariantEdit(rawVariants.length > 0);
+
+      const rawCategories = Array.isArray(editingProduct.category)
+        ? editingProduct.category
+        : (editingProduct.category ? [editingProduct.category] : []);
+      const initCategories =
+        editingProduct.sub_category && !rawCategories.includes(editingProduct.sub_category)
+          ? [editingProduct.sub_category, ...rawCategories]
+          : rawCategories;
 
       setFormData({
         product_id: editingProduct.product_id || "",
         name: editingProduct.name || "",
         price: initPrice,
         image_url: editingProduct.image_url || "",
-        stock: editingProduct.stock !== undefined ? editingProduct.stock : 100,
-        rating: editingProduct.rating !== undefined ? editingProduct.rating : 0,
+        stock: syncedVariants.length > 0
+          ? syncedVariants.reduce((sum, v) => sum + (v.stock || 0), 0)
+          : initStock,
+        rating: editingProduct.rating !== undefined && editingProduct.rating > 0 ? editingProduct.rating : 5.0,
         reviews_count: editingProduct.reviews_count !== undefined ? editingProduct.reviews_count : 0,
         brand: editingProduct.brand || "",
         gender: parsedGenders.join(', ') || "Unisex",
-        product_type: editingProduct.product_type || "",
-        sport_type: editingProduct.sport_type || "",
-        category: Array.isArray(editingProduct.category) ? editingProduct.category : (editingProduct.category ? [editingProduct.category] : []),
-        sizes: Array.isArray(editingProduct.sizes) ? editingProduct.sizes : (editingProduct.sizes ? [editingProduct.sizes] : []),
-        colors: Array.isArray(editingProduct.colors) ? editingProduct.colors : (editingProduct.colors ? [editingProduct.colors] : []),
-        variants: Array.isArray(editingProduct.variants) ? editingProduct.variants : [],
+        product_type: editingProduct.product_type || "Quần áo",
+        sport_type: editingProduct.sport_type || "Đá bóng",
+        category: initCategories,
+        sizes: initSizes,
+        colors: initColors,
+        variants: syncedVariants,
         description: editingProduct.description || "",
         images: Array.isArray(editingProduct.images) && editingProduct.images.length > 0
           ? editingProduct.images
@@ -156,21 +251,27 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
       else setActiveSizeCategory('clothing');
     } else {
       setSelectedGenders(['Unisex']);
-      setDisplayPrice('0');
+      setIsPriceFocused(false);
+      setIsStockFocused(false);
+      setHasManualVariantEdit(false);
+      setActiveSizeCategory('clothing');
       const randomSku = `KADY-${Math.floor(100000 + Math.random() * 900000)}`;
+      const defaultSport = "Đá bóng";
+      const defaultPT = "Quần áo";
+      const defaultSubCats = getSubCategoriesFor(menuSportsRef.current, defaultSport, defaultPT);
       setFormData({
         product_id: randomSku,
         name: "",
         price: 0,
         image_url: "",
         stock: 0,
-        rating: 0,
+        rating: 5.0,
         reviews_count: 0,
         brand: "",
         gender: "Unisex",
-        product_type: "Quần áo",
-        sport_type: "Đá bóng",
-        category: [],
+        product_type: defaultPT,
+        sport_type: defaultSport,
+        category: defaultSubCats.length > 0 ? [defaultSubCats[0]] : [],
         sizes: [],
         colors: [],
         variants: [],
@@ -183,21 +284,49 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
   if (!isOpen) return null;
 
   const toggleColor = (colorName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      colors: prev.colors.includes(colorName)
+    setFormData(prev => {
+      const nextColors = prev.colors.includes(colorName)
         ? prev.colors.filter(c => c !== colorName)
-        : [...prev.colors, colorName]
-    }));
+        : [...prev.colors, colorName];
+      const nextVariants = syncVariantsMatrix(
+        nextColors,
+        prev.sizes,
+        prev.variants,
+        prev.product_id,
+        prev.stock,
+        !hasManualVariantEdit
+      );
+      const totalStock = nextVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+      return {
+        ...prev,
+        colors: nextColors,
+        variants: nextVariants,
+        stock: nextVariants.length > 0 ? totalStock : prev.stock,
+      };
+    });
   };
 
   const toggleSize = (size: string) => {
-    setFormData(prev => ({
-      ...prev,
-      sizes: prev.sizes.includes(size)
+    setFormData(prev => {
+      const nextSizes = prev.sizes.includes(size)
         ? prev.sizes.filter(s => s !== size)
-        : [...prev.sizes, size]
-    }));
+        : [...prev.sizes, size];
+      const nextVariants = syncVariantsMatrix(
+        prev.colors,
+        nextSizes,
+        prev.variants,
+        prev.product_id,
+        prev.stock,
+        !hasManualVariantEdit
+      );
+      const totalStock = nextVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+      return {
+        ...prev,
+        sizes: nextSizes,
+        variants: nextVariants,
+        stock: nextVariants.length > 0 ? totalStock : prev.stock,
+      };
+    });
   };
 
   const toggleGender = (g: string) => {
@@ -217,24 +346,73 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      notifications.show({
+        title: "Thiếu thông tin",
+        message: "Vui lòng nhập tên sản phẩm!",
+        color: "orange",
+      });
+      return;
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      notifications.show({
+        title: "Giá bán chưa hợp lệ",
+        message: "Vui lòng nhập giá bán sản phẩm lớn hơn 0 VNĐ!",
+        color: "orange",
+      });
+      return;
+    }
+
+    const primaryImage = (
+      formData.image_url && formData.images.includes(formData.image_url)
+        ? formData.image_url
+        : (formData.images[0] || formData.image_url || '')
+    ).trim();
+
+    if (!primaryImage) {
+      notifications.show({
+        title: "Thiếu hình ảnh",
+        message: "Vui lòng tải lên hoặc dán link URL ít nhất 1 hình ảnh sản phẩm!",
+        color: "orange",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const apiUrl = resolveApiBaseUrl();
       const url = editingProduct
-        ? `${API_URL}/products/${editingProduct.product_id}`
-        : `${API_URL}/products`;
+        ? `${apiUrl}/products/${editingProduct.product_id}`
+        : `${apiUrl}/products`;
 
       const method = editingProduct ? 'PUT' : 'POST';
 
       const finalGender = selectedGenders.length > 0 ? selectedGenders.join(', ') : (formData.gender || 'Unisex');
       const finalBrand = formData.brand && formData.brand.trim() !== '' ? formData.brand.trim() : null;
+      const defaultSubCats = getSubCategoriesFor(menuSports, formData.sport_type, formData.product_type);
+      const finalCategories =
+        formData.category.length > 0
+          ? formData.category
+          : (defaultSubCats.length > 0 ? [defaultSubCats[0]] : []);
+      const finalImages =
+        formData.images.length > 0
+          ? [primaryImage, ...formData.images.filter((u) => u !== primaryImage)]
+          : [primaryImage];
 
       const payload = {
         ...formData,
+        product_id: formData.product_id.trim(),
+        name: trimmedName,
         brand: finalBrand,
         gender: finalGender,
-        image_url: formData.images.length > 0 ? formData.images[0] : formData.image_url,
+        category: finalCategories,
+        sub_category: finalCategories[0] || null,
+        image_url: primaryImage,
+        images: finalImages,
       };
 
       const res = await fetch(url, {
@@ -244,7 +422,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
       });
 
       if (res.ok) {
-        const savedProduct = await res.json().catch(() => null);
+        const savedProduct = await res.json().catch(() => undefined);
         notifications.show({
           title: "Thành công",
           message: editingProduct ? "Đã cập nhật sản phẩm!" : "Đã thêm sản phẩm mới!",
@@ -252,7 +430,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
         });
         onSuccess(savedProduct);
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         notifications.show({
           title: "Lỗi",
           message: errorData.detail || "Không thể lưu sản phẩm",
@@ -408,7 +586,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
                     value={
                       isPriceFocused
                         ? (formData.price === 0 ? '' : String(formData.price))
-                        : (formData.price > 0 ? formData.price.toLocaleString('vi-VN') : '0')
+                        : (formData.price > 0 ? formData.price.toLocaleString('vi-VN') : '')
                     }
                     onFocus={(e) => {
                       setIsPriceFocused(true);
@@ -418,11 +596,9 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
                       const raw = e.target.value.replace(/\D/g, '');
                       const num = raw === '' ? 0 : parseInt(raw, 10);
                       setFormData(prev => ({ ...prev, price: num }));
-                      setDisplayPrice(num > 0 ? num.toLocaleString('vi-VN') : '0');
                     }}
                     onBlur={() => {
                       setIsPriceFocused(false);
-                      setDisplayPrice(formData.price > 0 ? formData.price.toLocaleString('vi-VN') : '0');
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -447,11 +623,20 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
                   type="number"
                   min={0}
                   placeholder="0"
-                  value={formData.stock === 0 ? '' : formData.stock}
-                  onFocus={e => e.target.select()}
+                  value={
+                    isStockFocused
+                      ? (formData.stock === 0 ? '' : String(formData.stock))
+                      : String(formData.stock)
+                  }
+                  onFocus={e => {
+                    setIsStockFocused(true);
+                    e.target.select();
+                  }}
+                  onBlur={() => setIsStockFocused(false)}
                   onChange={e => {
                     const rawVal = e.target.value === '' ? 0 : Number(e.target.value);
                     const newTotal = Math.max(0, rawVal);
+                    setHasManualVariantEdit(false);
 
                     if (formData.variants.length > 0) {
                       const count = formData.variants.length;
@@ -483,13 +668,64 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
               selectedCategories={formData.category}
               menuSports={menuSports}
               onChangeSport={(sport, firstPT) => {
-                setFormData(prev => ({ ...prev, sport_type: sport, product_type: firstPT, category: [] }));
+                const subCats = getSubCategoriesFor(menuSports, sport, firstPT);
+                setFormData(prev => {
+                  const nextSizes = filterCompatibleSizes(
+                    prev.sizes,
+                    firstPT,
+                    availableShoeSizes,
+                    availableClothingSizes
+                  );
+                  const nextVariants = syncVariantsMatrix(
+                    prev.colors,
+                    nextSizes,
+                    prev.variants,
+                    prev.product_id,
+                    prev.stock,
+                    !hasManualVariantEdit
+                  );
+                  const totalStock = nextVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+                  return {
+                    ...prev,
+                    sport_type: sport,
+                    product_type: firstPT,
+                    category: subCats.length > 0 ? [subCats[0]] : [],
+                    sizes: nextSizes,
+                    variants: nextVariants,
+                    stock: nextVariants.length > 0 ? totalStock : prev.stock,
+                  };
+                });
                 if (firstPT === 'Giày dép') setActiveSizeCategory('shoe');
                 else if (firstPT === 'Thiết bị') setActiveSizeCategory('spec');
                 else setActiveSizeCategory('clothing');
               }}
               onChangeProductType={(pt) => {
-                setFormData(prev => ({ ...prev, product_type: pt, category: [] }));
+                setFormData(prev => {
+                  const subCats = getSubCategoriesFor(menuSports, prev.sport_type, pt);
+                  const nextSizes = filterCompatibleSizes(
+                    prev.sizes,
+                    pt,
+                    availableShoeSizes,
+                    availableClothingSizes
+                  );
+                  const nextVariants = syncVariantsMatrix(
+                    prev.colors,
+                    nextSizes,
+                    prev.variants,
+                    prev.product_id,
+                    prev.stock,
+                    !hasManualVariantEdit
+                  );
+                  const totalStock = nextVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+                  return {
+                    ...prev,
+                    product_type: pt,
+                    category: subCats.length > 0 ? [subCats[0]] : [],
+                    sizes: nextSizes,
+                    variants: nextVariants,
+                    stock: nextVariants.length > 0 ? totalStock : prev.stock,
+                  };
+                });
                 if (pt === 'Giày dép') setActiveSizeCategory('shoe');
                 else if (pt === 'Thiết bị') setActiveSizeCategory('spec');
                 else setActiveSizeCategory('clothing');
@@ -530,6 +766,7 @@ export default function ProductFormModal({ isOpen, onClose, onSuccess, editingPr
               productId={formData.product_id}
               targetTotalStock={formData.stock}
               onChangeVariants={(newVariants) => {
+                setHasManualVariantEdit(true);
                 const totalStock = newVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
                 setFormData(prev => ({
                   ...prev,

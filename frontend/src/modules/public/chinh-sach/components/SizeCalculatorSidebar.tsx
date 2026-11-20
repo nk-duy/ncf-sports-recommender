@@ -8,7 +8,7 @@ import {
   HelpCircle,
   Phone,
   MessageCircle,
-  Sparkles,
+  Ruler,
   ArrowRight,
 } from 'lucide-react';
 import { SizeGuideTabKey } from '../types';
@@ -71,9 +71,9 @@ export default function SizeCalculatorSidebar({
 
       {/* Quick Interactive Calculator Box */}
       <div className="bg-white rounded-xl border border-blue-200 p-5 shadow-xs text-sm">
-        <div className="flex items-center gap-2 text-blue-900 font-bold mb-3">
-          <Sparkles size={18} className="text-blue-600" />
-          <span>Tính size đề xuất nhanh</span>
+        <div className="flex items-center gap-2 text-slate-800 font-bold mb-3">
+          <Ruler size={18} className="text-blue-600" />
+          <span>Tính size nhanh</span>
         </div>
 
         <div className="space-y-3">

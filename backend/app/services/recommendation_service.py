@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import logging
 import random
 from typing import List, Dict, Any, Optional, Tuple
@@ -178,23 +179,32 @@ class RecommendationService:
         if self.model is None or self.mappings is None or force_reload:
             try:
                 with open(self.mappings_path, "r", encoding="utf-8") as f:
-                    self.mappings = json.load(f)
+                    new_mappings = json.load(f)
 
-                self.model = NCF(
-                    num_users=self.mappings["num_users"],
-                    num_items=self.mappings["num_items"],
+                new_model = NCF(
+                    num_users=new_mappings["num_users"],
+                    num_items=new_mappings["num_items"],
                     embedding_dim=16,
                     hidden_layers=[32, 16, 8]
                 )
-                self.model.load_state_dict(torch.load(self.model_path, map_location=torch.device("cpu")))
-                self.model.eval()
+                new_model.load_state_dict(
+                    torch.load(self.model_path, map_location=torch.device("cpu"), weights_only=True)
+                )
+                new_model.eval()
 
                 # Tiền tính toán & L2-normalize ma trận Embeddings sản phẩm trong RAM (cộng 1e-8 chống chia 0)
                 with torch.no_grad():
-                    all_embed_mf = self.model.embedding_item_mf.weight.data
-                    all_embed_mlp = self.model.embedding_item_mlp.weight.data
+                    all_embed_mf = new_model.embedding_item_mf.weight.data
+                    all_embed_mlp = new_model.embedding_item_mlp.weight.data
                     raw_embeds = torch.cat([all_embed_mf, all_embed_mlp], dim=-1)
-                    self.cached_item_embeddings = torch.nn.functional.normalize(raw_embeds + 1e-8, p=2, dim=1)
+                    new_cached_embeds = torch.nn.functional.normalize(raw_embeds + 1e-8, p=2, dim=1)
+
+                # Swap nguyên tử tránh request đồng thời đọc cặp (mappings mới, model cũ)
+                self.mappings, self.model, self.cached_item_embeddings = (
+                    new_mappings,
+                    new_model,
+                    new_cached_embeds,
+                )
                 return True
             except Exception as e:
                 logger.error(f"[NCF Model Load Error] {e}")
@@ -763,11 +773,14 @@ class RecommendationService:
             user_visual_vec = await self._compute_user_visual_profile()
 
         main_sports = ["Đá bóng", "Cầu lông", "Bóng chuyền", "Pickleball", "Chạy bộ", "Dã ngoại", "Gym & Fitness", "Phụ kiện chung"]
+        sport_batches = await asyncio.gather(
+            *[
+                Product.find({**query, "sport_type": sport}).sort("-rating", "-reviews_count").limit(8).to_list()
+                for sport in main_sports
+            ]
+        )
         collected = []
-        for sport in main_sports:
-            sq = dict(query)
-            sq["sport_type"] = sport
-            prods = await Product.find(sq).sort("-rating", "-reviews_count").limit(8).to_list()
+        for prods in sport_batches:
             if prods:
                 collected.extend(prods[:5])
 

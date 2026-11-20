@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import Breadcrumb from '@/shared/components/Breadcrumb';
 import SizeGuideModal from '@/shared/components/SizeGuideModal';
 import ProductImageGallery from './ProductImageGallery';
@@ -16,23 +17,6 @@ import {
 import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import type { ProductDetail } from '../types';
 
-const FALLBACK_PRODUCT: ProductDetail = {
-  product_id: 'SHOE-CARB-902',
-  name: 'Giày Thể Thao Cao Cấp',
-  price: 1500000,
-  image_url:
-    'https://lh3.googleusercontent.com/aida/AEtjO1X0GYFJwVR-Lm_MCL3yDf1dmYd9PEaoWx9AghA9qB1ENT8OYO0Yx2RSywbyg9j9aQzNFRIoG5o3wrc_ldekxBqwycGtmzJcWcHf612b1T_7zCIwmeKlzsKOAq6zwmJ-CddWgSOIjALrSJoYIDRi313ayHwI5G46whKzfYJUHzflWEf6UYFQdS4yOacI0jWsjiihMFRDRpnMGquoazt52j4cMUPAkZC5h2Z4G8I5sbM9SLz13zjEqs8oqz8',
-  brand: 'KADY',
-  sport_type: 'Chạy bộ',
-  product_type: 'Giày dép',
-  sub_category: 'Giày Chạy Bộ',
-  rating: 0,
-  reviews_count: 0,
-  category: ['Giày chạy bộ', 'Chạy bộ', 'Giày dép'],
-  stock: 25,
-  description: '',
-};
-
 interface ProductDetailViewProps {
   id: string;
 }
@@ -40,38 +24,43 @@ interface ProductDetailViewProps {
 export default function ProductDetailView({ id }: ProductDetailViewProps) {
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState<'not_found' | 'network' | null>(null);
   const [wishlistToast, setWishlistToast] = useState('');
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
 
-  useEffect(() => {
-    let active = true;
-    const fetchProduct = async () => {
-      try {
-        const apiUrl = resolveApiBaseUrl();
-        const res = await fetch(`${apiUrl}/products/${id}`);
-        const rawProduct: ProductDetail = res.ok ? await res.json() : FALLBACK_PRODUCT;
-        // Bảo vệ dữ liệu biến thể: Giày dép luôn 38–44, Quần áo S–2XL, thiết bị không có size quần áo.
-        const resolvedProduct = normalizeProductVariants(rawProduct);
-        if (active) {
-          setProduct(resolvedProduct);
-          // Không chọn sẵn kích cỡ, để người dùng chủ động lựa chọn
-          setSelectedSize('');
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
+  const loadProduct = useCallback(async () => {
+    setLoading(true);
+    setErrorState(null);
+    try {
+      const apiUrl = resolveApiBaseUrl();
+      const res = await fetch(`${apiUrl}/products/${id}`);
+      if (res.status === 404) {
+        setProduct(null);
+        setErrorState('not_found');
+        return;
       }
-    };
-
-    fetchProduct();
-    return () => {
-      active = false;
-    };
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const rawProduct: ProductDetail = await res.json();
+      // Bảo vệ dữ liệu biến thể: Giày dép luôn 38–44, Quần áo S–2XL, thiết bị không có size quần áo.
+      const resolvedProduct = normalizeProductVariants(rawProduct);
+      setProduct(resolvedProduct);
+      // Không chọn sẵn kích cỡ, để người dùng chủ động lựa chọn
+      setSelectedSize('');
+    } catch (err) {
+      console.error(err);
+      setProduct(null);
+      setErrorState('network');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    void loadProduct();
+  }, [loadProduct]);
 
   useEffect(() => {
     if (!product) return;
@@ -100,7 +89,41 @@ export default function ProductDetailView({ id }: ProductDetailViewProps) {
     );
   }
 
-  if (!product) return null;
+  if (errorState || !product) {
+    return (
+      <div className="min-h-[65vh] bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-slate-900">
+            {errorState === 'not_found'
+              ? 'Không tìm thấy sản phẩm'
+              : 'Không thể tải dữ liệu sản phẩm'}
+          </h2>
+          <p className="text-sm text-slate-500 leading-relaxed">
+            {errorState === 'not_found'
+              ? 'Sản phẩm bạn tìm kiếm có thể đã ngừng kinh doanh hoặc đường dẫn không tồn tại.'
+              : 'Không thể kết nối đến máy chủ KADY Sports. Vui lòng kiểm tra kết nối và thử lại.'}
+          </p>
+          <div className="flex items-center justify-center gap-3 pt-1">
+            {errorState !== 'not_found' && (
+              <button
+                type="button"
+                onClick={() => void loadProduct()}
+                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition cursor-pointer"
+              >
+                Thử lại
+              </button>
+            )}
+            <Link
+              href="/san-pham"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold transition"
+            >
+              Về cửa hàng
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const breadcrumbItems = buildProductBreadcrumbs(product);
 

@@ -130,7 +130,7 @@ export default function NotificationBellDropdown() {
               </div>
               <h4 className="text-sm font-bold text-gray-900 mb-1.5">Thông báo của bạn</h4>
               <p className="text-xs text-gray-500 leading-relaxed mb-5 max-w-[270px]">
-                Đăng nhập để theo dõi tiến độ đơn hàng, mã giảm giá và gợi ý AI dành riêng cho bạn
+                Đăng nhập để theo dõi tiến độ đơn hàng, mã giảm giá và ưu đãi dành riêng cho bạn
               </p>
               <Link
                 href="/dang-nhap"

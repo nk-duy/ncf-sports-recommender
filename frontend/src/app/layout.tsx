@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
-import { MantineProvider } from "@mantine/core";
+import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { LanguageProvider } from "@/shared/context/LanguageContext";
 
@@ -21,12 +21,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" {...mantineHtmlProps}>
+      <head>
+        <ColorSchemeScript defaultColorScheme="light" />
+      </head>
       <body
-        className={`${inter.className} min-h-screen flex flex-col antialiased bg-[#F5F7FA] text-[#1A202C] w-full max-w-full overflow-x-hidden`}
+        className={`${inter.className} min-h-screen flex flex-col antialiased bg-[#F5F7FA] text-[#1A202C] w-full max-w-full overflow-x-clip`}
         suppressHydrationWarning
       >
-        <MantineProvider>
+        <MantineProvider defaultColorScheme="light">
           <LanguageProvider>
             <Notifications position="top-right" zIndex={1000} />
             {children}

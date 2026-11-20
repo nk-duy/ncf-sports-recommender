@@ -39,9 +39,11 @@ export const SPORT_TABS: FilterTab[] = [
   { id: "Pickleball", label: "Pickleball" },
   { id: "Cầu lông", label: "Cầu lông" },
   { id: "Chạy bộ", label: "Chạy bộ" },
-  { id: "Đá bóng", label: "Bóng đá" },
+  { id: "Đá bóng", label: "Đá bóng" },
+  { id: "Bóng chuyền", label: "Bóng chuyền" },
+  { id: "Gym & Fitness", label: "Gym & Fitness" },
   { id: "Dã ngoại", label: "Dã ngoại" },
-  { id: "Đa dụng", label: "Gym & Fitness" },
+  { id: "Phụ kiện chung", label: "Phụ kiện chung" },
 ];
 
 export const TYPE_TABS: FilterTab[] = [

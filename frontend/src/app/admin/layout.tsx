@@ -17,13 +17,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
   const [authChecking, setAuthChecking] = useState<boolean>(true);
   const [mobileOpenPathname, setMobileOpenPathname] = useState<string | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('kady_admin_sidebar_collapsed') === 'true';
-    }
-    return false;
-  });
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [pendingOrders, setPendingOrders] = useState<number>(0);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('kady_admin_sidebar_collapsed') === 'true';
+      if (saved) setIsCollapsed(true);
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
 
   const mobileMenuOpen = mobileOpenPathname === pathname;
 

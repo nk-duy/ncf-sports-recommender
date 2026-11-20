@@ -149,7 +149,8 @@ class AnalyticsService:
         """
         from app.models.order import Order
 
-        all_orders = await Order.find({"order_status": {"$ne": "cancelled"}}).to_list()
+        cancelled_statuses = ["cancelled", "rejected", "canceled", "đã hủy", "từ chối"]
+        all_orders = await Order.find({"status": {"$nin": cancelled_statuses}}).to_list()
         if not all_orders:
             return 0.0, 0, 0.0
 

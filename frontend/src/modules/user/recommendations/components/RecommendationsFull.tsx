@@ -6,11 +6,11 @@ import {
   ArrowRight,
   ShoppingBag,
   ThumbsUp,
-  Info,
   Package,
 } from "lucide-react";
 import { useAuthStore } from "@/shared/store/authStore";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
+import { useHydrated } from "@/shared/hooks/useHydrated";
 import { notifications } from "@mantine/notifications";
 import QuickAddToCartModal, {
   type QuickAddProduct,
@@ -22,6 +22,7 @@ import RecommendationProductCard from "./RecommendationProductCard";
 export default function RecommendationsFull() {
   const { user, token, isAuthenticated } = useAuthStore();
   const { toggleItem, isWishlisted } = useWishlistStore();
+  const mounted = useHydrated();
 
   const [recommendations, setRecommendations] = useState<UserRecommendedProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,11 +56,11 @@ export default function RecommendationsFull() {
     void fetchRecommendations();
   }, [fetchRecommendations, isAuthenticated]);
 
-  const displayName = user?.full_name || user?.username || "bạn";
+  const displayName = mounted ? user?.full_name || user?.username || "bạn" : "bạn";
   const preferredSport =
-    user?.interested_sports && user.interested_sports.length > 0
-      ? user.interested_sports[0]
-      : "Chạy bộ Marathon, Gym Thể hình";
+    mounted && user?.interested_sports && user.interested_sports.length > 0
+      ? user.interested_sports.join(", ")
+      : "Đa bộ môn thể thao";
 
   const handleAddToCart = (product: UserRecommendedProduct) => {
     setModalProduct({
@@ -127,8 +128,8 @@ export default function RecommendationsFull() {
       <SportTasteProfileCard
         displayName={displayName}
         preferredSport={preferredSport}
-        tier={user?.tier}
-        shoeSize={user?.shoe_size}
+        tier={mounted ? user?.tier : undefined}
+        shoeSize={mounted ? user?.shoe_size : undefined}
       />
 
       {/* Product Picks */}
@@ -181,26 +182,13 @@ export default function RecommendationsFull() {
               <RecommendationProductCard
                 key={product.product_id || idx}
                 product={product}
-                wishlisted={isWishlisted(product.product_id)}
+                wishlisted={mounted && isWishlisted(product.product_id)}
                 onToggleWishlist={handleToggleWishlist}
                 onAddToCart={handleAddToCart}
               />
             ))}
           </div>
         )}
-      </div>
-
-      {/* Explanatory Footer Box */}
-      <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-6 flex items-start gap-4 mt-2">
-        <div className="p-2 rounded-lg bg-white text-blue-600 shrink-0 shadow-sm border border-blue-50">
-          <Info size={24} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <h4 className="text-sm font-bold text-gray-900">Cách KADY lựa chọn gợi ý cho bạn</h4>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Hệ thống tự động phân tích các bộ môn thể thao bạn quan tâm, kích thước form dáng thường chọn và lịch sử mua sắm để đề xuất những sản phẩm phù hợp nhất với nhu cầu tập luyện.
-          </p>
-        </div>
       </div>
 
       <QuickAddToCartModal

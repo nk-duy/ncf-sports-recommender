@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Flame, X, ChevronRight, Sparkles } from 'lucide-react';
+import { Clock, Flame, X, ChevronRight, Search } from 'lucide-react';
 import { AutocompleteProduct } from '../types';
 import { TRENDING_KEYWORDS } from '../hooks/useSearchAutocomplete';
 
@@ -39,8 +39,8 @@ export default function SearchDropdownContent({
         <div className="p-3">
           <div className="flex items-center justify-between px-2 pb-2 mb-1 border-b border-slate-100 text-xs">
             <span className="font-bold text-slate-700 flex items-center gap-1.5">
-              <Sparkles size={14} className="text-blue-600" />
-              Gợi ý sản phẩm ({results.length})
+              <Search size={14} className="text-blue-600" />
+              Sản phẩm gợi ý ({results.length})
             </span>
             {loading && <span className="text-[11px] text-blue-600 font-medium">Đang tìm...</span>}
           </div>

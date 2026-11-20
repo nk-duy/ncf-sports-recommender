@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React from 'react';
 import { Footprints, Shirt, Sparkles } from 'lucide-react';
 
 interface ProductSizeSelectorProps {

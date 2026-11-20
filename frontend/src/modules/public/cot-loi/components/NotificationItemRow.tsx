@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Package, Gift, Sparkles, Copy, Check, ChevronRight } from "lucide-react";
+import { Bell, Package, Gift, Tag, Copy, Check, ChevronRight } from "lucide-react";
 import { NotificationItem } from "@/shared/store/notificationStore";
 
 interface NotificationItemRowProps {
@@ -36,7 +36,7 @@ function getTypeIcon(type: string) {
     case "promotion":
       return <Gift size={15} className="text-amber-600" />;
     case "ai_recommend":
-      return <Sparkles size={15} className="text-purple-600" />;
+      return <Tag size={15} className="text-blue-600" />;
     default:
       return <Bell size={15} className="text-blue-600" />;
   }
@@ -49,7 +49,7 @@ function getTypeBg(type: string): string {
     case "promotion":
       return "bg-amber-50 border-amber-100";
     case "ai_recommend":
-      return "bg-purple-50 border-purple-100";
+      return "bg-blue-50 border-blue-100";
     default:
       return "bg-blue-50 border-blue-100";
   }

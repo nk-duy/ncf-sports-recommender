@@ -1,12 +1,32 @@
+import hashlib
+import hmac
+import re
+import secrets
+import time
 import uuid
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
+from app.core.cache import fast_cache
 from app.core.security import get_password_hash, verify_password, create_access_token
+from app.services.email_service import email_service
+
+OTP_TTL_SECONDS = 300
+OTP_MAX_ATTEMPTS = 5
+
 
 class AuthService:
+    @staticmethod
+    def _otp_cache_key(email: str) -> str:
+        return f"auth_otp:{email.strip().lower()}"
+
+    @staticmethod
+    def _hash_otp(email: str, otp: str) -> str:
+        payload = f"{email.strip().lower()}:{otp.strip()}".encode("utf-8")
+        return hashlib.sha256(payload).hexdigest()
+
     @staticmethod
     async def get_user_by_username(username: str) -> Optional[User]:
         return await User.find_one(User.username == username)
@@ -14,6 +34,11 @@ class AuthService:
     @staticmethod
     async def get_user_by_email(email: str) -> Optional[User]:
         return await User.find_one(User.email == email)
+
+    @staticmethod
+    async def get_user_by_email_insensitive(email: str) -> Optional[User]:
+        clean_email = email.strip().lower()
+        return await User.find_one({"email": {"$regex": f"^{re.escape(clean_email)}$", "$options": "i"}})
 
     @staticmethod
     async def register_user(user_in: UserCreate) -> User:
@@ -50,31 +75,187 @@ class AuthService:
         return create_access_token(data={"username": username})
 
     @staticmethod
-    async def handle_social_login(
-        email: str, 
+    async def _upsert_customer_by_email(
+        email: str,
         full_name: Optional[str] = None,
-        interested_sports: Optional[list[str]] = None
+        interested_sports: Optional[list[str]] = None,
+        overwrite_sports: bool = False,
     ) -> User:
-        user = await AuthService.get_user_by_email(email)
+        clean_email = email.strip().lower()
+        user = await AuthService.get_user_by_email_insensitive(clean_email)
+        if user and getattr(user, "role", "user") == "admin":
+            raise HTTPException(
+                status_code=403,
+                detail="Tài khoản Quản trị viên bắt buộc đăng nhập bằng tên đăng nhập và mật khẩu.",
+            )
+
+        clean_name = (full_name or "").strip() or None
+        clean_sports = [s.strip() for s in (interested_sports or []) if s and s.strip()]
+
         if not user:
             random_password = str(uuid.uuid4())
-            base_username = email.split('@')[0]
+            base_username = clean_email.split('@')[0]
             existing_user = await AuthService.get_user_by_username(base_username)
             username = base_username if not existing_user else f"{base_username}_{str(uuid.uuid4())[:8]}"
-            
+
             user_in = UserCreate(
                 username=username,
-                email=email,
+                email=clean_email,
                 password=random_password,
-                full_name=full_name or base_username,
-                interested_sports=interested_sports or []
+                full_name=clean_name or base_username,
+                interested_sports=clean_sports,
             )
             user = await AuthService.register_user(user_in)
         else:
-            if interested_sports and not user.interested_sports:
-                user.interested_sports = interested_sports
+            changed = False
+            if clean_name and not user.full_name:
+                user.full_name = clean_name
+                changed = True
+            if clean_sports and (overwrite_sports or not user.interested_sports):
+                user.interested_sports = clean_sports
+                changed = True
+            if changed:
                 await user.save()
         return user
+
+    @staticmethod
+    async def handle_social_login(
+        email: str,
+        full_name: Optional[str] = None,
+        interested_sports: Optional[list[str]] = None
+    ) -> User:
+        return await AuthService._upsert_customer_by_email(
+            email=email,
+            full_name=full_name,
+            interested_sports=interested_sports,
+            overwrite_sports=False,
+        )
+
+    @staticmethod
+    async def request_email_otp(
+        email: str,
+        full_name: Optional[str] = None,
+        interested_sports: Optional[list[str]] = None,
+    ) -> Dict[str, Any]:
+        """Sinh mã OTP 6 chữ số (hết hạn sau 5 phút) và gửi qua Email SMTP"""
+        clean_email = email.strip().lower()
+        existing = await AuthService.get_user_by_email_insensitive(clean_email)
+        if existing and getattr(existing, "role", "user") == "admin":
+            raise HTTPException(
+                status_code=403,
+                detail="Tài khoản Quản trị viên bắt buộc đăng nhập bằng tên đăng nhập và mật khẩu.",
+            )
+
+        otp_code = f"{secrets.randbelow(1000000):06d}"
+        cache_key = AuthService._otp_cache_key(clean_email)
+        clean_name = (full_name or "").strip() or None
+        clean_sports = [s.strip() for s in (interested_sports or []) if s and s.strip()]
+
+        await fast_cache.set(
+            cache_key,
+            {
+                "otp_hash": AuthService._hash_otp(clean_email, otp_code),
+                "email": clean_email,
+                "full_name": clean_name,
+                "interested_sports": clean_sports,
+                "attempts": 0,
+                "expires_at": time.time() + OTP_TTL_SECONDS,
+            },
+            ttl=OTP_TTL_SECONDS,
+        )
+
+        email_sent, smtp_error = await email_service.send_otp_email(
+            recipient_email=clean_email,
+            otp_code=otp_code,
+            full_name=clean_name,
+        )
+
+        if smtp_error:
+            await fast_cache.delete(cache_key)
+            raise HTTPException(
+                status_code=502,
+                detail="Không thể gửi email xác thực qua Gmail SMTP. Vui lòng kiểm tra cấu hình SMTP_EMAIL / SMTP_APP_PASSWORD hoặc kết nối mạng.",
+            )
+
+        if not email_sent:
+            print(f"[AuthService][OFFLINE OTP] Email: {clean_email} | OTP: {otp_code} (Hết hạn sau 5 phút)")
+            return {
+                "status": "success",
+                "message": f"Chế độ demo offline: Đã tạo mã xác nhận cho hộp thư {clean_email} (hết hạn sau 5 phút).",
+                "email": clean_email,
+                "expires_in_seconds": OTP_TTL_SECONDS,
+                "email_sent": False,
+                "dev_otp": otp_code,
+            }
+
+        return {
+            "status": "success",
+            "message": f"Đã gửi mã xác nhận đến hộp thư {clean_email}. Mã có hiệu lực trong 5 phút.",
+            "email": clean_email,
+            "expires_in_seconds": OTP_TTL_SECONDS,
+            "email_sent": True,
+            "dev_otp": None,
+        }
+
+    @staticmethod
+    async def verify_email_otp(
+        email: str,
+        otp: str,
+        full_name: Optional[str] = None,
+        interested_sports: Optional[list[str]] = None,
+    ) -> Tuple[User, str]:
+        """Xác thực mã OTP 6 chữ số, tạo/cập nhật user MongoDB và cấp JWT access_token"""
+        clean_email = email.strip().lower()
+        clean_otp = (otp or "").strip()
+        if len(clean_otp) != 6 or not clean_otp.isdigit():
+            raise HTTPException(
+                status_code=400,
+                detail="Mã xác nhận OTP phải gồm đúng 6 chữ số.",
+            )
+
+        cache_key = AuthService._otp_cache_key(clean_email)
+        otp_record = await fast_cache.get(cache_key)
+        if not otp_record:
+            raise HTTPException(
+                status_code=400,
+                detail="Mã OTP không tồn tại hoặc đã hết hạn sau 5 phút. Vui lòng yêu cầu gửi lại mã mới.",
+            )
+
+        provided_hash = AuthService._hash_otp(clean_email, clean_otp)
+        if not hmac.compare_digest(otp_record["otp_hash"], provided_hash):
+            attempts = int(otp_record.get("attempts", 0)) + 1
+            if attempts >= OTP_MAX_ATTEMPTS:
+                await fast_cache.delete(cache_key)
+                raise HTTPException(
+                    status_code=400,
+                    detail="Bạn đã nhập sai mã OTP quá 5 lần. Vui lòng yêu cầu gửi lại mã mới.",
+                )
+
+            remaining_ttl = max(1, int(otp_record.get("expires_at", time.time() + 60) - time.time()))
+            otp_record["attempts"] = attempts
+            await fast_cache.set(cache_key, otp_record, ttl=remaining_ttl)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mã xác nhận OTP không chính xác (còn {OTP_MAX_ATTEMPTS - attempts} lần thử).",
+            )
+
+        await fast_cache.delete(cache_key)
+
+        resolved_name = (full_name or "").strip() or otp_record.get("full_name")
+        resolved_sports = (
+            interested_sports
+            if interested_sports is not None and len(interested_sports) > 0
+            else otp_record.get("interested_sports", [])
+        )
+
+        user = await AuthService._upsert_customer_by_email(
+            email=clean_email,
+            full_name=resolved_name,
+            interested_sports=resolved_sports,
+            overwrite_sports=True,
+        )
+        access_token = AuthService.create_token(user.username)
+        return user, access_token
 
     @staticmethod
     async def update_user_profile(user: User, user_update: UserUpdate) -> User:

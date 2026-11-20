@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, Sparkles, Truck, Zap } from 'lucide-react';
+import { CheckCircle2, Clock, Truck, Zap } from 'lucide-react';
 import { useCheckoutStore } from '@/shared/store/checkoutStore';
 import { calcEffectiveShippingFee, formatVND, SHIPPING_OPTIONS } from '@/shared/lib/cart';
 
@@ -27,7 +27,7 @@ export default function CheckoutShippingMethods({ total }: CheckoutShippingMetho
 
         {isFreeshipEligible && (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            <Sparkles size={13} className="text-emerald-600" />
+            <CheckCircle2 size={13} className="text-emerald-600" />
             Đã áp dụng Freeship 30k
           </span>
         )}

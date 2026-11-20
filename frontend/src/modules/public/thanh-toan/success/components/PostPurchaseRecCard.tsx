@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, Sparkles, Star } from 'lucide-react';
+import { Activity, Star } from 'lucide-react';
 import AiXRayInspector from '@/shared/components/AiXRayInspector';
 import type { PostPurchaseRecProduct } from '../../types';
 
@@ -38,10 +38,11 @@ export default function PostPurchaseRecCard({
                 e.currentTarget.src = POST_PURCHASE_FALLBACK_IMG;
               }}
             />
-            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-[10px] text-white font-bold shadow-xs flex items-center gap-1 tabular-nums">
-              <Sparkles size={10} className="text-yellow-300" />
-              <span>{product.ai_explanation?.match_percent || 92}% Phù hợp</span>
-            </span>
+            {isXRayActive && (
+              <span className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-blue-600 text-[10px] text-white font-bold shadow-xs flex items-center gap-1 tabular-nums">
+                <span>{product.ai_explanation?.match_percent || 92}% Phù hợp</span>
+              </span>
+            )}
           </div>
         </Link>
 
@@ -56,13 +57,12 @@ export default function PostPurchaseRecCard({
           </Link>
         </h4>
 
-        {product.ai_explanation?.reason && (
+        {isXRayActive && product.ai_explanation?.reason && (
           <div className="mb-2">
             <span
               className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-1.5 sm:px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
               title={product.ai_explanation.reason}
             >
-              <Sparkles size={9} className="shrink-0 text-blue-500" />
               <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
             </span>
           </div>

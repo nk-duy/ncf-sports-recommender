@@ -8,7 +8,7 @@ import {
   ChevronDown,
   Home,
   ShoppingBag,
-  Sparkles,
+  Tag,
   Search,
   Info,
   PhoneCall,
@@ -198,7 +198,7 @@ export default function MobileMenuDrawer({ isOpen, onClose, menu }: MobileMenuDr
               }`}
             >
               <div className="flex items-center gap-3">
-                <Sparkles size={18} className="text-red-500 shrink-0" />
+                <Tag size={18} className="text-red-500 shrink-0" />
                 <span>{t('nav.sale', 'Khuyến mãi Hot')}</span>
               </div>
               <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />

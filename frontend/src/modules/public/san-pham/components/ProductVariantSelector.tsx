@@ -83,6 +83,7 @@ export default function ProductVariantSelector({
       )}
 
       {/* Bộ chọn Kích cỡ (Kiểu ô chọn có dấu tích) */}
+      {availableSizes.length > 0 && (
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <h3 className="text-xs font-bold text-slate-900">
@@ -145,6 +146,7 @@ export default function ProductVariantSelector({
           })}
         </div>
       </div>
+      )}
 
       {/* Tùy chọn Số lượng & Tồn kho chung 1 hàng */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-1">

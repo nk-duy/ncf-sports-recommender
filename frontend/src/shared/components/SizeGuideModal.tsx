@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { X, Ruler, Sparkles, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, Ruler, ArrowRight, ShieldCheck } from 'lucide-react';
 import {
   SIZE_TABS,
   calcRecommendedApparelSize,
@@ -70,14 +70,11 @@ function SizeGuideModalDialog({
               <Ruler className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-gray-900 flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-extrabold text-gray-900">
                 Hướng Dẫn Chọn Size &amp; Bộ Tính Nhanh
-                <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full">
-                  <Sparkles className="w-3 h-3 text-blue-600" /> Chuẩn form thể thao
-                </span>
               </h2>
               <p className="text-xs text-gray-500">
-                {productName ? `Đang xem cho: ${productName}` : 'Hệ thống gợi ý kích cỡ chính xác theo thể trạng thể thao Việt Nam'}
+                {productName ? `Đang xem cho: ${productName}` : 'Bảng quy đổi kích cỡ chuẩn theo thể trạng người Việt Nam'}
               </p>
             </div>
           </div>

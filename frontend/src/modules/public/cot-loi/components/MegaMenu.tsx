@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {
-  Sparkles,
+  Tag,
   ArrowRight,
   Flame,
   Activity,
@@ -34,7 +34,7 @@ function getSportIcon(sport: string) {
   if (s.includes('đa dụng') || s.includes('gym')) return <Dumbbell className="w-3.5 h-3.5" />;
   if (s.includes('dã ngoại')) return <Compass className="w-3.5 h-3.5" />;
   if (s.includes('phụ kiện')) return <ShoppingBag className="w-3.5 h-3.5" />;
-  return <Sparkles className="w-3.5 h-3.5" />;
+  return <Tag className="w-3.5 h-3.5" />;
 }
 
 export default function MegaMenu({ menu, isActive }: MegaMenuProps) {

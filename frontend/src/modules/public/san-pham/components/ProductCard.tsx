@@ -3,7 +3,7 @@
 import React, { useState, useSyncExternalStore } from "react";
 import styles from "./ProductCard.module.css";
 import Link from "next/link";
-import { Heart, Sparkles } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/shared/store/wishlistStore";
 import { useAiXRayStore } from "@/shared/store/aiXRayStore";
 import { notifications } from "@mantine/notifications";
@@ -61,6 +61,7 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
   const [heartAnim, setHeartAnim] = useState(false);
 
   const wishlisted = mounted && isWishlisted(displayId);
+  const showXRayDetails = mounted && isXRayActive;
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -98,17 +99,16 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
           }}
         />
         <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-1">
-          {product.ai_explanation?.match_percent ? (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-md tabular-nums">
-              <Sparkles size={9} className="text-yellow-300" />
+          {showXRayDetails && product.ai_explanation?.match_percent ? (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-sm tabular-nums">
               {product.ai_explanation.match_percent}% Phù hợp
             </span>
           ) : product.discountLabel ? (
             <span className={styles.badgePrimary}>{product.discountLabel}</span>
           ) : null}
-          {product.ai_explanation?.is_cross_sport_discovery && (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] sm:text-[10px] font-bold shadow-md">
-              🌟 Khám phá Liên bộ môn
+          {showXRayDetails && product.ai_explanation?.is_cross_sport_discovery && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-800 text-white text-[9px] sm:text-[10px] font-bold shadow-sm">
+              Khám phá Liên bộ môn
             </span>
           )}
         </div>
@@ -137,21 +137,20 @@ export default function ProductCard({ product }: { product: Product; isPromo?: b
 
         <h3 className={styles.title}>{product.name}</h3>
 
-        {/* AI Explanation Reason */}
-        {product.ai_explanation?.reason && (
+        {/* AI Explanation Reason (chỉ hiển thị khi bật X-Ray) */}
+        {showXRayDetails && product.ai_explanation?.reason && (
           <div className="mb-2">
             <span
               className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-1.5 sm:px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
               title={product.ai_explanation.reason}
             >
-              <Sparkles size={9} className="shrink-0 text-blue-500" />
               <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
             </span>
           </div>
         )}
 
         {/* AI X-Ray Inspector Box */}
-        {isXRayActive && product.ai_explanation && (
+        {showXRayDetails && product.ai_explanation && (
           <div className="mb-2">
             <AiXRayInspector explanation={product.ai_explanation} />
           </div>

@@ -257,7 +257,13 @@ export function useRecommendedPage() {
     if (p.is_hidden || p.is_deleted) return false;
 
     if (activeSportTab !== "all" && p.sport_type !== activeSportTab) {
-      if (!(activeSportTab === "Đa dụng" && p.sport_type?.toLowerCase().includes("gym"))) {
+      const sportLow = (p.sport_type || "").toLowerCase();
+      if (
+        !(
+          (activeSportTab === "Gym & Fitness" || activeSportTab === "Đa dụng") &&
+          (sportLow.includes("gym") || sportLow.includes("đa dụng"))
+        )
+      ) {
         return false;
       }
     }

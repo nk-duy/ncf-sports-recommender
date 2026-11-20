@@ -64,8 +64,11 @@ class ProductService:
             sports = [s.strip() for s in sport_type.split(',') if s.strip()]
             expanded_sports = []
             for s in sports:
-                if s.lower() in ["đa dụng", "gym", "gym & fitness", "gym & đa dụng", "fitness"]:
+                s_low = s.lower()
+                if s_low in ["đa dụng", "gym", "gym & fitness", "gym & đa dụng", "fitness"]:
                     expanded_sports.extend(["Đa dụng", "Gym & Fitness", "Gym & Đa Dụng", "Gym"])
+                elif s_low in ["bóng đá", "đá bóng", "bong da", "da bong", "football", "soccer"]:
+                    expanded_sports.extend(["Đá bóng", "Bóng đá"])
                 else:
                     expanded_sports.append(s)
             expanded_sports = list(set(expanded_sports))
@@ -131,10 +134,17 @@ class ProductService:
             query["discount_percent"] = {"$gt": 0}
             if not include_hidden:
                 now = datetime.now(timezone.utc)
-                query["$or"] = [
-                    {"discount_end_date": None},
-                    {"discount_end_date": {"$gt": now}}
-                ]
+                promo_condition = {
+                    "$or": [
+                        {"discount_end_date": None},
+                        {"discount_end_date": {"$gt": now}}
+                    ]
+                }
+                if "$or" in query:
+                    existing_or = query.pop("$or")
+                    query["$and"] = query.get("$and", []) + [{"$or": existing_or}, promo_condition]
+                else:
+                    query["$and"] = query.get("$and", []) + [promo_condition]
         return query
 
     @staticmethod
@@ -249,21 +259,68 @@ class ProductService:
     @staticmethod
     async def create_product(product_data: ProductCreate) -> Optional[Product]:
         import uuid
+        product_data.product_id = (product_data.product_id or "").strip()
         if not product_data.product_id:
-            product_data.product_id = f"PROD-{str(uuid.uuid4())[:8].upper()}"
+            product_data.product_id = f"KADY-{str(uuid.uuid4())[:6].upper()}"
             
         existing_product = await Product.find_one(Product.product_id == product_data.product_id)
         if existing_product:
             return None
-        
+
+        product_data.name = (product_data.name or "").strip()
+        if product_data.brand is not None:
+            product_data.brand = product_data.brand.strip() or None
+
+        # Đồng bộ category và sub_category
+        clean_categories = [c.strip() for c in (product_data.category or []) if c and isinstance(c, str) and c.strip()]
+        product_data.category = clean_categories
+        if not product_data.sub_category and clean_categories:
+            product_data.sub_category = clean_categories[0]
+        elif product_data.sub_category and not clean_categories:
+            product_data.category = [product_data.sub_category.strip()]
+
+        # Đồng bộ image_url và danh sách images
+        clean_images = [img.strip() for img in (product_data.images or []) if img and isinstance(img, str) and img.strip()]
+        primary_img = (product_data.image_url or "").strip()
+        if clean_images and not primary_img:
+            primary_img = clean_images[0]
+        elif primary_img and not clean_images:
+            clean_images = [primary_img]
+        product_data.image_url = primary_img
+        product_data.images = clean_images
+
         now = datetime.now(timezone.utc)
         if not product_data.created_at:
             product_data.created_at = now
         if not product_data.updated_at:
             product_data.updated_at = now
 
+        if product_data.rating is None or product_data.rating <= 0:
+            product_data.rating = 5.0
+
         if product_data.variants and len(product_data.variants) > 0:
-            product_data.stock = sum((v.stock if (v and v.stock is not None) else 0) for v in product_data.variants)
+            product_data.stock = sum(
+                max(0, v.stock if (v and v.stock is not None) else 0)
+                for v in product_data.variants
+            )
+            if not product_data.colors:
+                product_data.colors = list(
+                    dict.fromkeys(
+                        v.color.strip()
+                        for v in product_data.variants
+                        if v and v.color and v.color.strip()
+                    )
+                )
+            if not product_data.sizes:
+                product_data.sizes = list(
+                    dict.fromkeys(
+                        v.size.strip()
+                        for v in product_data.variants
+                        if v and v.size and v.size.strip()
+                    )
+                )
+        else:
+            product_data.stock = max(0, product_data.stock or 0)
 
         new_product = Product(**product_data.dict())
         await new_product.insert()
@@ -277,8 +334,31 @@ class ProductService:
         
         update_data = product_data.dict(exclude_unset=True)
         update_data["updated_at"] = datetime.now(timezone.utc)
-        if "variants" in update_data and update_data["variants"] is not None:
-            update_data["stock"] = sum((v.get("stock", 0) if isinstance(v, dict) else (v.stock or 0)) for v in update_data["variants"] if v)
+
+        if "name" in update_data and isinstance(update_data["name"], str):
+            update_data["name"] = update_data["name"].strip()
+
+        if "category" in update_data and isinstance(update_data["category"], list):
+            clean_cats = [c.strip() for c in update_data["category"] if c and isinstance(c, str) and c.strip()]
+            update_data["category"] = clean_cats
+            if clean_cats and not update_data.get("sub_category"):
+                update_data["sub_category"] = clean_cats[0]
+
+        if "images" in update_data and isinstance(update_data["images"], list):
+            clean_imgs = [img.strip() for img in update_data["images"] if img and isinstance(img, str) and img.strip()]
+            update_data["images"] = clean_imgs
+            if clean_imgs and not update_data.get("image_url"):
+                update_data["image_url"] = clean_imgs[0]
+
+        if "variants" in update_data and update_data["variants"]:
+            update_data["stock"] = sum(
+                max(0, v.get("stock", 0) if isinstance(v, dict) else (v.stock or 0))
+                for v in update_data["variants"]
+                if v
+            )
+        elif "stock" in update_data and update_data["stock"] is not None:
+            update_data["stock"] = max(0, int(update_data["stock"]))
+
         for key, value in update_data.items():
             setattr(product, key, value)
             

@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
 import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
+import { defaultMenu } from '@/modules/admin/danh-muc/data/defaultMenu';
 import type {
   AdminProductItem,
   ColorOption,
+  MenuCategoryOption,
+  MenuProductTypeOption,
   MenuSportOption,
   ProductFormData,
 } from '../types';
@@ -40,6 +43,45 @@ const DEFAULT_COLORS: ColorOption[] = [
   { name: 'Tím', hex: '#8B5CF6' },
 ];
 
+const DEFAULT_SHOE_SIZES = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
+const DEFAULT_CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
+const DEFAULT_SPORT_SPECS = [
+  'Bóng Size 4',
+  'Bóng Size 5',
+  'Vợt 3U-G5 (85-89g)',
+  'Vợt 4U-G5 (80-84g)',
+  'Vợt 5U-G6 (<80g)',
+  'Đinh dăm TF (Cỏ nhân tạo)',
+  'Đinh cao FG (Cỏ tự nhiên)',
+  'Đế bằng IC (Futsal)',
+  'Lều Đơn (1-2 Người)',
+  'Lều Đôi (2-4 Người)',
+  'Lều Gia Đình (4-6 Người)',
+  'Thảm tập 6mm',
+  'Thảm tập 8mm',
+  'Freesize',
+];
+
+function getSubCategoriesFor(
+  sports: MenuSportOption[],
+  sportName: string,
+  productTypeName: string
+): string[] {
+  const source = sports.length > 0 ? sports : defaultMenu;
+  const sport = source.find((s) => s.sport_type === sportName);
+  const pt = sport?.product_types?.find(
+    (p: MenuProductTypeOption) => p.product_type === productTypeName
+  );
+  const raw = pt?.categories || [];
+  return raw
+    .map((c: string | MenuCategoryOption) => {
+      if (typeof c === 'string') return c;
+      if (c && typeof c === 'object' && c.category && !c.is_hidden) return c.category;
+      return null;
+    })
+    .filter((item): item is string => Boolean(item));
+}
+
 function parseInitialGenders(editingProduct?: AdminProductItem | null): string[] {
   if (!editingProduct) return ['Unisex'];
   const rawGender = editingProduct.gender || 'Unisex';
@@ -60,19 +102,20 @@ function buildInitialFormData(
   defaultSku = 'KADY-100001'
 ): ProductFormData {
   if (!editingProduct) {
+    const defaultSubCats = getSubCategoriesFor([], 'Đá bóng', 'Quần áo');
     return {
       product_id: defaultSku,
       name: '',
       price: 0,
       image_url: '',
       stock: 0,
-      rating: 0,
+      rating: 5,
       reviews_count: 0,
       brand: '',
       gender: 'Unisex',
       product_type: 'Quần áo',
       sport_type: 'Đá bóng',
-      category: [],
+      category: defaultSubCats.length > 0 ? [defaultSubCats[0]] : [],
       sizes: [],
       colors: [],
       variants: [],
@@ -99,6 +142,14 @@ function buildInitialFormData(
       ? syncVariantsMatrix(colors, sizes, rawVariants, editingProduct.product_id, initStock)
       : rawVariants;
 
+  const initialCategories = Array.isArray(editingProduct.category)
+    ? editingProduct.category
+    : editingProduct.category
+      ? [editingProduct.category]
+      : editingProduct.sub_category
+        ? [editingProduct.sub_category]
+        : [];
+
   return {
     product_id: editingProduct.product_id || '',
     name: editingProduct.name || '',
@@ -109,13 +160,9 @@ function buildInitialFormData(
     reviews_count: editingProduct.reviews_count !== undefined ? editingProduct.reviews_count : 0,
     brand: editingProduct.brand || '',
     gender: parsedGenders.join(', ') || 'Unisex',
-    product_type: editingProduct.product_type || '',
-    sport_type: editingProduct.sport_type || '',
-    category: Array.isArray(editingProduct.category)
-      ? editingProduct.category
-      : editingProduct.category
-        ? [editingProduct.category]
-        : [],
+    product_type: editingProduct.product_type || 'Quần áo',
+    sport_type: editingProduct.sport_type || 'Đá bóng',
+    category: initialCategories,
     sizes,
     colors,
     variants: syncedVariants,
@@ -145,12 +192,17 @@ export function useProductForm({
     parseInitialGenders(editingProduct)
   );
   const [isPriceFocused, setIsPriceFocused] = useState<boolean>(false);
+  const [isStockFocused, setIsStockFocused] = useState<boolean>(false);
+  const [hasManualVariantEdit, setHasManualVariantEdit] = useState<boolean>(
+    () => Boolean(editingProduct && Array.isArray(editingProduct.variants) && editingProduct.variants.length > 0)
+  );
   const [availableBrands, setAvailableBrands] = useState<string[]>(DEFAULT_BRANDS);
   const [availableColors, setAvailableColors] = useState<ColorOption[]>(DEFAULT_COLORS);
-  const [availableShoeSizes, setAvailableShoeSizes] = useState<string[]>([]);
-  const [availableClothingSizes, setAvailableClothingSizes] = useState<string[]>([]);
-  const [availableSportSpecs, setAvailableSportSpecs] = useState<string[]>([]);
-  const [menuSports, setMenuSports] = useState<MenuSportOption[]>([]);
+  const [availableShoeSizes, setAvailableShoeSizes] = useState<string[]>(DEFAULT_SHOE_SIZES);
+  const [availableClothingSizes, setAvailableClothingSizes] =
+    useState<string[]>(DEFAULT_CLOTHING_SIZES);
+  const [availableSportSpecs, setAvailableSportSpecs] = useState<string[]>(DEFAULT_SPORT_SPECS);
+  const [menuSports, setMenuSports] = useState<MenuSportOption[]>(defaultMenu);
   const [activeSizeCategory, setActiveSizeCategory] = useState<'shoe' | 'clothing' | 'spec'>(() => {
     if (editingProduct?.product_type === 'Giày dép') return 'shoe';
     if (editingProduct?.product_type === 'Thiết bị') return 'spec';
@@ -165,11 +217,25 @@ export function useProductForm({
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           setMenuSports(data);
+          return;
         }
       }
     } catch {
       // Dùng danh mục mặc định khi không tải được menu API
     }
+    const savedMenu = localStorage.getItem('admin_mega_menu');
+    if (savedMenu) {
+      try {
+        const parsed = JSON.parse(savedMenu);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMenuSports(parsed);
+          return;
+        }
+      } catch {
+        // Ignore parse error
+      }
+    }
+    setMenuSports(defaultMenu);
   }, []);
 
   const fetchAttributes = useCallback(async () => {
@@ -177,15 +243,13 @@ export function useProductForm({
       const res = await fetch(`${resolveApiBaseUrl()}/attributes`);
       if (res.ok) {
         const data = await res.json();
-        setAvailableBrands(data.brands || DEFAULT_BRANDS);
-        setAvailableColors(data.colors || DEFAULT_COLORS);
-        setAvailableShoeSizes(
-          data.shoe_sizes || ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']
-        );
+        setAvailableBrands(data.brands?.length ? data.brands : DEFAULT_BRANDS);
+        setAvailableColors(data.colors?.length ? data.colors : DEFAULT_COLORS);
+        setAvailableShoeSizes(data.shoe_sizes?.length ? data.shoe_sizes : DEFAULT_SHOE_SIZES);
         setAvailableClothingSizes(
-          data.clothing_sizes || ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
+          data.clothing_sizes?.length ? data.clothing_sizes : DEFAULT_CLOTHING_SIZES
         );
-        setAvailableSportSpecs(data.sport_specs || []);
+        setAvailableSportSpecs(data.sport_specs?.length ? data.sport_specs : DEFAULT_SPORT_SPECS);
         return;
       }
     } catch {
@@ -205,6 +269,7 @@ export function useProductForm({
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAttributes();
     fetchMenuData();
   }, [fetchAttributes, fetchMenuData]);
@@ -219,7 +284,8 @@ export function useProductForm({
         prev.sizes,
         prev.variants,
         prev.product_id,
-        prev.stock
+        prev.stock,
+        !hasManualVariantEdit && prev.stock > 0
       );
       const totalStock = nextVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
       return {
@@ -241,7 +307,8 @@ export function useProductForm({
         nextSizes,
         prev.variants,
         prev.product_id,
-        prev.stock
+        prev.stock,
+        !hasManualVariantEdit && prev.stock > 0
       );
       const totalStock = nextVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
       return {
@@ -270,10 +337,41 @@ export function useProductForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
+      notifications.show({
+        title: 'Thiếu thông tin',
+        message: 'Vui lòng nhập tên sản phẩm',
+        color: 'orange',
+      });
+      return;
+    }
+
+    if (!formData.price || Number(formData.price) <= 0) {
+      notifications.show({
+        title: 'Giá không hợp lệ',
+        message: 'Vui lòng nhập giá bán lớn hơn 0 VNĐ',
+        color: 'orange',
+      });
+      return;
+    }
+
+    const primaryImage =
+      formData.images.length > 0 ? formData.images[0].trim() : formData.image_url.trim();
+    if (!primaryImage) {
+      notifications.show({
+        title: 'Thiếu hình ảnh',
+        message: 'Vui lòng tải ảnh lên hoặc dán đường dẫn URL hình ảnh sản phẩm',
+        color: 'orange',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+      const apiUrl = resolveApiBaseUrl();
       const url = editingProduct
         ? `${apiUrl}/products/${editingProduct.product_id}`
         : `${apiUrl}/products`;
@@ -284,11 +382,35 @@ export function useProductForm({
       const finalBrand =
         formData.brand && formData.brand.trim() !== '' ? formData.brand.trim() : null;
 
+      let finalCategories = Array.isArray(formData.category)
+        ? formData.category.filter(Boolean)
+        : [];
+      if (finalCategories.length === 0) {
+        const subCats = getSubCategoriesFor(menuSports, formData.sport_type, formData.product_type);
+        if (subCats.length > 0) {
+          finalCategories = [subCats[0]];
+        }
+      }
+
+      const finalImages =
+        formData.images.length > 0 ? formData.images : primaryImage ? [primaryImage] : [];
+      const finalTotalStock =
+        formData.variants.length > 0
+          ? formData.variants.reduce((sum, v) => sum + (Number(v.stock) || 0), 0)
+          : Math.max(0, Number(formData.stock) || 0);
+
       const payload = {
         ...formData,
+        product_id: formData.product_id.trim(),
+        name: trimmedName,
+        price: Number(formData.price),
+        stock: finalTotalStock,
         brand: finalBrand,
         gender: finalGender,
-        image_url: formData.images.length > 0 ? formData.images[0] : formData.image_url,
+        category: finalCategories,
+        sub_category: finalCategories[0] || null,
+        image_url: primaryImage,
+        images: finalImages,
       };
 
       const res = await fetch(url, {
@@ -330,6 +452,10 @@ export function useProductForm({
     selectedGenders,
     isPriceFocused,
     setIsPriceFocused,
+    isStockFocused,
+    setIsStockFocused,
+    hasManualVariantEdit,
+    setHasManualVariantEdit,
     availableBrands,
     availableColors,
     availableShoeSizes,

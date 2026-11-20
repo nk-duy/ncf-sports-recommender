@@ -1,9 +1,13 @@
 'use client';
 import React from 'react';
 import { Eye, EyeOff, Edit, Trash2, BadgePercent, RefreshCcw, ChevronUp, ChevronDown, AlertTriangle, Info } from 'lucide-react';
+import type { AdminProductItem } from '../types';
+
+const FALLBACK_PRODUCT_IMG =
+  'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=80';
 
 interface ProductTableProps {
-  products: any[];
+  products: AdminProductItem[];
   loading: boolean;
   currentPage: number;
   itemsPerPage: number;
@@ -11,14 +15,14 @@ interface ProductTableProps {
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   handleSort: (key: string) => void;
   formatPrice: (price: number) => string;
-  getDisplayTags: (product: any) => string[];
-  handleEdit: (product: any) => void;
-  handleToggleVisibility: (product: any) => void;
-  handleSoftDelete: (product: any) => void;
-  handleRestore: (product: any) => void;
+  getDisplayTags: (product: AdminProductItem) => string[];
+  handleEdit: (product: AdminProductItem) => void;
+  handleToggleVisibility: (product: AdminProductItem) => void;
+  handleSoftDelete: (product: AdminProductItem) => void;
+  handleRestore: (product: AdminProductItem) => void;
   handleDelete: (id: string) => void;
-  openDiscountModal: (product: any) => void;
-  onViewDetail?: (product: any) => void;
+  openDiscountModal: (product: AdminProductItem) => void;
+  onViewDetail?: (product: AdminProductItem) => void;
   // Bulk selection props
   selectedProductIds?: string[];
   onToggleSelect?: (productId: string) => void;
@@ -139,8 +143,11 @@ export default function ProductTable({
                         title="Click để xem chi tiết sản phẩm"
                       >
                         <img
-                          src={product.image_url}
+                          src={product.image_url || FALLBACK_PRODUCT_IMG}
                           alt={product.name}
+                          onError={(e) => {
+                            e.currentTarget.src = FALLBACK_PRODUCT_IMG;
+                          }}
                           className="size-12 object-cover rounded-lg transition-transform duration-200 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-lg">
@@ -224,10 +231,10 @@ export default function ProductTable({
                     </td>
 
                     <td className="px-3.5 py-3 font-sans tabular-nums font-bold text-slate-900">
-                      {product.discount_percent > 0 ? (
+                      {(product.discount_percent || 0) > 0 ? (
                         <div className="flex flex-col">
                           <span className="text-xs text-slate-400 line-through tabular-nums">{formatPrice(product.price)}</span>
-                          <span className="text-blue-600 tabular-nums">{formatPrice(product.price * (1 - product.discount_percent / 100))}</span>
+                          <span className="text-blue-600 tabular-nums">{formatPrice(product.price * (1 - (product.discount_percent || 0) / 100))}</span>
                         </div>
                       ) : (
                         formatPrice(product.price)

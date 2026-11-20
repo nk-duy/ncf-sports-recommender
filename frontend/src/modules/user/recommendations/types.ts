@@ -1,3 +1,5 @@
+import type { AIExplanation } from "@/shared/types/aiExplanation";
+
 export interface UserRecommendedProduct {
   product_id: string;
   name: string;
@@ -12,6 +14,7 @@ export interface UserRecommendedProduct {
   category?: string | string[];
   sport_type?: string;
   match_score?: number;
+  ai_explanation?: AIExplanation;
 }
 
 export const DEFAULT_RECOMMENDED_SPORT_IMG =

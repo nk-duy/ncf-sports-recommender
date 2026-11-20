@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, Sparkles, Star } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import AiXRayInspector from "@/shared/components/AiXRayInspector";
 import { HOME_FALLBACK_SPORT_IMG, type HomeRecProduct } from "../types";
 
@@ -27,6 +27,7 @@ export default function HomeRecommendationCard({
   const pid = product.product_id;
   const discount = product.discount_percent || 0;
   const salePrice = discount > 0 ? product.price * (1 - discount / 100) : product.price;
+  const showXRayDetails = mounted && isXRayActive;
 
   return (
     <div className="group bg-white rounded-2xl border border-slate-200/80 hover:border-blue-400 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 flex flex-col overflow-hidden relative">
@@ -47,17 +48,16 @@ export default function HomeRecommendationCard({
           }}
         />
 
-        {/* AI Match Percent & Discount Badges */}
+        {/* AI Match Percent (chỉ khi bật X-Ray) & Discount Badges */}
         <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
-          {product.ai_explanation?.match_percent ? (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-md tabular-nums">
-              <Sparkles size={9} className="text-yellow-300" />
+          {showXRayDetails && product.ai_explanation?.match_percent ? (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9.5px] sm:text-[10px] font-bold shadow-sm tabular-nums">
               {product.ai_explanation.match_percent}% Phù hợp
             </span>
           ) : null}
-          {product.ai_explanation?.is_cross_sport_discovery && (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-gradient-to-r from-amber-500 to-orange-600 text-white text-[9px] sm:text-[10px] font-bold shadow-md">
-              🌟 Khám phá Liên bộ môn
+          {showXRayDetails && product.ai_explanation?.is_cross_sport_discovery && (
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md bg-slate-800 text-white text-[9px] sm:text-[10px] font-bold shadow-sm">
+              Khám phá Liên bộ môn
             </span>
           )}
           {discount > 0 && (
@@ -104,21 +104,20 @@ export default function HomeRecommendationCard({
             {product.name}
           </Link>
 
-          {/* AI Explanation Reason */}
-          {product.ai_explanation?.reason && (
+          {/* AI Explanation Reason (chỉ hiển thị khi bật X-Ray) */}
+          {showXRayDetails && product.ai_explanation?.reason && (
             <div className="mb-2">
               <span
                 className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-blue-600 bg-blue-50/80 px-1.5 sm:px-2 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
                 title={product.ai_explanation.reason}
               >
-                <Sparkles size={9} className="shrink-0 text-blue-500" />
                 <span className="line-clamp-2 sm:truncate">{product.ai_explanation.reason}</span>
               </span>
             </div>
           )}
 
           {/* AI X-Ray Inspector Box */}
-          {isXRayActive && (
+          {showXRayDetails && (
             <div className="mb-2.5">
               <AiXRayInspector explanation={product.ai_explanation} />
             </div>

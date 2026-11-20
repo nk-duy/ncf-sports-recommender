@@ -1,5 +1,5 @@
 import React from "react";
-import { BadgeCheck, RefreshCcw, ShieldCheck, BrainCircuit } from "lucide-react";
+import { BadgeCheck, RefreshCcw, ShieldCheck, Ruler } from "lucide-react";
 
 export default function CheckoutCommitments() {
   return (
@@ -21,8 +21,8 @@ export default function CheckoutCommitments() {
           <span>Bảo hành hiệu năng thể thao 12 tháng</span>
         </li>
         <li className="flex items-start gap-3 text-gray-900">
-          <BrainCircuit size={18} className="text-green-700 mt-0.5 flex-shrink-0" />
-          <span>Hỗ trợ đo size chân AI trực tuyến 24/7</span>
+          <Ruler size={18} className="text-blue-600 mt-0.5 flex-shrink-0" />
+          <span>Hỗ trợ tư vấn chọn size trực tuyến 24/7</span>
         </li>
       </ul>
     </div>

@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.user import (
     UserCreate, UserResponse, UserUpdate, Token, SocialLoginRequest,
-    ForgotPasswordRequest, ChangePasswordRequest
+    ForgotPasswordRequest, ChangePasswordRequest,
+    SendOtpRequest, SendOtpResponse, VerifyOtpRequest
 )
 from app.services.auth_service import auth_service
+from app.services.email_service import email_service
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.core.limiter import limiter
@@ -82,6 +84,38 @@ async def social_login(request: Request, req: SocialLoginRequest):
         interested_sports=req.interested_sports
     )
     access_token = auth_service.create_token(user.username)
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/send-otp", response_model=SendOtpResponse)
+@limiter.limit("10/minute")
+async def send_otp(request: Request, req: SendOtpRequest):
+    """Sinh mã xác nhận OTP 6 chữ số (hết hạn sau 5 phút) và gửi tới email người dùng"""
+    return await auth_service.request_email_otp(
+        email=req.email,
+        full_name=req.full_name,
+        interested_sports=req.interested_sports,
+    )
+
+@router.post("/verify-otp", response_model=Token)
+@limiter.limit("10/minute")
+async def verify_otp(
+    request: Request,
+    req: VerifyOtpRequest,
+    background_tasks: BackgroundTasks,
+):
+    """Xác thực mã OTP 6 chữ số, tự động tạo/cập nhật user MongoDB, gửi email chào mừng ngầm và cấp JWT"""
+    user, access_token = await auth_service.verify_email_otp(
+        email=req.email,
+        otp=req.otp,
+        full_name=req.full_name,
+        interested_sports=req.interested_sports,
+    )
+    background_tasks.add_task(
+        email_service.send_welcome_email,
+        user.email,
+        user.full_name,
+        user.interested_sports,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/forgot-password")

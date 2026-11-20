@@ -1,4 +1,4 @@
-import { ArrowRight, Award, BadgePercent, RefreshCcw, ShieldCheck, Sparkles, Truck } from 'lucide-react';
+import { ArrowRight, Award, BadgePercent, CheckCircle2, RefreshCcw, ShieldCheck, Truck } from 'lucide-react';
 import { formatVND, SHIPPING_OPTIONS, type Voucher } from '@/shared/lib/cart';
 import type { CheckoutTextField } from '@/shared/store/checkoutStore';
 
@@ -85,7 +85,7 @@ export function CartSummary({
           </select>
           {subtotal >= 500000 && (
             <p className="text-[11px] text-green-700 font-medium mt-2 flex items-center gap-1.5">
-              <Sparkles size={13} className="shrink-0 text-green-600" />
+              <CheckCircle2 size={13} className="shrink-0 text-green-600" />
               Đơn trên 500k: Giảm ngay 30.000đ phí giao hàng!
             </p>
           )}

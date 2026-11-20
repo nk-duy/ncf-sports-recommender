@@ -109,6 +109,25 @@ export function getSizeSetForProduct(product: KindSource): string[] {
   return SIZE_SET_BY_KIND[detectProductSizeKind(product)];
 }
 
+const APPAREL_SIZE_RE = /^(XXS|XS|S|M|L|XL|XXL|2XL|3XL|4XL|5XL)$/i;
+const SHOE_SIZE_RE = /^(3[4-9]|4[0-8])(\.5)?$/;
+const SHOE_SPEC_RE = /(đinh|tf|fg|ic|ag|mg|sg|cỏ|futsal)/i;
+
+function isSizeValidForKind(size: string, kind: ProductSizeKind, targetSet: Set<string>): boolean {
+  const trimmed = (size || '').trim();
+  if (!trimmed) return false;
+  if (targetSet.has(trimmed)) return true;
+
+  if (kind === 'shoes') {
+    return SHOE_SIZE_RE.test(trimmed) || SHOE_SPEC_RE.test(trimmed);
+  }
+  if (kind === 'apparel' || kind === 'small_gear') {
+    return APPAREL_SIZE_RE.test(trimmed) || /^freesize$/i.test(trimmed);
+  }
+  // Với thiết bị / vợt / phụ kiện: chấp nhận mọi thông số kỹ thuật hợp lệ (không phải size chữ quần áo S/M/L hay size số giày 36-45)
+  return !APPAREL_SIZE_RE.test(trimmed) && !SHOE_SIZE_RE.test(trimmed);
+}
+
 /**
  * Hàm kiểm tra bảo vệ: đảm bảo `sizes` / `variants` của sản phẩm khớp đúng nhóm kích cỡ.
  * Ví dụ sản phẩm Giày dép chứa `S, M, L, XL, 2XL, 3XL` sẽ được ánh xạ sang `38 … 44`;
@@ -122,8 +141,17 @@ export function normalizeProductVariants(product: ProductDetail): ProductDetail 
 
   const sizes = product.sizes ?? [];
   const variants = product.variants ?? [];
-  const sizesValid = sizes.length > 0 && sizes.every((s) => targetSet.has(s));
-  const variantsValid = variants.every((v) => !v.size || targetSet.has(v.size));
+
+  // Trường hợp sản phẩm chỉ phân loại theo màu sắc (không có kích cỡ) do Admin tạo chủ đích
+  if (sizes.length === 0 && variants.length > 0 && variants.every((v) => !v.size)) {
+    return product;
+  }
+
+  const sizesValid =
+    sizes.length > 0 && sizes.every((s) => isSizeValidForKind(s, kind, targetSet));
+  const variantsValid = variants.every(
+    (v) => !v.size || isSizeValidForKind(v.size, kind, targetSet)
+  );
   if (sizesValid && variantsValid) return product;
 
   if (variants.length === 0) {
@@ -133,7 +161,7 @@ export function normalizeProductVariants(product: ProductDetail): ProductDetail 
 
   const mapSize = (old?: string): string | undefined => {
     if (!old) return undefined;
-    if (targetSet.has(old)) return old;
+    if (isSizeValidForKind(old, kind, targetSet)) return old;
     if (kind === 'shoes') return APPAREL_LETTER_TO_SHOE[old.toUpperCase()];
     if (kind === 'apparel' && old.toUpperCase() === 'XXL') return '2XL';
     return undefined;
@@ -144,18 +172,21 @@ export function normalizeProductVariants(product: ProductDetail): ProductDetail 
   );
   const colorList = colors.length > 0 ? colors : [''];
   const next: ProductVariant[] = [];
+  const isProductOutOfStock = product.stock !== undefined && product.stock <= 0;
 
   colorList.forEach((color, ci) => {
     const old = variants.filter((v) => (v.color || '') === color);
     const colorTotal = old.reduce((sum, v) => sum + (v.stock ?? 0), 0);
-    const fallbackStock = Math.max(1, Math.floor((colorTotal || (product.stock ?? 25)) / target.length));
+    const fallbackStock = isProductOutOfStock
+      ? 0
+      : Math.max(1, Math.floor((colorTotal || (product.stock ?? 25)) / target.length));
     target.forEach((size) => {
       const matched = old.filter((v) => mapSize(v.size) === size);
       const stock = matched.length > 0 ? matched.reduce((s, v) => s + (v.stock ?? 0), 0) : fallbackStock;
       next.push({
         color,
         size,
-        stock: Math.max(1, stock),
+        stock: isProductOutOfStock ? 0 : Math.max(0, stock),
         sku: `${product.product_id}-C${ci + 1}-${size.replace(/\s*\(.*?\)/g, '').replace(/[^0-9A-Za-z]+/g, '').toUpperCase()}`,
       });
     });

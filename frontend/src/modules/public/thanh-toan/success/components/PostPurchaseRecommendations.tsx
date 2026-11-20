@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, ShoppingBag } from 'lucide-react';
 import { notifications } from '@mantine/notifications';
 import { useCartStore } from '@/shared/store/cartStore';
 import { useAuthStore } from '@/shared/store/authStore';
@@ -90,13 +90,10 @@ export default function PostPurchaseRecommendations({ order }: PostPurchaseRecom
           // Try fallback
         }
 
-        // Secondary Fallback: Personalized NCF or Trending
+        // Secondary Fallback: Personalized NCF or Cold-Start Diverse Trending
         if (recData.length === 0) {
           try {
-            const endpoint =
-              isAuthenticated && token
-                ? `${apiUrl}/recommendations/?top_k=4`
-                : `${apiUrl}/recommendations/trending?top_k=4`;
+            const endpoint = `${apiUrl}/recommendations/?top_k=4`;
             const fallbackRes = await fetch(endpoint, {
               headers: isAuthenticated && token ? { Authorization: `Bearer ${token}` } : {},
             });
@@ -179,14 +176,14 @@ export default function PostPurchaseRecommendations({ order }: PostPurchaseRecom
         <div>
           <div className="flex items-center gap-2">
             <div className="size-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <Sparkles size={18} />
+              <ShoppingBag size={18} />
             </div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-              Gợi ý bổ trợ thông minh bởi AI (NCF)
+              Có thể bạn cũng cần
             </h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Dựa trên sở thích thể thao và các mặt hàng vừa đặt, KADY gợi ý các sản phẩm bổ trợ tối ưu nhất:
+            Các sản phẩm phù hợp với đơn hàng bạn vừa đặt:
           </p>
         </div>
         <div className="flex items-center gap-3 self-start sm:self-auto">

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Truck, Sparkles } from 'lucide-react';
+import { Truck, CheckCircle2 } from 'lucide-react';
 import { formatVND, FREESHIP_THRESHOLD } from '@/shared/lib/cart';
 
 interface CartFreeshipProgressProps {
@@ -20,7 +20,7 @@ export function CartFreeshipProgress({ subtotal }: CartFreeshipProgressProps) {
         <div className="flex-1">
           {isQualified ? (
             <p className="text-sm font-bold text-emerald-700 flex items-center gap-1.5">
-              <Sparkles size={16} className="text-emerald-600 shrink-0 animate-pulse" />
+              <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
               Chúc mừng! Bạn đã đủ điều kiện Miễn Phí Vận Chuyển toàn quốc.
             </p>
           ) : (

@@ -22,12 +22,12 @@ interface AiEvaluationModalProps {
 }
 
 const DEFAULT_DATASET: DatasetSummary = {
-  num_users: 135,
-  num_items: 552,
-  total_interactions: 1025,
-  train_samples: 4535,
-  test_instances: 118,
-  sparsity_percent: 98.62,
+  num_users: 230,
+  num_items: 633,
+  total_interactions: 4994,
+  train_samples: 16740,
+  test_instances: 203,
+  sparsity_percent: 97.56,
 };
 
 const DEFAULT_HYPERPARAMS: ModelHyperparameters = {
@@ -37,20 +37,20 @@ const DEFAULT_HYPERPARAMS: ModelHyperparameters = {
   mlp_layers: [32, 16, 8],
   negative_sampling_ratio: '1:4',
   test_negatives: 99,
-  optimizer: 'Adam (lr=0.001)',
+  optimizer: 'Adam (lr=0.0022, weight_decay=1e-4)',
   loss_function: 'Binary Cross-Entropy (BCELoss)',
   epochs: 20,
   batch_size: 128,
-  inference_latency_ms: 0.44,
+  inference_latency_ms: 0.75,
 };
 
 const DEFAULT_EVAL_METRICS: ModelEvaluationSummary = {
-  final_bce_loss: 0.231,
-  hr_at_8: 86.8,
-  ndcg_at_8: 0.655,
-  hr_at_10: 88.5,
-  ndcg_at_10: 0.678,
-  inference_latency_ms: 0.44,
+  final_bce_loss: 0.206,
+  hr_at_8: 74.88,
+  ndcg_at_8: 0.3805,
+  hr_at_10: 87.19,
+  ndcg_at_10: 0.4169,
+  inference_latency_ms: 0.75,
 };
 
 export default function AiEvaluationModal({

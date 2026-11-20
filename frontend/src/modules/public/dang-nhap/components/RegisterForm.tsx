@@ -101,7 +101,7 @@ export default function RegisterForm({
         notifications.show({
           title: 'Đăng ký thành công',
           message:
-            'Tài khoản của bạn đã được tạo thành công! Hãy đăng nhập để trải nghiệm AI NCF.',
+            'Tài khoản của bạn đã được tạo thành công! Hãy đăng nhập để bắt đầu mua sắm.',
           color: 'green',
         });
         onSwitchToLogin(formData.username.trim());
@@ -130,7 +130,7 @@ export default function RegisterForm({
 
   return (
     <>
-      <p className="mt-1 mb-4 text-center text-xs sm:text-sm text-gray-500">
+      <p className="mb-3 text-center text-xs text-slate-500">
         Đã có tài khoản?{' '}
         <button
           type="button"
@@ -142,17 +142,17 @@ export default function RegisterForm({
       </p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-100 flex items-start gap-2.5 text-red-600 animate-in fade-in slide-in-from-top-2">
+        <div className="mb-3 p-2.5 rounded-xl bg-red-50 border border-red-100 flex items-start gap-2 text-red-600 animate-in fade-in slide-in-from-top-2">
           <div className="shrink-0">
             <svg className="h-4 w-4 text-red-500 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
           </div>
-          <p className="text-xs sm:text-sm font-medium">{error}</p>
+          <p className="text-xs font-medium">{error}</p>
         </div>
       )}
 
-      <form className="space-y-3" onSubmit={handleSubmit} autoComplete="off" noValidate>
+      <form className="space-y-2.5" onSubmit={handleSubmit} autoComplete="off" noValidate>
         <RegisterCredentialsFields
           formData={formData}
           onChange={handleChange}
@@ -165,14 +165,13 @@ export default function RegisterForm({
         <SportPreferenceSelector
           selectedSports={selectedSports}
           onToggleSport={toggleSport}
-          showHint
         />
 
-        <div className="pt-2">
+        <div className="pt-1">
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-md shadow-blue-500/20 text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-xl shadow-sm text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -180,13 +179,17 @@ export default function RegisterForm({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              'Tạo Tài Khoản'
+              'Tạo tài khoản'
             )}
           </button>
         </div>
       </form>
 
-      <GoogleOAuthDividerButton onClick={onSwitchToGoogle} marginClass="mt-4" />
+      <GoogleOAuthDividerButton
+        onClick={onSwitchToGoogle}
+        marginClass="mt-3"
+        buttonLabel="Tiếp tục với Google"
+      />
     </>
   );
 }

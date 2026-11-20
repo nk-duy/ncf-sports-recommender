@@ -122,10 +122,12 @@ export default function CartRecommendations() {
     handleTrackClick(p.product_id);
     const size = p.sizes && p.sizes.length > 0 ? p.sizes[0] : 'Free size';
     const color = p.colors && p.colors.length > 0 ? p.colors[0] : '';
+    const discount = p.discount_percent || 0;
+    const salePrice = discount > 0 ? Math.round(p.price * (1 - discount / 100)) : p.price;
     addItem({
       product_id: p.product_id,
       name: p.name,
-      price: p.price,
+      price: salePrice,
       image_url: p.image_url,
       quantity: 1,
       size,
@@ -168,10 +170,12 @@ export default function CartRecommendations() {
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <AiXRayToggle />
-          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-xs font-bold items-center gap-1.5 border border-blue-200/60 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-blue-600 inline-block animate-pulse" />
-            ✨ NCF Cross-Sell
-          </span>
+          {isXRayActive && (
+            <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold items-center gap-1.5 border border-blue-200/80">
+              <span className="w-2 h-2 rounded-full bg-blue-600 inline-block" />
+              NCF Cross-Sell
+            </span>
+          )}
         </div>
       </div>
 

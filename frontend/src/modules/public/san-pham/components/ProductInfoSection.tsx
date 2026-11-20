@@ -113,10 +113,13 @@ export default function ProductInfoSection({
   };
 
   const hasColors = Boolean(product.colors && product.colors.length > 0);
-  const isReady = selectedSize !== '' && (!hasColors || selectedColor !== '');
+  const hasSizes = availableSizes.length > 0;
+  const isReady = (!hasSizes || selectedSize !== '') && (!hasColors || selectedColor !== '');
 
   const currentVariant = activeVariants.find(
-    (v) => (hasColors ? v.color === selectedColor : true) && v.size === selectedSize
+    (v) =>
+      (hasColors ? v.color === selectedColor : true) &&
+      (hasSizes ? v.size === selectedSize : !v.size)
   );
 
   const effectiveStock =

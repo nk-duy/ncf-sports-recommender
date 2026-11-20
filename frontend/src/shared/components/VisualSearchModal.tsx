@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import {
   Camera,
   UploadCloud,
-  Sparkles,
   X,
   ArrowRight,
   CheckCircle2,
@@ -557,14 +556,9 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
               <Camera size={18} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900 leading-tight">
-                  Tìm kiếm sản phẩm bằng hình ảnh
-                </h2>
-                <span className="hidden sm:inline-flex text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-                  Google Lens Style &bull; NCF 32D
-                </span>
-              </div>
+              <h2 className="text-base font-bold text-slate-900 leading-tight">
+                Tìm kiếm sản phẩm bằng hình ảnh
+              </h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
                 Chụp ảnh trực tiếp, dán ảnh hoặc tải tệp để tìm sản phẩm thể thao tương tự
               </p>
@@ -751,8 +745,7 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
 
             {/* Phần "Hoặc chọn nhanh ảnh mẫu có sẵn": Lưới 2 cột nhỏ gọn */}
             <div className="mt-4 pt-3.5 border-t border-slate-200/70 flex flex-col flex-1">
-              <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-600 mb-2 flex items-center gap-1.5">
-                <Sparkles size={13} className="text-amber-500" />
+              <span className="text-[10.5px] font-bold uppercase tracking-wider text-slate-600 mb-2">
                 Hoặc chọn nhanh ảnh mẫu
               </span>
 
@@ -807,15 +800,12 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
             <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm font-bold text-slate-900">
-                  Sản phẩm gợi ý tương tự
+                  Sản phẩm tương tự
                 </span>
-                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                <span className="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
                   {products.length} sản phẩm
                 </span>
               </div>
-              <span className="text-[11px] text-slate-400 hidden sm:inline-block">
-                Đối sánh kiểu dáng, màu sắc &amp; ngữ cảnh bộ môn
-              </span>
             </div>
 
             {/* Khu vực cuộn độc lập cho kết quả */}
@@ -849,8 +839,8 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
                   <p className="text-xs font-bold text-slate-800">
                     Đang tìm kiếm sản phẩm tương tự...
                   </p>
-                  <p className="text-[11px] text-slate-400">
-                    Hệ thống đang trích xuất đặc trưng thị giác 48D và vector NCF 32D
+                  <p className="text-[11px] text-slate-500">
+                    Vui lòng chờ trong giây lát
                   </p>
                 </div>
               ) : products.length > 0 ? (
@@ -896,13 +886,9 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
                         {/* Chi tiết sản phẩm */}
                         <div className="flex-1 flex flex-col justify-between">
                           <div>
-                            {/* Phân loại bộ môn & Nhãn thuật toán 1 dòng không ngắt dòng */}
-                            <div className="flex items-center justify-between gap-1 mb-1">
-                              <span className="text-[10px] font-bold uppercase text-slate-500 truncate">
+                            <div className="mb-1">
+                              <span className="text-[10px] font-bold uppercase text-slate-500 truncate block">
                                 {p.sport_type || 'Thể thao'}
-                              </span>
-                              <span className="text-[11px] font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded whitespace-nowrap shrink-0">
-                                Thị giác &amp; NCF 32D
                               </span>
                             </div>
 
@@ -958,14 +944,11 @@ export default function VisualSearchModal({ isOpen, onClose, initialFile }: Visu
         </div>
 
         {/* Footer Modal gọn gàng */}
-        <div className="px-5 py-2.5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between text-xs text-slate-500 shrink-0">
-          <span className="text-[11px] text-slate-400 hidden sm:inline-block">
-            KADY Sports &bull; Tìm kiếm sản phẩm thông minh bằng đặc trưng thị giác &amp; NCF
-          </span>
+        <div className="px-5 py-2.5 border-t border-slate-100 bg-slate-50/70 flex items-center justify-end text-xs text-slate-500 shrink-0">
           <button
             type="button"
             onClick={handleClose}
-            className="ml-auto px-4 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+            className="px-4 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
           >
             Đóng
           </button>

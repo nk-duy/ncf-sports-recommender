@@ -1,6 +1,6 @@
 "use client";
 
-import { Gift, ShieldCheck, Sparkles } from "lucide-react";
+import { Gift, ShieldCheck, Tag } from "lucide-react";
 
 interface PromotionsPerkCardsProps {
   mounted: boolean;
@@ -22,7 +22,7 @@ export default function PromotionsPerkCards({
       <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition-colors">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-red-600" />
+            <Tag className="w-5 h-5 text-red-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">

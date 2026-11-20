@@ -5,7 +5,7 @@ import {
   Bell,
   Package,
   Gift,
-  Sparkles,
+  Tag,
   Copy,
   Check,
   ChevronRight,
@@ -53,10 +53,10 @@ function getTypeMeta(type: string) {
       };
     case "ai_recommend":
       return {
-        icon: <Sparkles size={18} className="text-purple-600" />,
-        label: "Gợi ý AI",
-        badgeBg: "bg-purple-50 text-purple-700 border-purple-200",
-        cardBorder: "hover:border-purple-200",
+        icon: <Tag size={18} className="text-blue-600" />,
+        label: "Gợi ý cho bạn",
+        badgeBg: "bg-blue-50 text-blue-700 border-blue-200",
+        cardBorder: "hover:border-blue-200",
       };
     default:
       return {

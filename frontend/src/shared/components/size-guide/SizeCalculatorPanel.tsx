@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, Check, Info } from 'lucide-react';
+import { Ruler, Check, Info } from 'lucide-react';
 import {
   FIT_OPTIONS,
   type FitPreference,
@@ -48,7 +48,7 @@ export default function SizeCalculatorPanel({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2">
           <span className="p-1.5 rounded-lg bg-blue-600 text-white">
-            <Sparkles className="w-4 h-4" />
+            <Ruler className="w-4 h-4" />
           </span>
           <div>
             <h3 className="text-sm font-bold text-gray-900">Bộ tính size chuẩn cho cơ thể của bạn</h3>

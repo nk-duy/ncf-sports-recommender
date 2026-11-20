@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { HOME_FALLBACK_SPORT_IMG, type SportMeta } from "../types";
 
 interface SportSpotlightBannerProps {
@@ -26,8 +26,7 @@ export default function SportSpotlightBanner({ sport }: SportSpotlightBannerProp
       <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
 
       <div className="absolute top-5 left-5 z-10">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider border border-white/20">
-          <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+        <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] font-black uppercase tracking-wider border border-white/20">
           {sport.tag}
         </span>
       </div>

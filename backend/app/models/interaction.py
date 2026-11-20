@@ -12,3 +12,7 @@ class Interaction(Document):
 
     class Settings:
         name = "interactions"
+        indexes = [
+            [("user_id", 1), ("timestamp", -1)],
+            [("product_id", 1), ("interaction_type", 1)],
+        ]

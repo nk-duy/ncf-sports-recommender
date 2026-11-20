@@ -4,6 +4,8 @@ from app.models.user import User
 from app.models.product import Product
 from app.core.cache import cache_response, fast_cache
 
+CANCELLED_STATUSES = {"cancelled", "rejected", "canceled", "đã hủy", "từ chối"}
+
 class AdminService:
     @staticmethod
     @cache_response(ttl=300, prefix="dashboard_stats:summary")
@@ -13,9 +15,13 @@ class AdminService:
         total_products = await Product.count()
         total_orders = await Order.count()
         
-        # Calculate total revenue
+        # Calculate total revenue (exclude cancelled/rejected orders)
         orders = await Order.find_all().to_list()
-        total_revenue = sum(order.total_amount for order in orders)
+        total_revenue = sum(
+            order.total_amount
+            for order in orders
+            if (order.status or "").lower() not in CANCELLED_STATUSES
+        )
         
         # Calculate pending orders
         pending_orders = len([o for o in orders if o.status == "pending"])

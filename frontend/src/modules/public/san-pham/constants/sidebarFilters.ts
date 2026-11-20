@@ -13,7 +13,21 @@ export const SPORT_TYPES = [
   'Phụ kiện chung',
 ];
 
-export const BRANDS = ['Nike', 'Adidas', 'Puma', 'Asics', 'New Balance', 'Salomon', 'Unknown'];
+export const BRANDS = [
+  'Nike',
+  'Adidas',
+  'Puma',
+  'Yonex',
+  'Mizuno',
+  'Lining',
+  'Asics',
+  'Joola',
+  'Under Armour',
+  'Decathlon',
+  'New Balance',
+  'Coleman',
+  'NatureHike',
+];
 
 export const GENDERS = ['Nam', 'Nữ', 'Unisex'];
 

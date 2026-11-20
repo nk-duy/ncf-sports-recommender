@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { notifications } from '@mantine/notifications';
 import { getAuthHeaders } from '@/shared/lib/authHeader';
+import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
 import type {
   AdminProductItem,
   ConfirmModalState,
@@ -18,7 +19,7 @@ import {
 import { exportProductsToExcel } from '../utils/exportProductsExcel';
 import { useProductBulkActions } from './useProductBulkActions';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = resolveApiBaseUrl();
 
 export function useProductManager() {
   const [products, setProducts] = useState<AdminProductItem[]>([]);
@@ -109,6 +110,7 @@ export function useProductManager() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
     fetchBrands();
   }, [fetchProducts, fetchBrands]);

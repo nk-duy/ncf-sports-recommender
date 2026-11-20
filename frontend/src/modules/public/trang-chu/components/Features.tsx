@@ -21,15 +21,15 @@ export default function Features() {
       icon: <ShieldCheck size={24} />,
       title: "100% Chính hãng",
       desc: "Cam kết bồi thường 200%",
-      colorClass: "text-amber-600",
-      bgClass: "bg-amber-50"
+      colorClass: "text-blue-600",
+      bgClass: "bg-blue-50"
     },
     {
       icon: <Headset size={24} />,
       title: "Hotline 24/7",
       desc: "Tư vấn tận tình 1900 6868",
-      colorClass: "text-purple-600",
-      bgClass: "bg-purple-50"
+      colorClass: "text-slate-700",
+      bgClass: "bg-slate-100"
     },
   ];
 

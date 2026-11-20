@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Sparkles, Star } from 'lucide-react';
-import { calcOriginalPrice, formatVND } from '@/shared/lib/cart';
+import { Star } from 'lucide-react';
+import { formatVND } from '@/shared/lib/cart';
 import type { AIExplanation } from '@/shared/types/aiExplanation';
 import AiXRayInspector from '@/shared/components/AiXRayInspector';
 
@@ -37,8 +37,9 @@ export default function CartRecProductCard({
   isXRayActive,
   onTrackClick,
 }: CartRecProductCardProps) {
-  const original = calcOriginalPrice(p.price, p.discount_percent);
-  const hasDiscount = original > p.price;
+  const discount = p.discount_percent || 0;
+  const hasDiscount = discount > 0;
+  const salePrice = hasDiscount ? Math.round(p.price * (1 - discount / 100)) : p.price;
 
   return (
     <div className="group flex flex-col justify-between bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
@@ -58,9 +59,8 @@ export default function CartRecProductCard({
             }}
           />
           <div className="absolute top-2 left-2 z-10 flex flex-col gap-1 items-start">
-            {p.ai_explanation?.match_percent ? (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold shadow-md tabular-nums">
-                <Sparkles size={9} className="text-yellow-300" />
+            {isXRayActive && p.ai_explanation?.match_percent ? (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-600 text-white text-[10px] font-bold shadow-sm tabular-nums">
                 {p.ai_explanation.match_percent}% Phù hợp
               </span>
             ) : null}
@@ -81,13 +81,12 @@ export default function CartRecProductCard({
             {p.name}
           </Link>
 
-          {p.ai_explanation?.reason && (
+          {isXRayActive && p.ai_explanation?.reason && (
             <div className="mt-1.5 mb-1">
               <span
                 className="inline-flex items-center gap-1 text-[10px] text-blue-600 bg-blue-50/80 px-1.5 py-0.5 rounded max-w-full font-medium border border-blue-100/60 leading-tight"
                 title={p.ai_explanation.reason}
               >
-                <Sparkles size={9} className="shrink-0 text-blue-500" />
                 <span className="line-clamp-2 sm:truncate">{p.ai_explanation.reason}</span>
               </span>
             </div>
@@ -105,9 +104,9 @@ export default function CartRecProductCard({
             <span className="text-gray-400">({p.reviews_count || 0})</span>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-base font-bold text-blue-600 tabular-nums">{formatVND(p.price)}</span>
+            <span className="text-base font-bold text-blue-600 tabular-nums">{formatVND(salePrice)}</span>
             {hasDiscount && (
-              <span className="text-xs text-gray-400 line-through tabular-nums">{formatVND(original)}</span>
+              <span className="text-xs text-gray-400 line-through tabular-nums">{formatVND(p.price)}</span>
             )}
           </div>
         </div>

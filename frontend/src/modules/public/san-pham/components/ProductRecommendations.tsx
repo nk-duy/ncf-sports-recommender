@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import ProductCard, { type Product } from '@/modules/public/san-pham/components/ProductCard';
 import AiXRayToggle from '@/shared/components/AiXRayToggle';
 import { resolveApiBaseUrl } from '@/shared/lib/apiUrl';
-import { Sparkles } from 'lucide-react';
+import { Package } from 'lucide-react';
 import type { RawRecommendationItem } from '../types';
 
 interface ProductRecommendationsProps {
@@ -46,20 +46,21 @@ export default function ProductRecommendations({ productId, sportType }: Product
           const data: RawRecommendationItem[] = await res.json();
           const processedRecs: Product[] = data.map((p) => {
             const discountPercent = p.discount_percent || 0;
-            const originalPrice =
-              discountPercent > 0 ? Math.round(p.price / (1 - discountPercent / 100)) : p.price;
+            const salePrice =
+              discountPercent > 0 ? Math.round(p.price * (1 - discountPercent / 100)) : p.price;
             return {
               id: p.product_id,
               name: p.name,
               category:
                 p.category && p.category.length > 0 ? p.category[0] : p.sport_type || 'THỂ THAO',
-              price: p.price,
+              price: salePrice,
               originalPrice:
-                discountPercent > 0 ? `${originalPrice.toLocaleString('vi-VN')}đ` : undefined,
+                discountPercent > 0 ? `${p.price.toLocaleString('vi-VN')}đ` : undefined,
               rating: p.rating || 0,
               reviewsCount: p.reviews_count || 0,
               imageUrl: p.image_url,
               discountLabel: discountPercent > 0 ? `-${discountPercent}%` : undefined,
+              discountPercent: discountPercent > 0 ? discountPercent : undefined,
               ai_explanation: p.ai_explanation,
             };
           });
@@ -129,7 +130,7 @@ export default function ProductRecommendations({ productId, sportType }: Product
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
             {sportType
               ? `Các sản phẩm phù hợp và tương thích nhất với bộ môn ${sportType}`
-              : 'Đề xuất thông minh theo sở thích và xu hướng mua sắm'}
+              : 'Sản phẩm phù hợp với sở thích và xu hướng mua sắm của bạn'}
           </p>
         </div>
         <div className="shrink-0 self-start sm:self-auto">
@@ -153,11 +154,11 @@ export default function ProductRecommendations({ productId, sportType }: Product
           })
         ) : (
           <div className="col-span-full py-12 px-4 text-center bg-gray-50/70 rounded-2xl border border-gray-100 space-y-2">
-            <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-1">
-              <Sparkles size={20} />
+            <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mx-auto mb-1">
+              <Package size={20} />
             </div>
             <p className="text-sm font-semibold text-gray-700">Chưa có gợi ý phù hợp vào lúc này</p>
-            <p className="text-xs text-gray-400">Các sản phẩm được cá nhân hóa sẽ xuất hiện thêm khi bạn tương tác.</p>
+            <p className="text-xs text-gray-500">Hãy xem thêm sản phẩm để nhận gợi ý phù hợp hơn.</p>
           </div>
         )}
       </div>

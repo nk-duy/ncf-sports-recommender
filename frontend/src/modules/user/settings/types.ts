@@ -10,7 +10,7 @@ export const SETTINGS_NAV_TABS: { id: SettingsTab; label: string; targetId: stri
   { id: "profile", label: "Thông tin cá nhân", targetId: "profile-section" },
   { id: "address", label: "Sổ địa chỉ nhận hàng", targetId: "address-section" },
   { id: "security", label: "Đổi mật khẩu & Bảo mật", targetId: "security-section" },
-  { id: "ai", label: "Tùy chọn gợi ý AI", targetId: "ai-section" },
+  { id: "ai", label: "Sở thích thể thao & Kích cỡ", targetId: "ai-section" },
 ];
 
 export const SPORTS_OPTIONS = [

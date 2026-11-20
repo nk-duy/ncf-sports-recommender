@@ -104,7 +104,7 @@ export function useUserSettings(initialUser: User | null) {
         notifications.show({
           title: "Cài đặt thông báo",
           message: newVal
-            ? "Đã bật nhận thông báo ưu đãi & gợi ý AI qua email"
+            ? "Đã bật nhận thông báo ưu đãi & sản phẩm phù hợp qua email"
             : "Đã tắt nhận thông báo qua email.",
           color: newVal ? "blue" : "gray",
         });

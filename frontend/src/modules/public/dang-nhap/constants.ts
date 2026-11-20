@@ -19,7 +19,6 @@ export interface PresetGoogleAccount {
   initials: string;
   avatarBg: string;
   sports: string[];
-  badge: string;
 }
 
 export const PRESET_GOOGLE_ACCOUNTS: PresetGoogleAccount[] = [
@@ -27,24 +26,21 @@ export const PRESET_GOOGLE_ACCOUNTS: PresetGoogleAccount[] = [
     name: 'Nguyễn Hoàng Anh',
     email: 'hoanganh.runner@gmail.com',
     initials: 'HA',
-    avatarBg: 'bg-blue-100 text-blue-700 border-blue-200',
+    avatarBg: 'bg-blue-100 text-blue-700',
     sports: ['Chạy bộ', 'Pickleball'],
-    badge: 'Khách hàng thể thao',
   },
   {
     name: 'Trần Quang Minh',
     email: 'quangminh.badminton@gmail.com',
     initials: 'QM',
-    avatarBg: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    avatarBg: 'bg-emerald-100 text-emerald-700',
     sports: ['Cầu lông', 'Gym & Fitness'],
-    badge: 'VĐV Bán chuyên',
   },
   {
-    name: 'Quản trị viên KADY',
-    email: 'admin.sports@gmail.com',
-    initials: 'AD',
-    avatarBg: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-    sports: ['Đá bóng', 'Bóng chuyền'],
-    badge: 'Admin System',
+    name: 'Lê Minh Khôi',
+    email: 'minhkhoi.football@gmail.com',
+    initials: 'MK',
+    avatarBg: 'bg-indigo-100 text-indigo-700',
+    sports: ['Đá bóng', 'Dã ngoại'],
   },
 ];

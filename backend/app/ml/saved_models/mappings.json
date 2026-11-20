@@ -1748,7 +1748,7 @@
     "pure_ncf_ndcg_at_8": 0.251,
     "pure_ncf_hr_at_10": 57.64,
     "pure_ncf_ndcg_at_10": 0.2759,
-    "inference_latency_ms": 0.83,
+    "inference_latency_ms": 0.75,
     "total_users": 230,
     "total_items": 633,
     "total_test_instances": 203,

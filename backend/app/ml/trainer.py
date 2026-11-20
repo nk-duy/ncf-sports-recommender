@@ -45,7 +45,7 @@ class GMFBaseline(nn.Module):
         nn.init.kaiming_uniform_(self.affine.weight, a=1, nonlinearity="sigmoid")
 
     def forward(self, u: torch.Tensor, i: torch.Tensor) -> torch.Tensor:
-        return self.logistic(self.affine(self.user_emb(u) * self.item_emb(i))).squeeze()
+        return self.logistic(self.affine(self.user_emb(u) * self.item_emb(i))).squeeze(-1)
 
 
 class MLPBaseline(nn.Module):
@@ -73,7 +73,7 @@ class MLPBaseline(nn.Module):
 
     def forward(self, u: torch.Tensor, i: torch.Tensor) -> torch.Tensor:
         x = torch.cat([self.user_emb(u), self.item_emb(i)], dim=-1)
-        return self.logistic(self.affine(self.fc(x))).squeeze()
+        return self.logistic(self.affine(self.fc(x))).squeeze(-1)
 
 
 class NCFTrainer:
@@ -115,7 +115,7 @@ class NCFTrainer:
                 "mlp_layers": [32, 16, 8],
                 "negative_sampling_ratio": "1:4",
                 "test_negatives": 99,
-                "optimizer": "Adam (lr=0.003, weight_decay=1e-4)",
+                "optimizer": "Adam (lr=0.0022, weight_decay=1e-4)",
                 "loss_function": "Binary Cross-Entropy (BCELoss)",
                 "epochs": 20,
                 "batch_size": 128,
@@ -433,130 +433,154 @@ class NCFTrainer:
             self.training_status["progress"] = 20
             self.training_status["message"] = f"Khởi tạo DataLoader ({n_train:,} mẫu huấn luyện)..."
 
-            dataset = FastInteractionDataset(train_users, train_items, train_labels)
-            dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
-            criterion = nn.BCELoss()
-
-            # 1. Đánh giá Baseline 1: Popularity
-            pop_hits = {8: 0, 10: 0}
-            pop_ndcgs = {8: 0.0, 10: 0.0}
-            for _, pos_idx, neg_idxs in test_cases:
-                candidates = [pos_idx] + neg_idxs
-                ranked = sorted(candidates, key=lambda c: (-train_item_counts[c], c != pos_idx))
-                rank = ranked.index(pos_idx) + 1
-                for k in (8, 10):
-                    if rank <= k:
-                        pop_hits[k] += 1
-                        pop_ndcgs[k] += 1.0 / np.log2(rank + 1)
-            pop_res = {
-                "hr_at_8": round((pop_hits[8] / max(1, n_test)) * 100.0, 2),
-                "ndcg_at_8": round(pop_ndcgs[8] / max(1, n_test), 4),
-                "hr_at_10": round((pop_hits[10] / max(1, n_test)) * 100.0, 2),
-                "ndcg_at_10": round(pop_ndcgs[10] / max(1, n_test), 4),
-                "bce_loss": 0.6931,
-                "latency_ms": 0.02,
-            }
-
-            # 2. Huấn luyện & Đánh giá Baseline 2: GMF Standalone (Pure CF)
-            torch.manual_seed(SEED)
-            gmf_model = GMFBaseline(num_users, num_items, latent_dim=16)
-            gmf_optim = optim.Adam(gmf_model.parameters(), lr=0.003, weight_decay=1e-6)
-            gmf_loss = 0.0
-            for _ in range(20):
-                gmf_model.train()
-                tot_l, nb = 0.0, 0
-                for bu, bi, bl in dataloader:
-                    gmf_optim.zero_grad()
-                    loss = criterion(gmf_model(bu, bi), bl)
-                    loss.backward()
-                    gmf_optim.step()
-                    tot_l += loss.item()
-                    nb += 1
-                gmf_loss = tot_l / max(1, nb)
-            gmf_eval = evaluate_loo_vectorized(gmf_model, use_hybrid_boost=False)
-            gmf_lat = measure_latency_ms(gmf_model)
-            gmf_res = {**gmf_eval, "bce_loss": round(gmf_loss, 4), "latency_ms": gmf_lat}
-
-            # 3. Huấn luyện & Đánh giá Baseline 3: MLP Standalone (Pure CF)
-            torch.manual_seed(SEED)
-            mlp_model = MLPBaseline(num_users, num_items, latent_dim=16, layers=[32, 16, 8])
-            mlp_optim = optim.Adam(mlp_model.parameters(), lr=0.002, weight_decay=1e-4)
-            mlp_loss = 0.0
-            for _ in range(20):
-                mlp_model.train()
-                tot_l, nb = 0.0, 0
-                for bu, bi, bl in dataloader:
-                    mlp_optim.zero_grad()
-                    loss = criterion(mlp_model(bu, bi), bl)
-                    loss.backward()
-                    mlp_optim.step()
-                    tot_l += loss.item()
-                    nb += 1
-                mlp_loss = tot_l / max(1, nb)
-            mlp_eval = evaluate_loo_vectorized(mlp_model, use_hybrid_boost=False)
-            mlp_lat = measure_latency_ms(mlp_model)
-            mlp_res = {**mlp_eval, "bce_loss": round(mlp_loss, 4), "latency_ms": mlp_lat}
-
-            # 4. Huấn luyện & Đánh giá Mô hình Đề xuất: NeuMF Hybrid (20 Epochs)
-            torch.manual_seed(SEED)
-            new_model = NCF(num_users=num_users, num_items=num_items, embedding_dim=16, hidden_layers=[32, 16, 8])
-            nn.init.normal_(new_model.embedding_user_mf.weight, std=0.01)
-            nn.init.normal_(new_model.embedding_item_mf.weight, std=0.01)
-            nn.init.normal_(new_model.embedding_user_mlp.weight, std=0.01)
-            nn.init.normal_(new_model.embedding_item_mlp.weight, std=0.01)
-            for m in new_model.mlp_layers:
-                if isinstance(m, nn.Linear):
-                    nn.init.kaiming_normal_(m.weight)
-            nn.init.kaiming_uniform_(new_model.predict_layer.weight, a=1, nonlinearity="sigmoid")
-
-            optimizer = optim.Adam(new_model.parameters(), lr=0.0022, weight_decay=1e-4)
-
             epochs = 20
-            epoch_history: List[Dict[str, Any]] = []
+            neumf_lr = 0.0022
+            neumf_weight_decay = 1e-4
 
-            for epoch in range(1, epochs + 1):
-                new_model.train()
-                total_loss, nb = 0.0, 0
-                for batch_users, batch_items, batch_labels in dataloader:
-                    optimizer.zero_grad()
-                    preds = new_model(batch_users, batch_items)
-                    loss = criterion(preds, batch_labels)
-                    loss.backward()
-                    optimizer.step()
-                    total_loss += loss.item()
-                    nb += 1
+            def _run_pytorch_training_sync():
+                dataset = FastInteractionDataset(train_users, train_items, train_labels)
+                dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+                criterion = nn.BCELoss()
 
-                ep_avg_loss = round(total_loss / max(1, nb), 4)
-                # Đánh giá LOO Vectorized thực tế 100% trên PyTorch Tensor kết hợp Hybrid Context Boost
-                ep_eval = evaluate_loo_vectorized(new_model, use_hybrid_boost=True)
-                ep_pure = evaluate_loo_vectorized(new_model, use_hybrid_boost=False)
-
-                ep_data = {
-                    "epoch": epoch,
-                    "bce_loss": ep_avg_loss,
-                    "hr_at_8": ep_eval["hr_at_8"],
-                    "ndcg_at_8": ep_eval["ndcg_at_8"],
-                    "hr_at_10": ep_eval["hr_at_10"],
-                    "ndcg_at_10": ep_eval["ndcg_at_10"],
-                    "pure_hr_at_8": ep_pure["hr_at_8"],
-                    "pure_ndcg_at_8": ep_pure["ndcg_at_8"],
+                # 1. Đánh giá Baseline 1: Popularity
+                pop_hits = {8: 0, 10: 0}
+                pop_ndcgs = {8: 0.0, 10: 0.0}
+                for _, pos_idx, neg_idxs in test_cases:
+                    candidates = [pos_idx] + neg_idxs
+                    ranked = sorted(candidates, key=lambda c: (-train_item_counts[c], c != pos_idx))
+                    rank = ranked.index(pos_idx) + 1
+                    for k in (8, 10):
+                        if rank <= k:
+                            pop_hits[k] += 1
+                            pop_ndcgs[k] += 1.0 / np.log2(rank + 1)
+                pop_res_local = {
+                    "hr_at_8": round((pop_hits[8] / max(1, n_test)) * 100.0, 2),
+                    "ndcg_at_8": round(pop_ndcgs[8] / max(1, n_test), 4),
+                    "hr_at_10": round((pop_hits[10] / max(1, n_test)) * 100.0, 2),
+                    "ndcg_at_10": round(pop_ndcgs[10] / max(1, n_test), 4),
+                    "bce_loss": 0.6931,
+                    "latency_ms": 0.02,
                 }
-                epoch_history.append(ep_data)
 
-                self.training_status["current_epoch"] = epoch
-                self.training_status["current_loss"] = ep_avg_loss
-                self.training_status["progress"] = 20 + int((epoch / epochs) * 65)
-                self.training_status["message"] = (
-                    f"Epoch {epoch}/{epochs} | Loss: {ep_avg_loss:.4f} | "
-                    f"HR@8: {ep_eval['hr_at_8']}% ({ep_eval['hits_at_8']}/{n_test})"
+                # 2. Huấn luyện & Đánh giá Baseline 2: GMF Standalone (Pure CF)
+                torch.manual_seed(SEED)
+                gmf_model = GMFBaseline(num_users, num_items, latent_dim=16)
+                gmf_optim = optim.Adam(gmf_model.parameters(), lr=0.003, weight_decay=1e-6)
+                gmf_loss = 0.0
+                for _ in range(20):
+                    gmf_model.train()
+                    tot_l, nb = 0.0, 0
+                    for bu, bi, bl in dataloader:
+                        gmf_optim.zero_grad()
+                        loss = criterion(gmf_model(bu, bi), bl)
+                        loss.backward()
+                        gmf_optim.step()
+                        tot_l += loss.item()
+                        nb += 1
+                    gmf_loss = tot_l / max(1, nb)
+                gmf_eval = evaluate_loo_vectorized(gmf_model, use_hybrid_boost=False)
+                gmf_lat = measure_latency_ms(gmf_model)
+                gmf_res_local = {**gmf_eval, "bce_loss": round(gmf_loss, 4), "latency_ms": gmf_lat}
+
+                # 3. Huấn luyện & Đánh giá Baseline 3: MLP Standalone (Pure CF)
+                torch.manual_seed(SEED)
+                mlp_model = MLPBaseline(num_users, num_items, latent_dim=16, layers=[32, 16, 8])
+                mlp_optim = optim.Adam(mlp_model.parameters(), lr=0.002, weight_decay=1e-4)
+                mlp_loss = 0.0
+                for _ in range(20):
+                    mlp_model.train()
+                    tot_l, nb = 0.0, 0
+                    for bu, bi, bl in dataloader:
+                        mlp_optim.zero_grad()
+                        loss = criterion(mlp_model(bu, bi), bl)
+                        loss.backward()
+                        mlp_optim.step()
+                        tot_l += loss.item()
+                        nb += 1
+                    mlp_loss = tot_l / max(1, nb)
+                mlp_eval = evaluate_loo_vectorized(mlp_model, use_hybrid_boost=False)
+                mlp_lat = measure_latency_ms(mlp_model)
+                mlp_res_local = {**mlp_eval, "bce_loss": round(mlp_loss, 4), "latency_ms": mlp_lat}
+
+                # 4. Huấn luyện & Đánh giá Mô hình Đề xuất: NeuMF Hybrid (20 Epochs)
+                torch.manual_seed(SEED)
+                new_model_local = NCF(num_users=num_users, num_items=num_items, embedding_dim=16, hidden_layers=[32, 16, 8])
+                nn.init.normal_(new_model_local.embedding_user_mf.weight, std=0.01)
+                nn.init.normal_(new_model_local.embedding_item_mf.weight, std=0.01)
+                nn.init.normal_(new_model_local.embedding_user_mlp.weight, std=0.01)
+                nn.init.normal_(new_model_local.embedding_item_mlp.weight, std=0.01)
+                for m in new_model_local.mlp_layers:
+                    if isinstance(m, nn.Linear):
+                        nn.init.kaiming_normal_(m.weight)
+                nn.init.kaiming_uniform_(new_model_local.predict_layer.weight, a=1, nonlinearity="sigmoid")
+
+                optimizer = optim.Adam(new_model_local.parameters(), lr=neumf_lr, weight_decay=neumf_weight_decay)
+
+                epoch_history_local: List[Dict[str, Any]] = []
+
+                for epoch in range(1, epochs + 1):
+                    new_model_local.train()
+                    total_loss, nb = 0.0, 0
+                    for batch_users, batch_items, batch_labels in dataloader:
+                        optimizer.zero_grad()
+                        preds = new_model_local(batch_users, batch_items)
+                        loss = criterion(preds, batch_labels)
+                        loss.backward()
+                        optimizer.step()
+                        total_loss += loss.item()
+                        nb += 1
+
+                    ep_avg_loss = round(total_loss / max(1, nb), 4)
+                    # Đánh giá LOO Vectorized thực tế 100% trên PyTorch Tensor kết hợp Hybrid Context Boost
+                    ep_eval = evaluate_loo_vectorized(new_model_local, use_hybrid_boost=True)
+                    ep_pure = evaluate_loo_vectorized(new_model_local, use_hybrid_boost=False)
+
+                    ep_data = {
+                        "epoch": epoch,
+                        "bce_loss": ep_avg_loss,
+                        "hr_at_8": ep_eval["hr_at_8"],
+                        "ndcg_at_8": ep_eval["ndcg_at_8"],
+                        "hr_at_10": ep_eval["hr_at_10"],
+                        "ndcg_at_10": ep_eval["ndcg_at_10"],
+                        "pure_hr_at_8": ep_pure["hr_at_8"],
+                        "pure_ndcg_at_8": ep_pure["ndcg_at_8"],
+                    }
+                    epoch_history_local.append(ep_data)
+
+                    self.training_status["current_epoch"] = epoch
+                    self.training_status["current_loss"] = ep_avg_loss
+                    self.training_status["progress"] = 20 + int((epoch / epochs) * 65)
+                    self.training_status["message"] = (
+                        f"Epoch {epoch}/{epochs} | Loss: {ep_avg_loss:.4f} | "
+                        f"HR@8: {ep_eval['hr_at_8']}% ({ep_eval['hits_at_8']}/{n_test})"
+                    )
+
+                self.training_status["progress"] = 90
+                self.training_status["message"] = "Đang đo độ trễ suy luận và lưu trữ trọng số..."
+
+                latency_ms_local = measure_latency_ms(new_model_local)
+                final_pure_local = evaluate_loo_vectorized(new_model_local, use_hybrid_boost=False)
+                return (
+                    new_model_local,
+                    pop_res_local,
+                    gmf_res_local,
+                    mlp_res_local,
+                    epoch_history_local,
+                    latency_ms_local,
+                    final_pure_local,
                 )
 
-            self.training_status["progress"] = 90
-            self.training_status["message"] = "Đang đo độ trễ suy luận và lưu trữ trọng số..."
+            (
+                new_model,
+                pop_res,
+                gmf_res,
+                mlp_res,
+                epoch_history,
+                latency_ms,
+                final_pure,
+            ) = await asyncio.to_thread(_run_pytorch_training_sync)
 
-            latency_ms = measure_latency_ms(new_model)
             final_ep = epoch_history[-1]
-            final_pure = evaluate_loo_vectorized(new_model, use_hybrid_boost=False)
 
             metrics = {
                 "final_bce_loss": final_ep["bce_loss"],
@@ -669,7 +693,7 @@ class NCFTrainer:
                     "mlp_layers": [32, 16, 8],
                     "negative_sampling_ratio": f"1:{num_negatives_train}",
                     "test_negatives": num_negatives_test,
-                    "optimizer": "Adam (lr=0.003, weight_decay=1e-4)",
+                    "optimizer": f"Adam (lr={neumf_lr}, weight_decay={neumf_weight_decay})",
                     "loss_function": "Binary Cross-Entropy (BCELoss)",
                     "epochs": epochs,
                     "batch_size": 128,

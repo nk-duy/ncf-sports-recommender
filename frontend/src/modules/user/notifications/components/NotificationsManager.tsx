@@ -63,7 +63,7 @@ export default function NotificationsManager() {
                 )}
               </h1>
               <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                Xem toàn bộ lịch sử thông báo đơn hàng, gợi ý AI và mã ưu đãi độc quyền từ Kady Sport
+                Xem toàn bộ lịch sử thông báo đơn hàng, gợi ý sản phẩm và mã ưu đãi từ KADY Sports
               </p>
             </div>
           </div>

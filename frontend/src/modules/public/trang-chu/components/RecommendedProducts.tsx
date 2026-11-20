@@ -42,7 +42,7 @@ export default function RecommendedProducts() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b border-slate-200/80 w-full max-w-full">
           <div className="min-w-0 max-w-full">
             <h2 className="text-lg sm:text-2xl font-bold text-slate-900 break-words">
-              {isAuthenticated && user ? (
+              {mounted && isAuthenticated && user ? (
                 <>
                   Gợi ý cho bạn: <span className="text-blue-600">{user.full_name || "Khách hàng"}</span>
                 </>
@@ -130,14 +130,7 @@ export default function RecommendedProducts() {
         )}
 
         {/* Footer */}
-        <div className="mt-8 pt-5 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
-            <span>
-              Sản phẩm được lựa chọn dựa trên sở thích thể thao và hoạt động gần đây của bạn.
-            </span>
-          </div>
-
+        <div className="mt-8 pt-5 border-t border-slate-200/80 flex items-center justify-end text-xs">
           <Link
             href="/goi-y"
             className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-bold uppercase tracking-wider transition-colors shrink-0"

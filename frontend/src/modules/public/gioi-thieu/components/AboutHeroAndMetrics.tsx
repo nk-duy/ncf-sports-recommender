@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ShoppingBag, Sparkles, MessageCircle, Cpu } from 'lucide-react';
+import { ShoppingBag, MessageCircle, Compass } from 'lucide-react';
 import { SYSTEM_METRICS } from '../data/aboutUsData';
 
 export default function AboutHeroAndMetrics() {
@@ -11,16 +11,15 @@ export default function AboutHeroAndMetrics() {
         <div className="w-full mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 relative z-10">
           <div className="max-w-3xl space-y-6">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/15 text-blue-300 text-xs font-bold border border-blue-400/25 tracking-wide shadow-xs">
-              <Sparkles size={14} className="text-blue-400" />
-              HỆ THỐNG KADY SPORTS &amp; NCF RECOMMENDATION ENGINE
+              THƯƠNG HIỆU ĐỒ THỂ THAO KADY SPORTS
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight text-balance">
-              Đồng hành cùng đam mê thể thao &amp; Công nghệ gợi ý thông minh
+              Đồng hành cùng đam mê thể thao &amp; Trải nghiệm mua sắm chuẩn xác
             </h1>
 
             <p className="text-base sm:text-lg text-slate-300 leading-relaxed text-pretty max-w-2xl">
-              KADY Sport kết hợp nguồn trang bị thể thao chính hãng tuyển chọn với hệ thống gợi ý cá nhân hóa dựa trên học sâu (Neural Collaborative Filtering - NeuMF). Chúng tôi giúp bạn nhanh chóng tìm thấy trang thiết bị vừa vặn và tối ưu nhất cho từng buổi tập luyện.
+              KADY Sports mang đến nguồn trang thiết bị, giày dép và trang phục thể thao chính hãng tuyển chọn, giúp bạn nhanh chóng tìm thấy sản phẩm vừa vặn và tối ưu nhất cho từng buổi tập luyện.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3.5">
@@ -29,14 +28,14 @@ export default function AboutHeroAndMetrics() {
                 className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
               >
                 <ShoppingBag size={18} />
-                Khám phá 551+ sản phẩm
+                Khám phá 633+ sản phẩm
               </Link>
               <Link
-                href="/#ai-recommendations"
+                href="/goi-y"
                 className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-sm px-5 py-3.5 rounded-xl border border-slate-700 transition-all duration-200 cursor-pointer"
               >
-                <Cpu size={18} className="text-indigo-400" />
-                Trải nghiệm Gợi ý AI (NCF)
+                <Compass size={18} className="text-blue-400" />
+                Khám phá gợi ý riêng
               </Link>
               <a
                 href="https://zalo.me/0988888888"

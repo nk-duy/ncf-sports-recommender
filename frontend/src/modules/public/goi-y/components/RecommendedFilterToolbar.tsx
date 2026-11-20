@@ -36,27 +36,27 @@ export default function RecommendedFilterToolbar({
     <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm mb-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider">
-              Gợi Ý Cá Nhân Hóa
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold text-blue-600">
+              Tuyển chọn cho bạn
             </span>
             <span className="text-xs text-slate-400">·</span>
-            <span className="text-xs font-semibold text-slate-500">
-              {productsCount} sản phẩm tuyển chọn
+            <span className="text-xs font-medium text-slate-500">
+              {productsCount} sản phẩm
             </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-800">
             {isAuthenticated && displayUserName ? (
               <>
                 Sản phẩm gợi ý cho bạn:{" "}
                 <span className="text-blue-600">{displayUserName}</span>
               </>
             ) : (
-              <>Toàn bộ sản phẩm gợi ý dành cho bạn</>
+              <>Gợi ý dành cho bạn</>
             )}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-2xl leading-relaxed">
-            Hệ thống tự động phân tích sở thích thể thao, lịch sử xem và các lượt mua sắm để đề xuất 8 - 12 sản phẩm tối ưu nhất cho bạn.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1.5 max-w-2xl leading-relaxed">
+            Các sản phẩm thể thao phù hợp với sở thích và hoạt động mua sắm của bạn.
           </p>
         </div>
 

@@ -1,11 +1,13 @@
 'use client';
 import React from 'react';
+import { defaultMenu } from '@/modules/admin/danh-muc/data/defaultMenu';
+import type { MenuCategoryOption, MenuProductTypeOption, MenuSportOption } from '../../types';
 
 interface ProductCategoryCascadeProps {
   sportType: string;
   productType: string;
   selectedCategories: string[];
-  menuSports: any[];
+  menuSports: MenuSportOption[];
   onChangeSport: (sport: string, firstProductType: string) => void;
   onChangeProductType: (productType: string) => void;
   onToggleCategory: (category: string) => void;
@@ -20,14 +22,24 @@ export default function ProductCategoryCascade({
   onChangeProductType,
   onToggleCategory,
 }: ProductCategoryCascadeProps) {
-  const currentSportObj = menuSports.find(s => s.sport_type === sportType);
-  const prodTypes = currentSportObj?.product_types?.map((pt: any) => pt.product_type) || ['Quần áo', 'Giày dép', 'Phụ kiện', 'Thiết bị'];
-  const currentPTObj = currentSportObj?.product_types?.find((pt: any) => pt.product_type === productType);
+  const effectiveMenu: MenuSportOption[] =
+    menuSports && menuSports.length > 0 ? menuSports : defaultMenu;
+  const currentSportObj = effectiveMenu.find(s => s.sport_type === sportType);
+  const prodTypes =
+    currentSportObj?.product_types?.map((pt: MenuProductTypeOption) => pt.product_type) || [
+      'Quần áo',
+      'Giày dép',
+      'Phụ kiện',
+      'Thiết bị',
+    ];
+  const currentPTObj = currentSportObj?.product_types?.find(
+    (pt: MenuProductTypeOption) => pt.product_type === productType
+  );
   const rawSubCats = currentPTObj?.categories || [];
 
   // Chuẩn hóa: categories có thể là string[] hoặc MegaMenuCategory[] ({category: string, is_hidden?: boolean})
   const subCats: string[] = rawSubCats
-    .map((item: any) => {
+    .map((item: string | MenuCategoryOption) => {
       if (typeof item === 'string') return item;
       if (item && typeof item === 'object' && item.category) {
         if (item.is_hidden) return null; // Bỏ qua danh mục đang bị ẩn
@@ -46,28 +58,15 @@ export default function ProductCategoryCascade({
             value={sportType} 
             onChange={e => {
               const selected = e.target.value;
-              const sportObj = menuSports.find(s => s.sport_type === selected);
+              const sportObj = effectiveMenu.find(s => s.sport_type === selected);
               const firstPT = sportObj?.product_types?.[0]?.product_type || "Quần áo";
               onChangeSport(selected, firstPT);
             }} 
             className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm bg-white cursor-pointer font-medium focus:ring-2 focus:ring-emerald-500 outline-none"
           >
-            {menuSports.length > 0 ? (
-              menuSports.map(s => (
-                <option key={s.sport_type} value={s.sport_type}>{s.sport_type}</option>
-              ))
-            ) : (
-              <>
-                <option value="Đá bóng">Đá bóng</option>
-                <option value="Cầu lông">Cầu lông</option>
-                <option value="Pickleball">Pickleball</option>
-                <option value="Chạy bộ">Chạy bộ</option>
-                <option value="Bóng chuyền">Bóng chuyền</option>
-                <option value="Bóng rổ">Bóng rổ</option>
-                <option value="Dã ngoại">Dã ngoại / Leo núi</option>
-                <option value="Đa dụng">Đa dụng / Gym / Yoga</option>
-              </>
-            )}
+            {effectiveMenu.map(s => (
+              <option key={s.sport_type} value={s.sport_type}>{s.sport_type}</option>
+            ))}
           </select>
         </div>
 

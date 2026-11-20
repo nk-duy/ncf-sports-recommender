@@ -1,4 +1,4 @@
-import { Flame, ShieldCheck, Sparkles, Ticket, Truck } from "lucide-react";
+import { Flame, ShieldCheck, Tag, Ticket, Truck } from "lucide-react";
 import type { BannerItem } from "../types";
 
 export const DEFAULT_SLIDES: BannerItem[] = [
@@ -62,8 +62,8 @@ export const QUICK_ACTIONS = [
     title: "Hàng Mới Về",
     sub: "Bộ sưu tập 2026",
     href: "/san-pham?sort_by=created_desc",
-    icon: Sparkles,
-    colorClass: "text-purple-600 bg-purple-50 group-hover:bg-purple-600 group-hover:text-white",
+    icon: Tag,
+    colorClass: "text-blue-600 bg-blue-50 group-hover:bg-blue-600 group-hover:text-white",
   },
   {
     id: "authentic",

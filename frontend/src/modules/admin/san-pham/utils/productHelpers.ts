@@ -53,8 +53,8 @@ export function filterAndSortProducts(
 
   const filteredProducts = products.filter((p) => {
     const matchesSearch =
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.product_id.toLowerCase().includes(searchQuery.toLowerCase());
+      (p.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.product_id || '').toLowerCase().includes(searchQuery.toLowerCase());
     const rawTags = [p.product_type, p.sport_type, ...getProductCategoryArray(p)].filter(
       (t): t is string => Boolean(t)
     );
