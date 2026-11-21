@@ -1,3 +1,4 @@
+import asyncio
 import io
 import os
 import json
@@ -14,6 +15,12 @@ import torch
 from app.models.product import Product
 from app.services.recommendation_service import recommendation_service
 from app.core.rec_utils import filter_duplicate_recommendations
+from app.ml.visual_encoder import (
+    VISUAL_FEATURE_DIM,
+    coerce_to_pil_image,
+    encode_image_pil,
+    warm_load_visual_encoder,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,53 +32,26 @@ VISUAL_FEATURES_PATH = os.path.join(
 )
 
 
-def extract_visual_features(img_input: Any) -> np.ndarray:
+def extract_visual_features_48d(img_input: Any) -> np.ndarray:
     """
-    Trích xuất vector đặc trưng thị giác 48 chiều chuẩn hóa L2:
-    - Kích thước chuẩn 64x64 hệ màu RGB.
-    - Loại bỏ Background Bias: Giảm mạnh trọng số các pixel nền trắng thuần (RGB > 240)
-      hoặc nền đen thuần (RGB < 20) ở vùng rìa ngoài.
-    - Tập trung 75% trọng số vào vùng trung tâm chứa vật thể sản phẩm (Center Crop 40x40).
-    - Trích xuất 16 đặc trưng màu sắc & biên cạnh Sobel trên 3 vùng không gian:
-      1. Vùng 1: Vật thể trung tâm 40x40 (Center Crop)
-      2. Vùng 2: Nửa trên của ảnh (Top 0..32)
-      3. Vùng 3: Nửa dưới của ảnh (Bottom 32..64)
-      = 16 * 3 = 48 chiều, chuẩn hóa L2 norm kèm epsilon 1e-8.
+    Bộ trích xuất 48 chiều dự phòng (RGB + Sobel 3 vùng không gian)
+    phục vụ khả năng rollback tức thời về visual_features_48d_backup.json.
     """
-    if isinstance(img_input, str):
-        raw_b64 = img_input
-        if "," in raw_b64:
-            raw_b64 = raw_b64.split(",", 1)[1]
-        img_bytes = base64.b64decode(raw_b64)
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    elif isinstance(img_input, bytes):
-        img = Image.open(io.BytesIO(img_input)).convert("RGB")
-    elif isinstance(img_input, Image.Image):
-        img = img_input.convert("RGB")
-    else:
-        raise ValueError("Định dạng ảnh không được hỗ trợ (cần base64, bytes hoặc PIL.Image)")
+    img = coerce_to_pil_image(img_input)
 
     # Đưa ảnh về kích thước chuẩn 64x64
     img = img.resize((64, 64), Image.Resampling.BILINEAR)
     arr = np.array(img, dtype=np.float32) / 255.0  # (64, 64, 3)
 
-    # 1. Phát hiện pixel nền trắng (R,G,B > 240/255 ≈ 0.94) hoặc nền đen (R,G,B < 20/255 ≈ 0.08)
     is_white = (arr[:, :, 0] > 0.94) & (arr[:, :, 1] > 0.94) & (arr[:, :, 2] > 0.94)
     is_black = (arr[:, :, 0] < 0.08) & (arr[:, :, 1] < 0.08) & (arr[:, :, 2] < 0.08)
     is_bg = is_white | is_black
 
-    # 2. Khởi tạo bản đồ trọng số không gian: Center 40x40 (y: 12..52, x: 12..52) chiếm 75% trọng số
     weights = np.full((64, 64), fill_value=0.25 / (64 * 64 - 40 * 40), dtype=np.float32)
     weights[12:52, 12:52] = 0.75 / (40.0 * 40.0)
-
-    # Giảm 90% trọng số của các pixel nền ở vùng rìa ngoài để triệt tiêu Background Bias
     weights[is_bg] *= 0.10
     weights = weights / (np.sum(weights) + 1e-8)
 
-    # 3. Định nghĩa 3 vùng trích xuất (mỗi vùng 16 đặc trưng = 48 chiều):
-    # Vùng 1: Center Crop 40x40 (12..52, 12..52) - Vật thể trọng tâm
-    # Vùng 2: Nửa trên của ảnh (0..32, 0..64)
-    # Vùng 3: Nửa dưới của ảnh (32..64, 0..64)
     regions_and_weights = [
         (arr[12:52, 12:52, :], weights[12:52, 12:52]),
         (arr[0:32, :, :], weights[0:32, :]),
@@ -82,26 +62,22 @@ def extract_visual_features(img_input: Any) -> np.ndarray:
     for r, w_sub in regions_and_weights:
         w_norm = w_sub / (np.sum(w_sub) + 1e-8)
 
-        # 1. Đặc trưng màu sắc có trọng số (8 chiều)
         mean_rgb = np.sum(r * w_norm[:, :, None], axis=(0, 1))
         var_rgb = np.sum(((r - mean_rgb) ** 2) * w_norm[:, :, None], axis=(0, 1))
         std_rgb = np.sqrt(np.maximum(var_rgb, 0.0))
 
-        # Độ sáng chuẩn ITU-R BT.601
         gray = 0.299 * r[:, :, 0] + 0.587 * r[:, :, 1] + 0.114 * r[:, :, 2]
         mean_lum = float(np.sum(gray * w_norm))
         std_lum = float(np.sqrt(np.maximum(np.sum(((gray - mean_lum) ** 2) * w_norm), 0.0)))
 
-        # 2. Đặc trưng biên cạnh Sobel / Gradient ngang & dọc (8 chiều)
-        gx = np.diff(gray, axis=1)  # (H, W-1)
-        gy = np.diff(gray, axis=0)  # (H-1, W)
+        gx = np.diff(gray, axis=1)
+        gy = np.diff(gray, axis=0)
 
         mean_abs_gx = float(np.mean(np.abs(gx)))
         std_gx = float(np.std(gx))
         mean_abs_gy = float(np.mean(np.abs(gy)))
         std_gy = float(np.std(gy))
 
-        # Độ lớn biên độ gradient trên phần ma trận giao nhau (H-1, W-1)
         mag = np.sqrt(gx[:-1, :] ** 2 + gy[:, :-1] ** 2)
         mean_mag = float(np.mean(mag))
         std_mag = float(np.std(mag))
@@ -120,38 +96,87 @@ def extract_visual_features(img_input: Any) -> np.ndarray:
 
     feat_vec = np.array(features, dtype=np.float32)
     norm = np.linalg.norm(feat_vec) + 1e-8
-    return feat_vec / norm
+    return (feat_vec / norm).astype(np.float32)
+
+
+def extract_visual_features(img_input: Any, target_dim: int = VISUAL_FEATURE_DIM) -> np.ndarray:
+    """
+    Trích xuất vector đặc trưng thị giác chuẩn hóa L2:
+    - Mặc định (512D): Sử dụng mạng học sâu ResNet-18 (bỏ lớp fc cuối) qua encode_image_pil.
+    - Tương thích ngược (48D): Tự động chuyển về Sobel-RGB 48D nếu kho đặc trưng đang dùng bản backup 48D.
+    """
+    if target_dim == 48:
+        return extract_visual_features_48d(img_input)
+    pil_img = coerce_to_pil_image(img_input)
+    vec = encode_image_pil(pil_img)
+    if target_dim > 0 and vec.shape[0] != target_dim:
+        if vec.shape[0] > target_dim:
+            vec = vec[:target_dim]
+        else:
+            vec = np.pad(vec, (0, target_dim - vec.shape[0]))
+        vec = (vec / (np.linalg.norm(vec) + 1e-8)).astype(np.float32)
+    return vec
 
 
 class VisualSearchService:
     def __init__(self):
         self._product_features_cache: Dict[str, np.ndarray] = {}
+        self._feature_matrix: Optional[np.ndarray] = None
+        self._feature_pids: List[str] = []
+        self._feature_dim: int = VISUAL_FEATURE_DIM
         self._loaded_from_disk: bool = False
 
+    @property
+    def feature_dim(self) -> int:
+        return self._feature_dim
+
     def load_visual_features(self) -> int:
-        """Nạp nóng toàn bộ vector đặc trưng thị giác 48 chiều đã trích xuất thực tế từ đĩa lên RAM"""
+        """Nạp nóng mô hình trích xuất 512D và ma trận vector đặc trưng (N x D) từ đĩa lên RAM"""
+        warm_load_visual_encoder()
         if not os.path.exists(VISUAL_FEATURES_PATH):
             logger.warning(f"[VisualSearch] Không tìm thấy file {VISUAL_FEATURES_PATH}.")
             return 0
         try:
             with open(VISUAL_FEATURES_PATH, "r", encoding="utf-8") as f:
                 raw_map = json.load(f)
-            count = 0
+
+            detected_dim: Optional[int] = None
+            for vec_list in raw_map.values():
+                if isinstance(vec_list, list) and len(vec_list) > 0:
+                    detected_dim = len(vec_list)
+                    break
+
+            if not detected_dim:
+                return 0
+
+            loaded_cache: Dict[str, np.ndarray] = {}
+            pids: List[str] = []
+            rows: List[np.ndarray] = []
+
             for pid, vec_list in raw_map.items():
-                if isinstance(vec_list, list) and len(vec_list) == 48:
+                if isinstance(vec_list, list) and len(vec_list) == detected_dim:
                     arr = np.array(vec_list, dtype=np.float32)
-                    norm = np.linalg.norm(arr) + 1e-8
-                    self._product_features_cache[pid] = (arr / norm).astype(np.float32)
-                    count += 1
+                    norm = float(np.linalg.norm(arr)) + 1e-8
+                    normed = (arr / norm).astype(np.float32)
+                    loaded_cache[pid] = normed
+                    pids.append(pid)
+                    rows.append(normed)
+
+            self._product_features_cache = loaded_cache
+            self._feature_pids = pids
+            self._feature_dim = detected_dim
+            self._feature_matrix = np.vstack(rows).astype(np.float32) if rows else None
             self._loaded_from_disk = True
-            logger.info(f"[VisualSearch] Đã nạp {count} vector đặc trưng ảnh 48D thực tế vào RAM.")
-            return count
+            logger.info(
+                f"[VisualSearch] Đã nạp nóng ma trận {len(loaded_cache)}x{detected_dim}D vào RAM."
+            )
+            return len(loaded_cache)
         except Exception as e:
             logger.error(f"[VisualSearch] Lỗi khi đọc {VISUAL_FEATURES_PATH}: {e}")
             return 0
 
     def get_product_visual_features(self, product: Product) -> np.ndarray:
-        """Lấy hoặc trích xuất thực tế vector đặc trưng thị giác 48 chiều từ ảnh sản phẩm (RGB + Sobel)"""
+        """Lấy hoặc trích xuất thực tế vector đặc trưng thị giác (512D/48D động) từ ảnh sản phẩm"""
         if not self._loaded_from_disk and not self._product_features_cache:
             self.load_visual_features()
 
@@ -159,7 +184,6 @@ class VisualSearchService:
         if pid in self._product_features_cache:
             return self._product_features_cache[pid]
 
-        # Nếu sản phẩm mới chưa có trong visual_features.json, trích xuất thực tế từ ảnh gốc
         img_url = (product.image_url or "").strip()
         if not img_url and product.images:
             img_url = (product.images[0] or "").strip()
@@ -168,26 +192,34 @@ class VisualSearchService:
         if img_url:
             try:
                 if img_url.startswith("data:image/"):
-                    feat_vec = extract_visual_features(img_url)
+                    feat_vec = extract_visual_features(img_url, target_dim=self._feature_dim)
                 elif img_url.startswith("/uploads/") or img_url.startswith("uploads/"):
                     local_path = img_url.lstrip("/")
                     if os.path.exists(local_path):
                         with open(local_path, "rb") as f:
-                            feat_vec = extract_visual_features(f.read())
+                            feat_vec = extract_visual_features(f.read(), target_dim=self._feature_dim)
                 elif img_url.startswith("http://") or img_url.startswith("https://"):
                     req = urllib.request.Request(img_url, headers={"User-Agent": "Mozilla/5.0"})
                     with urllib.request.urlopen(req, timeout=6.0) as resp:
-                        feat_vec = extract_visual_features(resp.read())
+                        feat_vec = extract_visual_features(resp.read(), target_dim=self._feature_dim)
             except Exception as e:
                 logger.warning(f"[VisualSearch] Không thể tải ảnh sản phẩm {pid} ({img_url}): {e}")
 
         if feat_vec is None:
-            # Ảnh nền trung tính nếu URL ảnh mới bị hỏng
-            neutral_img = Image.new("RGB", (64, 64), color=(128, 128, 128))
-            feat_vec = extract_visual_features(neutral_img)
+            neutral_img = Image.new("RGB", (224, 224), color=(128, 128, 128))
+            feat_vec = extract_visual_features(neutral_img, target_dim=self._feature_dim)
 
         self._product_features_cache[pid] = feat_vec
         return feat_vec
+
+    async def aget_product_visual_features(self, product: Product) -> np.ndarray:
+        """Phiên bản non-blocking chạy trích xuất ảnh mới trên worker thread nếu chưa có trong RAM cache"""
+        if not self._loaded_from_disk and not self._product_features_cache:
+            self.load_visual_features()
+        pid = product.product_id
+        if pid in self._product_features_cache:
+            return self._product_features_cache[pid]
+        return await asyncio.to_thread(self.get_product_visual_features, product)
 
     @staticmethod
     def _classify_semantic_group(product: Product) -> str:
@@ -261,7 +293,10 @@ class VisualSearchService:
         start_time = time.perf_counter()
         detected_sport = self._detect_sport_hint(filename, sport_type)
 
-        # 1. Trích xuất hoặc lấy vector thị giác truy vấn (48D)
+        # 1. Trích xuất hoặc lấy vector thị giác truy vấn (động 512D/48D)
+        if not self._loaded_from_disk and not self._product_features_cache:
+            self.load_visual_features()
+
         query_visual_feat: Optional[np.ndarray] = None
         ref_product: Optional[Product] = None
 
@@ -270,17 +305,22 @@ class VisualSearchService:
             if ref_product:
                 if not detected_sport:
                     detected_sport = ref_product.sport_type
-                query_visual_feat = self.get_product_visual_features(ref_product)
+                query_visual_feat = await self.aget_product_visual_features(ref_product)
+            elif reference_product_id in self._product_features_cache:
+                query_visual_feat = self._product_features_cache[reference_product_id]
 
         if image_base64 and image_base64.strip():
             try:
-                query_visual_feat = extract_visual_features(image_base64)
+                # Chạy encode_image_pil trên worker thread qua asyncio.to_thread để không block FastAPI event loop
+                query_visual_feat = await asyncio.to_thread(
+                    extract_visual_features, image_base64, self._feature_dim
+                )
             except Exception as e:
                 logger.warning(f"[VisualSearch] Lỗi trích xuất ảnh base64: {e}. Sử dụng vector thay thế.")
 
-        # Nếu không có ảnh hay mẫu tham chiếu, tạo vector ngẫu nhiên chuẩn hóa
+        # Nếu không có ảnh hay mẫu tham chiếu, tạo vector chuẩn hóa theo đúng số chiều động
         if query_visual_feat is None:
-            default_vec = np.ones(48, dtype=np.float32)
+            default_vec = np.ones(self._feature_dim, dtype=np.float32)
             query_visual_feat = default_vec / (np.linalg.norm(default_vec) + 1e-8)
 
         # 2. Chuẩn bị không gian vector nhúng NCF 32 chiều
@@ -329,7 +369,7 @@ class VisualSearchService:
         if best_product is None:
             best_init_sim = -1.0
             for p in candidate_products:
-                p_feat = self.get_product_visual_features(p)
+                p_feat = await self.aget_product_visual_features(p)
                 v_sim = float(np.dot(query_visual_feat, p_feat))
                 if detected_sport and p.sport_type == detected_sport:
                     v_sim += 0.20
@@ -347,11 +387,11 @@ class VisualSearchService:
         target_product_type = (best_product.product_type or "").strip().lower() if best_product else ""
         target_sport_type = detected_sport.lower() if detected_sport else ((best_product.sport_type or "").strip().lower() if best_product else "")
 
-        # 5. Tính toán điểm tổng hợp (Visual 48D + NCF 32D + Nhóm loại sản phẩm + Context)
+        # 5. Tính toán điểm tổng hợp (Visual 512D/48D + NCF 32D + Nhóm loại sản phẩm + Context)
         scored_candidates: List[Tuple[float, Product]] = []
         for p in candidate_products:
             # Tương đồng hình ảnh thị giác Cosine (do 2 vector đã chuẩn hóa L2 nên dot = cosine)
-            p_visual_feat = self.get_product_visual_features(p)
+            p_visual_feat = await self.aget_product_visual_features(p)
             raw_vis_sim = float(np.dot(query_visual_feat, p_visual_feat))
             norm_vis_sim = max(0.0, min(1.0, (raw_vis_sim + 1.0) / 2.0))
 
@@ -459,7 +499,7 @@ class VisualSearchService:
         return {
             "products": final_products,
             "metadata": {
-                "feature_dim": 48,
+                "feature_dim": self._feature_dim,
                 "ncf_dim": 32,
                 "latency_ms": latency_ms,
                 "total_matched": len(final_products),

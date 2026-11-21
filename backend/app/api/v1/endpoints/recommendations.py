@@ -19,12 +19,12 @@ async def get_recommendations(
     current_product_id: Optional[str] = Query(None, description="ID sản phẩm hiện tại đang xem"),
     sport_type: Optional[str] = Query(None, description="Môn thể thao của sản phẩm đang xem"),
     w_ncf: float = Query(1.0, ge=0.0, le=2.0, description="Hệ số trọng số hành vi NeuMF 32D"),
-    w_visual: float = Query(0.35, ge=0.0, le=2.0, description="Hệ số trọng số thị giác Sobel-RGB 48D"),
+    w_visual: float = Query(0.35, ge=0.0, le=2.0, description="Hệ số trọng số thị giác 512D"),
     w_context: float = Query(1.0, ge=0.0, le=2.0, description="Hệ số trọng số ngữ cảnh bộ môn"),
     discovery_mode: bool = Query(False, description="Chế độ Khám phá Liên bộ môn chống Filter Bubble"),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Lấy danh sách sản phẩm gợi ý cá nhân hóa dựa trên NCF Model & Visual 48D Fusion"""
+    """Lấy danh sách sản phẩm gợi ý cá nhân hóa dựa trên NCF Model & Visual 512D Fusion"""
     try:
         user_id_str = str(current_user.id) if current_user else ""
         products = await recommendation_service.get_recommendations_for_user(
@@ -59,7 +59,7 @@ async def get_recommendations(
 async def get_latent_radar(
     user_id: Optional[str] = Query(None, description="ID người dùng tùy chọn"),
     w_ncf: float = Query(1.0, ge=0.0, le=2.0, description="Hệ số trọng số hành vi NCF 32D"),
-    w_visual: float = Query(0.35, ge=0.0, le=2.0, description="Hệ số trọng số thị giác 48D"),
+    w_visual: float = Query(0.35, ge=0.0, le=2.0, description="Hệ số trọng số thị giác 512D"),
     current_user: Optional[User] = Depends(get_current_user_optional)
 ):
     """Tính điểm tương thích tiềm ẩn 8 bộ môn thể thao (ncf_affinity, visual_affinity, combined_affinity) phục vụ Biểu đồ Radar"""

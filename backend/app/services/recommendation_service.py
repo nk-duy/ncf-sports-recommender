@@ -42,6 +42,7 @@ class RecommendationService:
         self.mappings: Optional[Dict[str, Any]] = None
         self.cached_item_embeddings: Optional[torch.Tensor] = None
         self.visual_features_cache: Dict[str, np.ndarray] = {}
+        self.visual_feature_dim: int = 512
         self._visual_loaded: bool = False
 
         # Tích hợp Sub-services
@@ -54,7 +55,7 @@ class RecommendationService:
         self.analytics = AnalyticsService(mappings_path=self.mappings_path)
 
     def _load_visual_features(self, force_reload: bool = False) -> Dict[str, np.ndarray]:
-        """Nạp một lần từ điển vector thị giác 48 chiều (RGB-Sobel) từ đĩa lên bộ nhớ RAM"""
+        """Nạp một lần từ điển vector thị giác (512D ResNet-18 hoặc 48D dự phòng) từ đĩa lên bộ nhớ RAM"""
         if self._visual_loaded and self.visual_features_cache and not force_reload:
             return self.visual_features_cache
 
@@ -65,15 +66,29 @@ class RecommendationService:
         try:
             with open(self.visual_features_path, "r", encoding="utf-8") as f:
                 raw_map = json.load(f)
+
+            detected_dim: Optional[int] = None
+            for vec_list in raw_map.values():
+                if isinstance(vec_list, list) and len(vec_list) > 0:
+                    detected_dim = len(vec_list)
+                    break
+
+            if not detected_dim:
+                return self.visual_features_cache
+
             loaded_cache: Dict[str, np.ndarray] = {}
             for pid, vec_list in raw_map.items():
-                if isinstance(vec_list, list) and len(vec_list) == 48:
+                if isinstance(vec_list, list) and len(vec_list) == detected_dim:
                     arr = np.array(vec_list, dtype=np.float32)
                     norm = np.linalg.norm(arr) + 1e-8
                     loaded_cache[pid] = (arr / norm).astype(np.float32)
+
             self.visual_features_cache = loaded_cache
+            self.visual_feature_dim = detected_dim
             self._visual_loaded = True
-            logger.info(f"[Visual Features] Đã nạp {len(loaded_cache)} vector 48D vào RAM.")
+            logger.info(
+                f"[Visual Features] Đã nạp {len(loaded_cache)} vector {self.visual_feature_dim}D vào RAM."
+            )
         except Exception as e:
             logger.error(f"[Visual Features Load Error] {e}")
 
@@ -85,14 +100,15 @@ class RecommendationService:
         context_product_id: Optional[str] = None
     ) -> np.ndarray:
         """
-        Tính Hồ sơ Thị hiếu Thị giác 48 chiều của Người dùng (User Visual Taste Profile 48D):
+        Tính Hồ sơ Thị hiếu Thị giác của Người dùng (User Visual Taste Profile 512D / 48D động):
         - Lấy các sản phẩm mà user_id đã tương tác dương trong lịch sử (hoặc context_product_id).
         - Tính vector trung bình có trọng số (weighted average theo điểm rating tương tác)
-          trên không gian 48 chiều và chuẩn hóa L2-norm để thu được user_visual_vec in R^48.
+          và chuẩn hóa L2-norm để thu được user_visual_vec in R^D.
         """
         v_cache = self._load_visual_features()
+        dim = self.visual_feature_dim if self.visual_feature_dim > 0 else 512
         if not v_cache:
-            default_v = np.ones(48, dtype=np.float32)
+            default_v = np.ones(dim, dtype=np.float32)
             return default_v / (np.linalg.norm(default_v) + 1e-8)
 
         implicit_weights = {
@@ -104,7 +120,7 @@ class RecommendationService:
             "view": 1.0,
         }
 
-        weighted_sum = np.zeros(48, dtype=np.float32)
+        weighted_sum = np.zeros(dim, dtype=np.float32)
         total_weight = 0.0
 
         # 1. Nếu có sản phẩm ngữ cảnh đang xem, ưu tiên trọng số trực tiếp
@@ -154,21 +170,30 @@ class RecommendationService:
         product_id: str
     ) -> float:
         """
-        Tính điểm tương đồng thị giác visual_sim = Cosine Similarity giữa user_visual_vec (48D)
-        và vector 48D của sản phẩm ứng viên, chuẩn hóa về đoạn [0.0, 1.0].
+        Tính điểm tương đồng thị giác visual_sim = Cosine Similarity giữa user_visual_vec (512D/48D)
+        và vector của sản phẩm ứng viên, chuẩn hóa về đoạn [0.0, 1.0].
         """
         v_cache = self._load_visual_features()
         if user_visual_vec is None or product_id not in v_cache:
             return 0.65
 
         item_vec = v_cache[product_id]
+        if user_visual_vec.shape != item_vec.shape:
+            return 0.65
+
         raw_cos = float(np.dot(user_visual_vec, item_vec))
-        # Vì đặc trưng RGB & biên cạnh Sobel đều không âm nên raw_cos tập trung trong [0.84, 1.0].
-        # Căng dải (Contrast Stretching) về [0.15, 0.99] để phân hóa rõ nét thẩm mỹ thị giác 48D.
-        if raw_cos >= 0.82:
-            stretched = 0.15 + ((raw_cos - 0.82) / 0.175) * 0.84
+        if self.visual_feature_dim == 48:
+            if raw_cos >= 0.82:
+                stretched = 0.15 + ((raw_cos - 0.82) / 0.175) * 0.84
+            else:
+                stretched = (raw_cos + 1.0) / 2.0 * 0.5
         else:
-            stretched = (raw_cos + 1.0) / 2.0 * 0.5
+            # Không gian 512D ResNet-18 (sau ReLU + AdaptiveAvgPool2d):
+            # Cosine similarity giữa các ảnh sản phẩm thực tế phân bố trong [0.40, 0.98].
+            if raw_cos >= 0.45:
+                stretched = 0.20 + ((raw_cos - 0.45) / 0.52) * 0.79
+            else:
+                stretched = max(0.05, (raw_cos + 1.0) / 2.0 * 0.25)
         return float(max(0.0, min(1.0, stretched)))
 
     def _load_model(self, force_reload: bool = False) -> bool:
@@ -354,7 +379,7 @@ class RecommendationService:
         w_context: float = 1.0,
         discovery_mode: bool = False
     ) -> List[Tuple[float, Product]]:
-        """Tính điểm tổng hợp kết hợp điểm NCF 32D, Thị giác 48D, Context Boost và Chế độ Khám phá Liên bộ môn"""
+        """Tính điểm tổng hợp kết hợp điểm NCF 32D, Thị giác 512D, Context Boost và Chế độ Khám phá Liên bộ môn"""
         scored_prods = []
         familiar_sports = set(user_interested_sports or [])
         if target_sport:
@@ -377,7 +402,7 @@ class RecommendationService:
             if discovery_mode:
                 # Phá vỡ bong bóng lọc (Cross-Sport Serendipity):
                 # Không cộng thưởng cho môn đã quen thuộc; thưởng serendipity boost cho sản phẩm thuộc bộ môn khác
-                # có tương thích thị giác 48D & NeuMF để cạnh tranh sòng phẳng với sản phẩm môn quen thuộc.
+                # có tương thích thị giác 512D & NeuMF để cạnh tranh sòng phẳng với sản phẩm môn quen thuộc.
                 if p.sport_type and p.sport_type not in familiar_sports:
                     if (ncf_score + visual_sim) >= 1.0 or (weighted_ncf + weighted_visual) >= 0.65:
                         weighted_context = round(0.55 * w_context, 3)
@@ -399,13 +424,13 @@ class RecommendationService:
             match_percent = min(99, max(82, int(82 + min(1.0, max(0.0, (final_score - 0.70) / 1.15)) * 17)))
 
             if is_cross_sport_discovery:
-                reason = f"Khám phá liên bộ môn {p.sport_type} (Hợp Thị giác 48D & NeuMF)"
+                reason = f"Khám phá liên bộ môn {p.sport_type} (Hợp Thị giác {self.visual_feature_dim}D & NeuMF)"
             elif not discovery_mode and target_sport and p.sport_type == target_sport:
                 reason = f"Cùng bộ môn {p.sport_type} đang xem"
             elif not discovery_mode and user_interested_sports and p.sport_type in user_interested_sports:
                 reason = "Thuộc bộ môn yêu thích trong Hồ sơ thể thao"
             elif w_visual >= 0.8 and visual_sim >= 0.65:
-                reason = f"Tương đồng Thị giác 48D ({int(round(visual_sim * 100))}%) · {p.sport_type or 'Thể thao'}"
+                reason = f"Tương đồng Thị giác {self.visual_feature_dim}D ({int(round(visual_sim * 100))}%) · {p.sport_type or 'Thể thao'}"
             elif boost_type > 0 or boost_cat > 0:
                 reason = f"Cùng nhóm sản phẩm {p.product_type or 'thể thao'}"
             else:
@@ -443,7 +468,7 @@ class RecommendationService:
         """
         Hybrid Context-Aware Recommendation Pipeline:
         1. NeuMF In-Memory Inference với Boundary Guard chống KeyError/IndexError
-        2. Adaptive Visual 48D Profile & Context Boost (Sport, Category, Rating, Cross-Sport Discovery)
+        2. Adaptive Visual 512D Profile & Context Boost (Sport, Category, Rating, Cross-Sport Discovery)
         3. Cold-Start Fallback đa tầng
         4. Khử trùng lặp 3-Tier Deduplication
         """
@@ -639,7 +664,7 @@ class RecommendationService:
         w_context: float = 1.0,
         discovery_mode: bool = False
     ) -> List[Product]:
-        """Gợi ý ngữ cảnh kết hợp độ tương đồng Item Embeddings từ mô hình NCF & Thị giác 48D"""
+        """Gợi ý ngữ cảnh kết hợp độ tương đồng Item Embeddings từ mô hình NCF & Thị giác 512D"""
         exclude_list = list(exclude_ids or [])
         if current_product_id and current_product_id not in exclude_list:
             exclude_list.append(current_product_id)
@@ -717,11 +742,11 @@ class RecommendationService:
             match_percent = min(98, max(82, int(82 + min(1.0, max(0.0, (final_score - 0.70) / 1.15)) * 16)))
 
             if is_cross_sport_discovery:
-                reason = f"Khám phá liên bộ môn {p.sport_type} (Tương đồng Thị giác 48D & NCF)"
+                reason = f"Khám phá liên bộ môn {p.sport_type} (Tương đồng Thị giác {self.visual_feature_dim}D & NCF)"
             elif not discovery_mode and target_sport and p.sport_type == target_sport:
                 reason = f"Cùng bộ môn {p.sport_type} đang xem"
             elif w_visual >= 0.8 and visual_sim >= 0.65:
-                reason = f"Tương đồng Thị giác 48D ({int(round(visual_sim * 100))}%) · {p.sport_type or 'Thể thao'}"
+                reason = f"Tương đồng Thị giác {self.visual_feature_dim}D ({int(round(visual_sim * 100))}%) · {p.sport_type or 'Thể thao'}"
             elif sim_val is not None and sim_val > 0.5:
                 reason = f"Tương đồng vector sản phẩm ({round(sim_val * 100)}%)"
             elif boost_type > 0 or boost_cat > 0:
@@ -822,9 +847,9 @@ class RecommendationService:
             match_percent = min(98, max(83, int(83 + min(1.0, max(0.0, (final_score - 0.70) / 1.10)) * 15)))
 
             if is_cross_sport_discovery:
-                reason = f"Khám phá liên bộ môn {p.sport_type} (Tương đồng Thị giác 48D & NCF)"
+                reason = f"Khám phá liên bộ môn {p.sport_type} (Tương đồng Thị giác {self.visual_feature_dim}D & NCF)"
             elif w_visual >= 0.8 and visual_sim >= 0.65:
-                reason = f"Tương đồng Thị giác 48D ({int(round(visual_sim * 100))}%) · {p.sport_type or 'Thể thao'}"
+                reason = f"Tương đồng Thị giác {self.visual_feature_dim}D ({int(round(visual_sim * 100))}%) · {p.sport_type or 'Thể thao'}"
             else:
                 reason = f"Xu hướng nổi bật môn {p.sport_type or 'thể thao'} ({p.rating or 5.0}★)"
 

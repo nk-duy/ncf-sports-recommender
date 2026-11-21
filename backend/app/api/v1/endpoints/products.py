@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/visual-search", response_model=VisualSearchResponse)
 async def visual_search_products(request: VisualSearchRequest):
     """
-    Tìm kiếm & gợi ý sản phẩm bằng Đặc trưng Hình ảnh (Visual 48D) kết hợp Vector nhúng NCF 32D
+    Tìm kiếm & gợi ý sản phẩm bằng Đặc trưng Hình ảnh (Visual 512D) kết hợp Vector nhúng NCF 32D
     """
     result = await visual_search_service.search_by_visual_features(
         image_base64=request.image_base64,

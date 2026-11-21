@@ -30,7 +30,7 @@ export default function AiXRayInspector({ explanation, className = "" }: AiXRayI
   const getStrategyLabel = () => {
     switch (strategy) {
       case "visual_ncf_fusion":
-        return { text: "Visual 48D", color: "bg-purple-500/20 text-purple-300 border-purple-500/40" };
+        return { text: "Visual 512D", color: "bg-purple-500/20 text-purple-300 border-purple-500/40" };
       case "hybrid_ncf":
         return { text: "NeuMF+Context", color: "bg-blue-500/20 text-blue-300 border-blue-500/40" };
       case "cosine_cross_sell":
@@ -117,9 +117,9 @@ export default function AiXRayInspector({ explanation, className = "" }: AiXRayI
           </span>
         </div>
 
-        {/* Row 2: Visual 48D (RGB-Sobel) */}
+        {/* Row 2: Visual 512D */}
         <div className="flex items-center justify-between gap-1">
-          <span className="text-slate-400 text-[9px] sm:text-[9.5px] shrink-0">Thị giác 48D (RGB-Sobel):</span>
+          <span className="text-slate-400 text-[9px] sm:text-[9.5px] shrink-0">Thị giác 512D:</span>
           <span className="font-bold text-purple-300 tabular-nums text-[9.5px] sm:text-[10px] shrink-0">
             +{Number(visual_score || 0).toFixed(3)}
           </span>
